@@ -1,8 +1,8 @@
 //================================================
-//  Developed by Vdaon Development Group, 2011 feb
-//
-//  
+//  Developed by Benny Saxén
 //================================================
+
+#define HIST_MAX  100
 
 #define DP 5
 #define AP 15
@@ -10,6 +10,18 @@
 #define ER 1
 #define SR 20
 
+#define ON     1
+#define OFF    0
+
+#define YES    10
+#define NO     20
+
+// Configuration
+int pinServer = NO;
+int interface_id = 1;
+int nloop = 0;
+
+#include "pinProtocol_lib.c"
 #include "simuino_lib.c"
 #include "arduino_lib.c"
 #include "sketch/sketch.pde"
@@ -29,13 +41,13 @@ void decValue()
 void runSim(int n)
 {
   int i;
-  for(i=1;i<=n;i++)
+  for(i=0;i<n;i++)
     {
-      //readExt();
+      nloop++;
       loop();
       Serial.flush();
-      passTime(); 
-    } 
+      passTime();  
+    }
 }    
   
 //========================================
@@ -43,6 +55,7 @@ int main(int argc, char *argv[])
 {
   int i,x;
   int ch;
+  int nhist;
 
   getAppName(appName);
 
@@ -112,7 +125,7 @@ int main(int argc, char *argv[])
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
   wmove(uno,0,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer www.vdaon.com");
+  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer Version: 2011-11-03");
   wrefresh(uno);
 
   // Serial Window
@@ -131,11 +144,21 @@ int main(int argc, char *argv[])
   // Command Window
   com=newwin(AP+10,20,0,72);
   wbkgd(com,COLOR_PAIR(4));
+  wmove(com,0,0);
+  if(pinServer==YES)
+    {
+      wprintw(com,"Server YES");
+      strcpy(url,"localhost");
+      conn = c_connect(PIN_PORT,url);
+      if(conn == 0)pinServer = NO;
+    }
+  if(pinServer==NO)wprintw(com,"Server NO ");
   wrefresh(com);
 
 
   boardInit();
   setup();
+  nhist = readExt();
   while((ch!='q')&&(ch!='Q'))  
     {
       x = kbhit();
@@ -143,18 +166,19 @@ int main(int argc, char *argv[])
 	{
 	  ch = readch();
 	  wmove(com,1,2);
-	  wprintw(com,"%c",ch);
+	  wprintw(com,"%c loop %d (%d)",ch,nloop,nhist);
 	  wrefresh(com);
-	  if (ch=='s') selPin();
-	  if (ch=='+') incValue();
-	  if (ch=='-') decValue();
+	  //if (ch=='s') selPin();
+	  //if (ch=='+') incValue();
+	  //if (ch=='-') decValue();
 	  if (ch=='r') runSim(1);
+	  if (ch=='g') runSim(nhist);
+	  // if (ch=='c') connect(interface_id);
+	  //if (ch=='d') disconnect(interface_id);
 	}     
     }
-
+  c_disconnect(conn);
   tcsetattr(0,TCSANOW, &orig);
   delwin(uno);
   endwin();
 }
-
-
