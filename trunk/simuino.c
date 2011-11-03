@@ -21,7 +21,6 @@ int pinServer = NO;
 int interface_id = 1;
 int nloop = 0;
 
-#include "pinProtocol_lib.c"
 #include "simuino_lib.c"
 #include "arduino_lib.c"
 #include "sketch/sketch.pde"
