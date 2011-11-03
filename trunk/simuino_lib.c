@@ -1,3 +1,6 @@
+//================================================
+//  Developed by Benny Saxen, ADCAJO
+//================================================
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,19 +15,16 @@
 #define TX     4
 #define PWM    5
 
-#define ON     1
-#define OFF    0
+#define TEMPO  100
 
-#define YES    10
-#define NO     20
 
-int row,col;
-int graph_x= 10,graph_y=10;
-int digPinPos[14];
-int anaPinPos[6];
-char appName[80];
-int   analogPin[100];
-int   digitalPin[100];
+int   row,col;
+int   graph_x = 10,graph_y = 10;
+int   digPinPos[14];
+int   anaPinPos[6];
+char  appName[80];
+int   analogPin[HIST_MAX][100];
+int   digitalPin[HIST_MAX][100];
 int   digitalMode[100];
 int   timeFromStart = 0;
 int   paceMaker = 0;
@@ -36,9 +36,32 @@ int   g[14][900];
 int   serialMode = OFF;
 char  serialBuffer[240],stemp[80];
 
+int conn;
+
 WINDOW *uno,*ser,*slog,*com;
 static struct termios orig, nnew;
 static int peek = -1;
+
+
+bool write_pin(int interface_id, int pin, int value)
+{
+  char request[80],answer[80];
+  sprintf(request,"%d setpin %d %d",interface_id,pin,value);
+  wmove(com,3,0);
+  wprintw(com,answer);
+  wrefresh(com);
+}
+
+bool read_pin(int interface_id, int pin, int *value)
+{
+  char request[80],answer[80];
+  sprintf(request,"%d getpin %d",interface_id,pin);
+  wmove(com,3,0);
+  wprintw(com,answer);
+  wrefresh(com);
+}
+
+
 
 int kbhit()
 {
@@ -65,6 +88,7 @@ int readch()
 {
 
   char ch;
+  ssize_t x;
 
   if(peek != -1) {
     ch = peek;
@@ -72,7 +96,7 @@ int readch()
     return ch;
   }
 
-  read(0,&ch,1);
+  x=read(0,&ch,1);
   return ch;
 }
 
@@ -146,12 +170,12 @@ void show(WINDOW *win)
 {
   wmove(win,0,0);
   wrefresh(win);
-  iDelay(100);
+  iDelay(TEMPO);
 }
 
 void showSerial()
 {
-  wmove(ser,0,0);
+  wmove(ser,1,0);
   wprintw(ser,"%s",serialBuffer);
   wrefresh(ser);
 }
@@ -184,16 +208,21 @@ void getAppName(char *app)
 
 void boardInit()
 {
-  int i;
+  int i,j;
 
+  nloop = 0;
   for(i=0;i<14;i++)
     {
-      digitalPin[i]      = 0;
+//      digitalPin[i]      = 0;
       digitalMode[i]     = FREE;
     }
-  for(i=0;i<6;i++)
+  for(i=0;i<14;i++)
     {
-      analogPin[i]     = 0;
+      for(j=0;j<HIST_MAX;j++)
+      {
+          analogPin[j][i]   = 0;
+          digitalPin[j][i]  = 0;
+      }
     }
 }
 
@@ -202,4 +231,72 @@ void unimplemented(const char *f)
   wmove(ser,0,0);
   wprintw(ser,"unimplemented: %s\n",f);
   wrefresh(ser); 
+  iDelay(100);
+}
+
+int readExt()
+{
+  FILE *in;
+  char row[80],*p;
+  int x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,temp,res=0;
+
+  in = fopen("scenario/analogPins.txt","r");
+  if(in == NULL)
+    {
+      printf("Unable to open analogue scenario\n");
+      //exit(0);
+    }
+  else
+    {
+      while (fgets(row,80,in)!=NULL)
+	{
+	  sscanf(row,"%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5);
+	  if(temp<HIST_MAX)
+           {
+	      res++;
+	      analogPin[temp][0]= x0;
+	      analogPin[temp][1]= x1;
+	      analogPin[temp][2]= x2;
+	      analogPin[temp][3]= x3;
+	      analogPin[temp][4]= x4;
+	      analogPin[temp][5]= x5;
+	    }
+	}
+    }
+  fclose(in);  
+
+  in = fopen("scenario/digitalPins.txt","r");
+  if(in == NULL)
+    {
+      printf("Unable to open digital scenario\n");
+      //exit(0);
+    }
+  else
+    {
+      while (fgets(row,80,in)!=NULL)
+        {
+          sscanf(row,"%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5,&x6,&x7,&x8,&x9,&x9,&x10,&x11,&x12,&x13);
+          if(temp<HIST_MAX)
+           {
+              res++;
+              digitalPin[temp][0]= x0;
+              digitalPin[temp][1]= x1;
+              digitalPin[temp][2]= x2;
+              digitalPin[temp][3]= x3;
+              digitalPin[temp][4]= x4;
+              digitalPin[temp][5]= x5;
+              digitalPin[temp][6]= x6;
+              digitalPin[temp][7]= x7;
+              digitalPin[temp][8]= x8;
+              digitalPin[temp][9]= x9;
+              digitalPin[temp][10]= x10;
+              digitalPin[temp][11]= x11;
+              digitalPin[temp][12]= x12;
+              digitalPin[temp][13]= x13;
+            }
+        }
+    }
+  fclose(in);
+
+  return(res);
 }

@@ -1,14 +1,18 @@
+==================================================
 SIMUINO is a Arduino Simulator. Simple and basic. 
 Code: c/c++
 Platform: Linux (Ubuntu)
 
+Developed by Benny Saxen, ADCAJO
+==================================================
 Quick starter guide:
 
-1. Download simuino zip-file from www.vdaon.com
+1. Download simuino zip-file from Google Code, project simuino
 
 2. Unzip the file. A directory named simuino will be created.
 
 3. Go to directory simuino. Compile: g++ -O2 -o simuino simuino.c -lncurses
+   You need to have installed packages for ncurses-dev.
 
 4. Run: ./simuino 
 
@@ -29,12 +33,11 @@ Test your own sketch in simuino:
 
 Available commands:
 
-q	  quit
-r	  run one loop() sequence
-s	  select pin
+q    quit
+r    run one loop() sequence
 g    run complete scenario
 
-
+====================================================
 
 
 

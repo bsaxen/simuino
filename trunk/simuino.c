@@ -1,5 +1,5 @@
 //================================================
-//  Developed by Benny Saxén
+//  Developed by Benny Saxen, ADCAJO
 //================================================
 
 #define HIST_MAX  100
@@ -17,9 +17,9 @@
 #define NO     20
 
 // Configuration
-int pinServer = NO;
+int pinServer    = NO;
 int interface_id = 1;
-int nloop = 0;
+int nloop        = 0;
 
 #include "simuino_lib.c"
 #include "arduino_lib.c"
@@ -144,14 +144,7 @@ int main(int argc, char *argv[])
   com=newwin(AP+10,20,0,72);
   wbkgd(com,COLOR_PAIR(4));
   wmove(com,0,0);
-  if(pinServer==YES)
-    {
-      wprintw(com,"Server YES");
-      strcpy(url,"localhost");
-      conn = c_connect(PIN_PORT,url);
-      if(conn == 0)pinServer = NO;
-    }
-  if(pinServer==NO)wprintw(com,"Server NO ");
+
   wrefresh(com);
 
 
@@ -167,17 +160,14 @@ int main(int argc, char *argv[])
 	  wmove(com,1,2);
 	  wprintw(com,"%c loop %d (%d)",ch,nloop,nhist);
 	  wrefresh(com);
-	  //if (ch=='s') selPin();
-	  //if (ch=='+') incValue();
-	  //if (ch=='-') decValue();
 	  if (ch=='r') runSim(1);
 	  if (ch=='g') runSim(nhist);
-	  // if (ch=='c') connect(interface_id);
-	  //if (ch=='d') disconnect(interface_id);
 	}     
     }
-  c_disconnect(conn);
+
   tcsetattr(0,TCSANOW, &orig);
   delwin(uno);
   endwin();
 }
+
+

@@ -1,6 +1,5 @@
-
 //================================================
-//  Developed by Benny Saxén
+//  Developed by Benny Saxen, ADCAJO
 //================================================
 //=====================================
 // Structure
@@ -22,7 +21,7 @@
 #define DEC    4
 #define HEX    5
 
-//#define LOW     1
+
 #define CHANGE  2
 #define RISING  3
 #define FALLING 4
@@ -670,5 +669,3 @@ void serial::write(char *p)
 /*   showSerial(); */
 /*   passTime(); */
 /* } */
- 
-
