@@ -32,8 +32,7 @@ Available commands:
 q	  quit
 r	  run one loop() sequence
 s	  select pin
-+	  increase pin value
--	  decrease pin value
+g    run complete scenario
 
 
 
