@@ -1,3 +1,7 @@
+
+//================================================
+//  Developed by Benny Saxén
+//================================================
 //=====================================
 // Structure
 //=====================================
@@ -7,10 +11,22 @@
 //=====================================
 
 //------ Constants -------------------------
-#define LOW    900
-#define HIGH   901
+#define LOW    0
+#define HIGH   5
 #define INPUT  1
 #define OUTPUT 2
+
+#define BYTE   1
+#define BIN    2
+#define OCT    3
+#define DEC    4
+#define HEX    5
+
+//#define LOW     1
+#define CHANGE  2
+#define RISING  3
+#define FALLING 4
+
 
 //=====================================
 // Functions
@@ -21,7 +37,6 @@
 
 void pinMode(int pin,int mode)
 {
-  //passTime();
 
   if(mode == INPUT || mode == OUTPUT || mode == PWM)
     {
@@ -54,7 +69,8 @@ void digitalWrite(int pin,int value)
 
   if(digitalMode[pin] == OUTPUT)
     {
-      digitalPin[pin] = value;
+      if(pinServer==YES)write_pin(interface_id,pin,value);
+      if(pinServer==NO)digitalPin[nloop][pin] = value;
 
       wmove(uno,DP,digPinPos[pin]);
       if(value==HIGH)
@@ -70,6 +86,8 @@ void digitalWrite(int pin,int value)
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno,"w");
       show(uno);
+      wmove(uno,DP,digPinPos[pin]);
+      wprintw(uno,"%1d",value);
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno," ");
       show(uno);
@@ -87,15 +105,17 @@ int digitalRead(int pin)
 {
   int value=0;
 
-
-
   if(digitalMode[pin] == INPUT)
     {
-      value = digitalPin[pin];
-      wmove(uno,DP-2,digPinPos[pin]);
+      if(pinServer==NO)value = digitalPin[nloop][pin];
+      if(pinServer==YES)read_pin(interface_id,pin,&value);
+ 
+      wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno,"r");
       show(uno);
-      wmove(uno,DP-2,digPinPos[pin]);
+      wmove(uno,DP,digPinPos[pin]);
+      wprintw(uno,"%1d",value);
+      wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno," ");
       show(uno);
     }
@@ -121,7 +141,9 @@ int analogRead(int pin)  // Values 0 to 1023
 {
 
   int value;
-  value = analogPin[pin];
+  if(pinServer==NO)value = analogPin[nloop][pin];
+  if(pinServer==YES)read_pin(interface_id,pin,&value);
+
   if(value > 1023 || value < 0)
     {
       move(ER,RF);
@@ -153,8 +175,10 @@ void analogWrite(int pin,int value)
 {
   if(pin==3 || pin==5 || pin==6 || pin==9 || pin==10 || pin==11)
     {
-      //pinMode(pin,PWM);
-      digitalPin[pin] = value;
+
+      if(pinServer==YES)write_pin(interface_id,pin,value);
+      if(pinServer==NO)digitalPin[nloop][pin] = value;
+
       wmove(uno,DP,digPinPos[pin]-2);
       wprintw(uno,"%3d",value);
       wmove(uno,DP+2,digPinPos[pin]);
@@ -196,14 +220,28 @@ void shiftOut(int dataPin, int clockPin, int bitOrder, int value)
   unimplemented("shiftOut()");
 }
 
-void pulseIn(int pin, int value)
+unsigned long pulseIn(int pin, int value)
 {
-  unimplemented("pulseIn()");
+  int res=0;
+  if(pinServer==NO)
+    res = pin*1000;
+  else
+    {
+      res = pin*100;
+    }
+  return(res);
 }
 
-void pulseIn(int pin, int value, unsigned long timeout)
+unsigned long pulseIn(int pin, int value, unsigned long timeout)
 {
-  unimplemented("pulseIn()");
+  int res=0;
+  if(pinServer==NO)
+    res = pin*1000;
+  else
+    {
+      res = pin*100;
+    }
+  return(res);
 }
 
 //------ Time ------------------------------
@@ -227,7 +265,10 @@ void delay(int ms)
 
 void delayMicroseconds(int us)
 {
-  unimplemented("delayMicroseconds()");
+  if(logging==YES)wLog("delayMicroseconds",us,-1);
+  msleep(us);
+  passTime();
+
 }
 
 //------ Math ------------------------------
@@ -313,7 +354,7 @@ unsigned char bit(unsigned char x)
 //------ External Interrupts ---------------
 
 
-void attachInterrupt(int interrupt,int function,int mode)
+void attachInterrupt(int interrupt,void(*func)(),int mode)
 {
   unimplemented("attachInterrupt()");
 }
@@ -344,6 +385,7 @@ class serial {
   int  peek();
   void flush();
   void print(int x);
+  void print(int x,int base);
   void print(const char *p);
   void println(int x);
   void println(const char *p);
@@ -384,13 +426,22 @@ int serial::peek()
 
 void serial::flush() 
 {
-  strcpy(serialBuffer," ");
+  strcpy(serialBuffer,".......flushed.......");
   showSerial();
 }
 
 void serial::print(int x) 
 {
   if(logging==YES)wLog("serial print",x,-1);
+  sprintf(stemp,"%d",x);
+  strcat(serialBuffer,stemp);
+  showSerial();
+  passTime();
+}
+
+void serial::print(int x,int base) 
+{
+  if(logging==YES)wLog("serial print base",x,-1);
   sprintf(stemp,"%d",x);
   strcat(serialBuffer,stemp);
   showSerial();
@@ -407,6 +458,7 @@ void serial::print(const char *p)
 
 void serial::println(int x) 
 {
+  //if(logging==YES)wLog("serial:printline",x,-1);
   sprintf(stemp,"%d\n",x);
   strcat(serialBuffer,stemp);
   showSerial();
@@ -425,3 +477,198 @@ void serial::write(char *p)
 {
    passTime();
 }
+
+//======================================================
+// Ethernet Library
+//======================================================
+
+/* class Ethernet { */
+/*  public: */
+/*   void begin(int baudRate); */
+/* }; */
+
+/* void Ethernet::begin(char *mac,char *ip)  */
+/* { */
+/*   if(logging==YES)wLog("Ethernet.begin",-1,-1); */
+/* } */
+/* void Ethernet::begin(char *mac,char *ip,char *gateway)  */
+/* { */
+/*   if(logging==YES)wLog("Ethernet.begin",-1,-1); */
+/* } */
+/* void Ethernet::begin(char *mac,char *ip,char *gateway, char *subnet)  */
+/* { */
+/*   if(logging==YES)wLog("Ethernet.begin",-1,-1); */
+/* } */
+
+/* class Server { */
+/*  public: */
+/* begin() */
+/* available() */
+/* write() */
+/* print() */
+/* println() */
+/* }; */
+
+/* void Server::Server(int port)  */
+/* { */
+/*   if(logging==YES)wLog("Server.Server",port,-1); */
+/* } */
+/* void Server::begin()  */
+/* { */
+/*   if(logging==YES)wLog("Server.begin",-1,-1); */
+/* } */
+/* Client Server::available()  */
+/* { */
+/*   Client x = Client(); */
+/*   if(logging==YES)wLog("Server.available",-1,-1); */
+/*   return(x),  */
+/* } */
+/* void Server::write(char x)  */
+/* { */
+/*   if(logging==YES)wLog("Server.write",-1,-1); */
+/*   sprintf(stemp,"%c",x); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+/* void Server::write(int x)  */
+/* { */
+/*   if(logging==YES)wLog("Server.write",-1,-1); */
+/*   sprintf(stemp,"%d",x); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+/* void Server::print(char x)  */
+/* { */
+/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   sprintf(stemp,"%c",x); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+/* void Server::print(int x)  */
+/* { */
+/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   sprintf(stemp,"%d",x); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+/* void Server::print(char *x)  */
+/* { */
+/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   sprintf(stemp,"%s",x); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+/* void Server::print(char x,char *base)  */
+/* { */
+/*   //BIN for binary (base 2)  */
+/*   //DEC for decimal (base 10) */
+/*   //OCT for octal (base 8) */
+/*   //HEX for hexadecimal (base 16) */
+/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   sprintf(stemp,"%c",x); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+/* void Server::print(int x,char *base)  */
+/* { */
+/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   sprintf(stemp,"%d",x); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+/* void Server::print(char *x,char *base)  */
+/* { */
+/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   sprintf(stemp,"%s",x); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+/* void Server::println()  */
+/* { */
+/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   sprintf(stemp,"\n"); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+/* void Server::println(char x)  */
+/* { */
+/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   sprintf(stemp,"%c\n",x); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+/* void Server::println(int x)  */
+/* { */
+/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   sprintf(stemp,"%d\n",x); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+/* void Server::println(char *x)  */
+/* { */
+/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   sprintf(stemp,"%s\n",x); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+/* void Server::println(char x,char *base)  */
+/* { */
+/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   sprintf(stemp,"%c\n",x); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+/* void Server::println(int x,char *base)  */
+/* { */
+/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   sprintf(stemp,"%d\n",x); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+/* void Server::println(char *x,char *base)  */
+/* { */
+/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   sprintf(stemp,"%s\n",x); */
+/*   strcat(ethernetBuffer,stemp); */
+/*   showEthernet(); */
+/*   passTime(); */
+/* } */
+
+/* class Client { */
+/*  public: */
+/*   void begin(int baudRate); */
+/* connected() */
+/* connect() */
+/* write() */
+/* print() */
+/* println() */
+/* available() */
+/* read() */
+/* flush() */
+/* stop() */
+/* }; */
+
+/* void serial::print(int x)  */
+/* { */
+/*   if(logging==YES)wLog("serial print",x,-1); */
+/*   sprintf(stemp,"%d",x); */
+/*   strcat(serialBuffer,stemp); */
+/*   showSerial(); */
+/*   passTime(); */
+/* } */
+ 
+
