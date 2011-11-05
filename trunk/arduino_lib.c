@@ -68,8 +68,8 @@ void digitalWrite(int pin,int value)
 
   if(digitalMode[pin] == OUTPUT)
     {
-      if(pinServer==YES)write_pin(interface_id,pin,value);
-      if(pinServer==NO)digitalPin[nloop][pin] = value;
+
+      digitalPin[nloop][pin] = value;
 
       wmove(uno,DP,digPinPos[pin]);
       if(value==HIGH)
@@ -106,8 +106,7 @@ int digitalRead(int pin)
 
   if(digitalMode[pin] == INPUT)
     {
-      if(pinServer==NO)value = digitalPin[nloop][pin];
-      if(pinServer==YES)read_pin(interface_id,pin,&value);
+      value = digitalPin[nloop][pin];
  
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno,"r");
@@ -140,8 +139,8 @@ int analogRead(int pin)  // Values 0 to 1023
 {
 
   int value;
-  if(pinServer==NO)value = analogPin[nloop][pin];
-  if(pinServer==YES)read_pin(interface_id,pin,&value);
+
+  value = analogPin[nloop][pin];
 
   if(value > 1023 || value < 0)
     {
@@ -175,8 +174,7 @@ void analogWrite(int pin,int value)
   if(pin==3 || pin==5 || pin==6 || pin==9 || pin==10 || pin==11)
     {
 
-      if(pinServer==YES)write_pin(interface_id,pin,value);
-      if(pinServer==NO)digitalPin[nloop][pin] = value;
+      digitalPin[nloop][pin] = value;
 
       wmove(uno,DP,digPinPos[pin]-2);
       wprintw(uno,"%3d",value);
@@ -222,24 +220,14 @@ void shiftOut(int dataPin, int clockPin, int bitOrder, int value)
 unsigned long pulseIn(int pin, int value)
 {
   int res=0;
-  if(pinServer==NO)
-    res = pin*1000;
-  else
-    {
-      res = pin*100;
-    }
+  res = pin*1000;
   return(res);
 }
 
 unsigned long pulseIn(int pin, int value, unsigned long timeout)
 {
   int res=0;
-  if(pinServer==NO)
-    res = pin*1000;
-  else
-    {
-      res = pin*100;
-    }
+  res = pin*1000;
   return(res);
 }
 

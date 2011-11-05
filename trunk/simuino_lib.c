@@ -26,7 +26,6 @@ char  appName[80];
 int   analogPin[HIST_MAX][100];
 int   digitalPin[HIST_MAX][100];
 int   digitalMode[100];
-int   timeFromStart = 0;
 int   paceMaker = 0;
 int   baud = 0;
 int   logging = YES;
@@ -41,26 +40,6 @@ int conn;
 WINDOW *uno,*ser,*slog,*com;
 static struct termios orig, nnew;
 static int peek = -1;
-
-
-bool write_pin(int interface_id, int pin, int value)
-{
-  char request[80],answer[80];
-  sprintf(request,"%d setpin %d %d",interface_id,pin,value);
-  wmove(com,3,0);
-  wprintw(com,answer);
-  wrefresh(com);
-}
-
-bool read_pin(int interface_id, int pin, int *value)
-{
-  char request[80],answer[80];
-  sprintf(request,"%d getpin %d",interface_id,pin);
-  wmove(com,3,0);
-  wprintw(com,answer);
-  wrefresh(com);
-}
-
 
 
 int kbhit()
@@ -112,7 +91,7 @@ void wLog(const char *p, int value1, int value2)
   int i;
   char temp[100],temp2[100];
 
-  sprintf(temp," %d ",timeFromStart);
+  sprintf(temp," %d,%d ",nloop,timeFromStart);
   strcat(temp,p);
 
   if(value1 > -1)
@@ -238,7 +217,7 @@ int readExt()
 {
   FILE *in;
   char row[80],*p;
-  int x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,temp,res=0;
+  int x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,temp,res1=0,res2=0,res=0;
 
   in = fopen("scenario/analogPins.txt","r");
   if(in == NULL)
@@ -253,7 +232,7 @@ int readExt()
 	  sscanf(row,"%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5);
 	  if(temp<HIST_MAX)
            {
-	      res++;
+	     res1=temp;
 	      analogPin[temp][0]= x0;
 	      analogPin[temp][1]= x1;
 	      analogPin[temp][2]= x2;
@@ -278,7 +257,7 @@ int readExt()
           sscanf(row,"%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5,&x6,&x7,&x8,&x9,&x9,&x10,&x11,&x12,&x13);
           if(temp<HIST_MAX)
            {
-              res++;
+	     res2 = temp;
               digitalPin[temp][0]= x0;
               digitalPin[temp][1]= x1;
               digitalPin[temp][2]= x2;
@@ -296,7 +275,9 @@ int readExt()
             }
         }
     }
-  fclose(in);
-
+  fclose(in)
+;
+  if(res1 > res2) res = res1;
+  else res = res2;
   return(res);
 }

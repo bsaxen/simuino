@@ -17,9 +17,12 @@
 #define NO     20
 
 // Configuration
-int pinServer    = NO;
-int interface_id = 1;
-int nloop        = 0;
+//int pinServer     = NO;
+int interface_id  = 1;
+
+// Init
+int nloop         = 0;
+int timeFromStart = 0;
 
 #include "simuino_lib.c"
 #include "arduino_lib.c"
@@ -27,28 +30,32 @@ int nloop        = 0;
 
 
 // ----- Commands ----------
-void selPin()
-{
-}
-void incValue()
-{
-}
-void decValue()
-{
-}
 
 void runSim(int n)
 {
   int i;
-  for(i=0;i<n;i++)
+  int currentLoop = nloop;
+
+  if(n == 1)
     {
       nloop++;
       loop();
       Serial.flush();
       passTime();  
     }
+  else if(n > 1)
+    {
+      for(i=0;i<n-currentLoop;i++)
+	{
+	  nloop++;
+	  loop();
+	  Serial.flush();
+	  passTime();  
+	}
+    }
+  return;
 }    
-  
+
 //========================================
 int main(int argc, char *argv[])
 {
@@ -124,7 +131,7 @@ int main(int argc, char *argv[])
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
   wmove(uno,0,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer Version: 2011-11-03");
+  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.2");
   wrefresh(uno);
 
   // Serial Window

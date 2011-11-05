@@ -35,9 +35,49 @@ Available commands:
 
 q    quit
 r    run one loop() sequence
-g    run complete scenario
+g    run complete scenario, according to the content in scenario/digitalPins.txt and analogPins.txt
 
 ====================================================
+In order to be able to run specific scenarios, controlled by values read from pins,
+it is possible to specify what value shall be read per loop and pin.
 
+The files, analogPins.txt and digitalPins.txt are located in the subdirectory "scenario".
 
+The content of analogPins.txt:
+----------------------------------
+1 100 101 102 103 104 100
+2 200 101 102 103 104  70
+3 300 101 102 103 104  80
+4 400 101 102 103 104  75
+5 500 101 102 103 104 120
+6 600 101 102 103 104  40
+7 700 101 102 103 104 100
+8 800 101 102 103 104  50
+9 900 101 102 103 104 106
+10 1000 101 102 103 104 105
+----------------------------------
+The first column specifies the loop number (in this example the scenario runs th eloop from 1 to 10). 
+The other columns is the value to be read for pins A0 - A5.
+
+The content of digitalPins.txt:
+----------------------------------
+1  1 0 1 0 1 0 1 0 1 0 1 0 1 0
+2  0 1 0 1 0 1 0 1 0 1 0 1 0 1
+3  1 0 0 0 1 0 1 0 1 0 1 0 1 0
+4  0 1 0 1 0 1 0 1 0 1 0 1 0 1
+5  1 0 0 0 1 0 1 0 1 0 1 0 1 0
+6  0 1 0 1 0 1 0 1 0 1 0 1 0 1
+7  1 0 0 0 1 0 1 0 1 0 1 0 1 0
+8  0 1 0 1 0 1 0 1 0 1 0 1 0 1
+9  1 0 0 0 1 0 1 0 1 0 1 0 1 0
+10 0 1 0 1 0 1 0 1 0 1 0 1 0 1
+11 1 0 0 0 1 0 1 0 1 0 1 0 1 0
+12 0 1 0 1 0 1 0 1 0 1 0 1 0 1
+13 1 0 0 0 1 0 1 0 1 0 1 0 1 0
+14 0 1 0 1 0 1 0 1 0 1 0 1 0 1
+15 1 0 0 0 1 0 1 0 1 0 1 0 1 0
+16 0 1 0 1 0 1 0 1 0 1 0 1 0 1
+----------------------------------
+The first column specifies the loop number. 
+The other columns is the value to be read for pins D0 - A13.
 
