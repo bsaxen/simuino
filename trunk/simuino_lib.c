@@ -41,10 +41,10 @@ WINDOW *uno,*ser,*slog,*com;
 static struct termios orig, nnew;
 static int peek = -1;
 
-
+void wLog(const char *p, int value1, int value2);
+//===================================================
 void passTime()
 {
-  int i;
   timeFromStart++;
 }
 
@@ -59,6 +59,38 @@ void wLog(const char *p, int value1, int value2)
   if(value1 > -1)
     {
       sprintf(temp2," %d",value1);
+      strcat(temp,temp2);
+    }
+  
+  if(value2 > -1)
+    {
+      sprintf(temp2," %d",value2);
+      strcat(temp,temp2);
+    }
+
+  for(i=logSize;i>0;i--)strcpy(logBuffer[i],logBuffer[i-1]);
+  strcpy(logBuffer[0],temp);
+
+  wclear(slog);
+  for(i=0;i<logSize;i++)
+    {
+      wmove(slog,i,0);
+      wprintw(slog,"%s",logBuffer[i]);
+    } 
+  wrefresh(slog);
+}
+
+void wLogChar(const char *p, const char *value1, int value2)
+{
+  int i;
+  char temp[100],temp2[100];
+
+  sprintf(temp," %d,%d ",nloop,timeFromStart);
+  strcat(temp,p);
+
+  if(value1)
+    {
+      sprintf(temp2," %s",value1);
       strcat(temp,temp2);
     }
   

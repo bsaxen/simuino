@@ -44,7 +44,6 @@ void runSim(int n)
       nloop++;
       loop();
       Serial.flush();
-      passTime();  
     }
   else if(n > 1)
     {
@@ -57,7 +56,6 @@ void runSim(int n)
 
 	  loop();
 	  Serial.flush();
-	  passTime();  
 	}
     }
   return;
@@ -155,7 +153,7 @@ int main(int argc, char *argv[])
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
   wmove(uno,0,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.3");
+  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.4");
   wrefresh(uno);
 
   // Serial Window

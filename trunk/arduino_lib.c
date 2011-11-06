@@ -19,7 +19,6 @@
 #define RISING  3
 #define FALLING 4
 
-
 //=====================================
 // Functions
 //=====================================
@@ -52,14 +51,14 @@ void pinMode(int pin,int mode)
 	  if(logging==YES)wLog("pinMode PWM",pin,-1);
 	}
       show(uno);
-      stepCommand();
+      //stepCommand();
     }
 }
 
 void digitalWrite(int pin,int value)
 {
 
-
+  passTime();
   if(digitalMode[pin] == OUTPUT)
     {
 
@@ -93,13 +92,13 @@ void digitalWrite(int pin,int value)
       wprintw(uno,"Error: Wrong pin=%d mode. Should be OUTPUT\n",pin);
       show(uno);
     }
-  passTime();
 }
 
 int digitalRead(int pin)
 {
   int value=0;
 
+  passTime();
   if(digitalMode[pin] == INPUT)
     {
       value = digitalPin[nloop][pin];
@@ -137,6 +136,7 @@ int analogRead(int pin)  // Values 0 to 1023
 
   int value;
 
+  passTime();
   value = analogPin[nloop][pin];
 
   if(value > 1023 || value < 0)
@@ -161,7 +161,7 @@ int analogRead(int pin)  // Values 0 to 1023
 
   show(uno);
   if(logging==YES)wLog("analogRead",pin,value);
-  passTime();
+
   stepCommand();
   return(value); 
 }
@@ -169,6 +169,7 @@ int analogRead(int pin)  // Values 0 to 1023
 void analogWrite(int pin,int value) 
 // Values 0 to 255   PWM: only pin 3,5,6,9,10,11
 {
+  passTime();
   if(pin==3 || pin==5 || pin==6 || pin==9 || pin==10 || pin==11)
     {
 
@@ -190,7 +191,6 @@ void analogWrite(int pin,int value)
       show(uno);
     }
   if(logging==YES)wLog("analogWrite",pin,value);
-  passTime();
   stepCommand();
 }
 
@@ -244,18 +244,18 @@ unsigned long micros()
 
 void delay(int ms)
 {
+  passTime(); 
   if(logging==YES)wLog("delay",ms,-1);
   msleep(ms);
   stepCommand();
-  passTime();
 }
 
 void delayMicroseconds(int us)
 {
+  passTime();
   if(logging==YES)wLog("delayMicroseconds",us,-1);
   msleep(us);
   stepCommand();
-  passTime();
 }
 
 //------ Math ------------------------------
@@ -413,56 +413,62 @@ int serial::peek()
 
 void serial::flush() 
 {
-  strcpy(serialBuffer,".......flushed.......");
+  strcpy(serialBuffer,".......flush.........");
   showSerial();
 }
 
 void serial::print(int x) 
 {
-  if(logging==YES)wLog("serial print",x,-1);
+  passTime();
+  if(logging==YES)wLog("serial:print",x,-1);
   sprintf(stemp,"%d",x);
   strcat(serialBuffer,stemp);
   showSerial();
-  passTime();
 }
 
 void serial::print(int x,int base) 
 {
-  if(logging==YES)wLog("serial print base",x,-1);
+  passTime();
+  if(logging==YES)wLog("serial:print base",x,-1);
   sprintf(stemp,"%d",x);
   strcat(serialBuffer,stemp);
   showSerial();
-  passTime();
 }
 
 void serial::print(const char *p) 
 {
+  passTime();
+  if(logging==YES)wLogChar("serial:print",p,-1);
   sprintf(stemp,"%s",p);
   strcat(serialBuffer,stemp);
   showSerial();
-  passTime();
 }
 
 void serial::println(int x) 
 {
-  //if(logging==YES)wLog("serial:printline",x,-1);
+  passTime();
+  if(logging==YES)wLog("serial:println",x,-1);
   sprintf(stemp,"%d\n",x);
   strcat(serialBuffer,stemp);
   showSerial();
-  passTime();
 }
 
 void serial::println(const char *p) 
 {
+  passTime();
+  if(logging==YES)wLogChar("serial:println",p,-1);
   sprintf(stemp,"%s\n",p);
   strcat(serialBuffer,stemp);
   showSerial();
-  passTime();
 }
 
 void serial::write(char *p) 
 {
    passTime();
+   if(logging==YES)wLogChar("serial:write",p,-1);
+   sprintf(stemp,"%s\n",p);
+   strcat(serialBuffer,stemp);
+   showSerial();
 }
 
 //======================================================
