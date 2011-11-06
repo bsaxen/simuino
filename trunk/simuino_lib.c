@@ -42,44 +42,6 @@ static struct termios orig, nnew;
 static int peek = -1;
 
 
-int kbhit()
-{
-
-  char ch;
-  int nread;
-
-  if(peek != -1) return 1;
-  nnew.c_cc[VMIN]=0;
-  tcsetattr(0, TCSANOW, &nnew);
-  nread = read(0,&ch,1);
-  nnew.c_cc[VMIN]=1;
-  tcsetattr(0, TCSANOW, &nnew);
-
-  if(nread == 1) {
-   peek = ch;
-   return 1;
-  }
-
-  return 0;
-}
-
-int readch()
-{
-
-  char ch;
-  ssize_t x;
-
-  if(peek != -1) {
-    ch = peek;
-    peek = -1;
-    return ch;
-  }
-
-  x=read(0,&ch,1);
-  return ch;
-}
-
-
 void passTime()
 {
   int i;

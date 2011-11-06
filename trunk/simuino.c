@@ -17,12 +17,15 @@
 #define NO     20
 
 // Configuration
-//int pinServer     = NO;
-int interface_id  = 1;
+int stepStep = 0;
+
 
 // Init
 int nloop         = 0;
 int timeFromStart = 0;
+
+
+void stepCommand();
 
 #include "simuino_lib.c"
 #include "arduino_lib.c"
@@ -48,6 +51,10 @@ void runSim(int n)
       for(i=0;i<n-currentLoop;i++)
 	{
 	  nloop++;
+	  wmove(com,1,1);
+	  wprintw(com,"Loop:     %d",nloop);
+	  wrefresh(com); 
+
 	  loop();
 	  Serial.flush();
 	  passTime();  
@@ -55,6 +62,23 @@ void runSim(int n)
     }
   return;
 }    
+
+void stepCommand()
+{
+  int ch;
+
+  wmove(com,1,1);
+  wprintw(com,"Loop:     %d",nloop);
+  wmove(com,2,1);
+  wprintw(com,"Step:     %d",timeFromStart);
+  wrefresh(com);
+  if(stepStep == 1)
+    {
+      ch = getchar();
+      if (ch=='q')stepStep = 0;
+    }
+}
+
 
 //========================================
 int main(int argc, char *argv[])
@@ -126,12 +150,12 @@ int main(int argc, char *argv[])
 
   for(i=0;i<14;i++){wmove(uno,DP+1,digPinPos[i]-2); wprintw(uno,"%3d",i);}
   for(i=0;i<14;i++){wmove(uno,DP,digPinPos[i]); waddch(uno,ACS_BULLET);}
-  wmove(uno,DP+5,RF+6); wprintw(uno,"Application: %s",appName);  
+  wmove(uno,DP+5,RF+6); wprintw(uno,"Sketch: %s",appName);  
   for(i=0;i<6;i++){wmove(uno,AP-1,anaPinPos[i]-1); wprintw(uno,"A%1d",i);}
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
   wmove(uno,0,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.2");
+  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.3");
   wrefresh(uno);
 
   // Serial Window
@@ -157,21 +181,40 @@ int main(int argc, char *argv[])
 
   boardInit();
   setup();
+
   nhist = readExt();
+  wmove(com,0,1);
+  wprintw(com,"Scenario: %d loops",nhist);
+  wrefresh(com); 
+
   while((ch!='q')&&(ch!='Q'))  
     {
-      x = kbhit();
-      if(x) 
-	{
-	  ch = readch();
-	  wmove(com,1,2);
-	  wprintw(com,"%c loop %d (%d)",ch,nloop,nhist);
-	  wrefresh(com);
-	  if (ch=='r') runSim(1);
-	  if (ch=='g') runSim(nhist);
-	}     
-    }
+      ch = getchar();
 
+
+      wmove(com,1,1);
+
+      if (ch=='r')
+	{
+	  wprintw(com,"Loop:     %d",nloop+1);
+	  wrefresh(com); 
+	  runSim(1);
+	}
+      if (ch=='s') 
+	{
+	  //wprintw(com,"%c step %d",ch,timeFromStart);
+	  //wrefresh(com); 
+	  stepStep = 1;
+	  runSim(1); 
+	}
+      if (ch=='g')
+	{
+	  //wprintw(com,"%c scenario %d",nloop+1,nhist);
+	  //wrefresh(com); 
+	  runSim(nhist);   
+	}
+    }
+  
   tcsetattr(0,TCSANOW, &orig);
   delwin(uno);
   endwin();

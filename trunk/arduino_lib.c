@@ -1,13 +1,6 @@
 //================================================
 //  Developed by Benny Saxen, ADCAJO
 //================================================
-//=====================================
-// Structure
-//=====================================
-
-//=====================================
-// Variables
-//=====================================
 
 //------ Constants -------------------------
 #define LOW    0
@@ -59,6 +52,7 @@ void pinMode(int pin,int mode)
 	  if(logging==YES)wLog("pinMode PWM",pin,-1);
 	}
       show(uno);
+      stepCommand();
     }
 }
 
@@ -90,6 +84,8 @@ void digitalWrite(int pin,int value)
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno," ");
       show(uno);
+
+      stepCommand();
     }
   else
     {
@@ -116,6 +112,7 @@ int digitalRead(int pin)
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno," ");
       show(uno);
+      stepCommand();
     }
   else
     {
@@ -165,6 +162,7 @@ int analogRead(int pin)  // Values 0 to 1023
   show(uno);
   if(logging==YES)wLog("analogRead",pin,value);
   passTime();
+  stepCommand();
   return(value); 
 }
 
@@ -193,6 +191,7 @@ void analogWrite(int pin,int value)
     }
   if(logging==YES)wLog("analogWrite",pin,value);
   passTime();
+  stepCommand();
 }
 
 //------ Advanced I/O ----------------------
@@ -247,6 +246,7 @@ void delay(int ms)
 {
   if(logging==YES)wLog("delay",ms,-1);
   msleep(ms);
+  stepCommand();
   passTime();
 }
 
@@ -254,8 +254,8 @@ void delayMicroseconds(int us)
 {
   if(logging==YES)wLog("delayMicroseconds",us,-1);
   msleep(us);
+  stepCommand();
   passTime();
-
 }
 
 //------ Math ------------------------------
