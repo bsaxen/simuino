@@ -51,7 +51,6 @@ void pinMode(int pin,int mode)
 	  if(logging==YES)wLog("pinMode PWM",pin,-1);
 	}
       show(uno);
-      //stepCommand();
     }
 }
 
@@ -78,19 +77,19 @@ void digitalWrite(int pin,int value)
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno,"w");
       show(uno);
+      stepCommand(1);
       wmove(uno,DP,digPinPos[pin]);
       wprintw(uno,"%1d",value);
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno," ");
       show(uno);
-
-      stepCommand();
     }
   else
     {
       wmove(uno,ER,RF);
       wprintw(uno,"Error: Wrong pin=%d mode. Should be OUTPUT\n",pin);
       show(uno);
+      stepCommand(2);
     }
 }
 
@@ -106,20 +105,21 @@ int digitalRead(int pin)
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno,"r");
       show(uno);
+      if(logging==YES)wLog("digitalRead",pin,value);
+      stepCommand(3);
       wmove(uno,DP,digPinPos[pin]);
       wprintw(uno,"%1d",value);
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno," ");
       show(uno);
-      stepCommand();
     }
   else
     {
       move(ER,RF);
       printw("Error: Wrong pin=%d mode. Should be INPUT\n",pin);
       show(uno);
+      stepCommand(4);
     }
-  if(logging==YES)wLog("digitalRead",pin,value);
   return(value);
 }
 
@@ -151,6 +151,8 @@ int analogRead(int pin)  // Values 0 to 1023
   wmove(uno,AP-2,anaPinPos[pin]);
   wprintw(uno,"r");
   show(uno);
+  if(logging==YES)wLog("analogRead",pin,value);
+  stepCommand(5);
   wmove(uno,AP-2,anaPinPos[pin]);
   wprintw(uno," ");
 
@@ -160,9 +162,6 @@ int analogRead(int pin)  // Values 0 to 1023
   wprintw(uno,"In");
 
   show(uno);
-  if(logging==YES)wLog("analogRead",pin,value);
-
-  stepCommand();
   return(value); 
 }
 
@@ -180,6 +179,8 @@ void analogWrite(int pin,int value)
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno,"a");
       show(uno);
+      if(logging==YES)wLog("analogWrite",pin,value);
+      stepCommand(6);
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno," ");
       show(uno);
@@ -189,9 +190,8 @@ void analogWrite(int pin,int value)
       move(ER,RF);
       printw("Error: Pin=%d not PWM\n",pin);
       show(uno);
+      stepCommand(7);
     }
-  if(logging==YES)wLog("analogWrite",pin,value);
-  stepCommand();
 }
 
 //------ Advanced I/O ----------------------
@@ -247,7 +247,7 @@ void delay(int ms)
   passTime(); 
   if(logging==YES)wLog("delay",ms,-1);
   msleep(ms);
-  stepCommand();
+  stepCommand(8);
 }
 
 void delayMicroseconds(int us)
@@ -255,7 +255,7 @@ void delayMicroseconds(int us)
   passTime();
   if(logging==YES)wLog("delayMicroseconds",us,-1);
   msleep(us);
-  stepCommand();
+  stepCommand(9);
 }
 
 //------ Math ------------------------------
@@ -413,7 +413,7 @@ int serial::peek()
 
 void serial::flush() 
 {
-  strcpy(serialBuffer,".......flush.........");
+  strcpy(serialBuffer,"flush");
   showSerial();
 }
 

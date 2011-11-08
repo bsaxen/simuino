@@ -25,7 +25,7 @@ int nloop         = 0;
 int timeFromStart = 0;
 
 
-void stepCommand();
+void stepCommand(int x);
 
 #include "simuino_lib.c"
 #include "arduino_lib.c"
@@ -42,8 +42,9 @@ void runSim(int n)
   if(n == 1)
     {
       nloop++;
+    //  wLogChar("--- Loop: "," ",nloop);
       loop();
-      Serial.flush();
+      //Serial.flush();
     }
   else if(n > 1)
     {
@@ -55,13 +56,13 @@ void runSim(int n)
 	  wrefresh(com); 
 
 	  loop();
-	  Serial.flush();
+	//  Serial.flush();
 	}
     }
   return;
 }    
 
-void stepCommand()
+void stepCommand(int x)
 {
   int ch;
 
@@ -74,6 +75,7 @@ void stepCommand()
     {
       ch = getchar();
       if (ch=='q')stepStep = 0;
+     // Serial.println(x);
     }
 }
 
@@ -153,12 +155,15 @@ int main(int argc, char *argv[])
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
   wmove(uno,0,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.4");
+  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.5");
   wrefresh(uno);
 
   // Serial Window
-  ser=newwin(5,70,AP+5,0);
-  wbkgd(ser,COLOR_PAIR(5));
+  //ser=newwin(5,70,AP+5,0);
+  //wbkgd(ser,COLOR_PAIR(5));
+  ser=newwin(row,20,0,72);
+  wbkgd(ser,COLOR_PAIR(4));
+
   wmove(ser,0,0); 
   wprintw(ser,"[Serial Interface]");
   wrefresh(ser);
@@ -170,8 +175,11 @@ int main(int argc, char *argv[])
   wrefresh(slog);
 
   // Command Window
-  com=newwin(AP+10,20,0,72);
-  wbkgd(com,COLOR_PAIR(4));
+  //com=newwin(AP+10,20,0,72);
+  //wbkgd(com,COLOR_PAIR(4));
+  com=newwin(5,70,AP+5,0);
+  wbkgd(com,COLOR_PAIR(5));
+
   wmove(com,0,0);
 
   wrefresh(com);
@@ -187,28 +195,24 @@ int main(int argc, char *argv[])
 
   while((ch!='q')&&(ch!='Q'))  
     {
+      wLog("--- Loop: ",nloop+1,-2);
+      //wprintw(com,"Loop:     %d",nloop+1);
       ch = getchar();
-
 
       wmove(com,1,1);
 
       if (ch=='r')
 	{
-	  wprintw(com,"Loop:     %d",nloop+1);
 	  wrefresh(com); 
 	  runSim(1);
 	}
       if (ch=='s') 
 	{
-	  //wprintw(com,"%c step %d",ch,timeFromStart);
-	  //wrefresh(com); 
 	  stepStep = 1;
 	  runSim(1); 
 	}
       if (ch=='g')
 	{
-	  //wprintw(com,"%c scenario %d",nloop+1,nhist);
-	  //wrefresh(com); 
 	  runSim(nhist);   
 	}
     }

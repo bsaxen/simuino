@@ -53,8 +53,13 @@ void wLog(const char *p, int value1, int value2)
   int i;
   char temp[100],temp2[100];
 
-  sprintf(temp," %d,%d ",nloop,timeFromStart);
+ sprintf(temp," "); 
+ if(value2 > -2)
+  {
+   sprintf(temp," %d,%d ",nloop,timeFromStart);
+  }
   strcat(temp,p);
+ 
 
   if(value1 > -1)
     {
@@ -85,8 +90,13 @@ void wLogChar(const char *p, const char *value1, int value2)
   int i;
   char temp[100],temp2[100];
 
-  sprintf(temp," %d,%d ",nloop,timeFromStart);
+  sprintf(temp," ");
+  if(value2 > -2)
+  {
+   sprintf(temp," %d,%d ",nloop,timeFromStart);
+  }  
   strcat(temp,p);
+  
 
   if(value1)
     {
@@ -111,6 +121,7 @@ void wLogChar(const char *p, const char *value1, int value2)
     } 
   wrefresh(slog);
 }
+
 
 int __nsleep(const struct timespec *req, struct timespec *rem)  
 {  
