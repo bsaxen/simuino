@@ -83,6 +83,7 @@ int set_shunt_position(int from, int to)
   if(from > 90 || from < 0) return(99);
 
   //if(from == to) return(to);
+
   if(from > to)
   {
      delta = from-to;

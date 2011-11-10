@@ -14,10 +14,21 @@
 #define DEC    4
 #define HEX    5
 
-
 #define CHANGE  2
 #define RISING  3
 #define FALLING 4
+
+
+// Math function min and max
+#ifndef max
+	#define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
+#endif
+
+#ifndef min
+	#define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
+#endif
+  
+char  stemp[80];
 
 //=====================================
 // Functions
@@ -77,7 +88,7 @@ void digitalWrite(int pin,int value)
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno,"w");
       show(uno);
-      stepCommand(1);
+      stepCommand();
       wmove(uno,DP,digPinPos[pin]);
       wprintw(uno,"%1d",value);
       wmove(uno,DP+2,digPinPos[pin]);
@@ -89,7 +100,7 @@ void digitalWrite(int pin,int value)
       wmove(uno,ER,RF);
       wprintw(uno,"Error: Wrong pin=%d mode. Should be OUTPUT\n",pin);
       show(uno);
-      stepCommand(2);
+      stepCommand();
     }
 }
 
@@ -106,7 +117,7 @@ int digitalRead(int pin)
       wprintw(uno,"r");
       show(uno);
       if(logging==YES)wLog("digitalRead",pin,value);
-      stepCommand(3);
+      stepCommand();
       wmove(uno,DP,digPinPos[pin]);
       wprintw(uno,"%1d",value);
       wmove(uno,DP+2,digPinPos[pin]);
@@ -118,7 +129,7 @@ int digitalRead(int pin)
       move(ER,RF);
       printw("Error: Wrong pin=%d mode. Should be INPUT\n",pin);
       show(uno);
-      stepCommand(4);
+      stepCommand();
     }
   return(value);
 }
@@ -152,7 +163,7 @@ int analogRead(int pin)  // Values 0 to 1023
   wprintw(uno,"r");
   show(uno);
   if(logging==YES)wLog("analogRead",pin,value);
-  stepCommand(5);
+  stepCommand();
   wmove(uno,AP-2,anaPinPos[pin]);
   wprintw(uno," ");
 
@@ -180,7 +191,7 @@ void analogWrite(int pin,int value)
       wprintw(uno,"a");
       show(uno);
       if(logging==YES)wLog("analogWrite",pin,value);
-      stepCommand(6);
+      stepCommand();
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno," ");
       show(uno);
@@ -190,7 +201,7 @@ void analogWrite(int pin,int value)
       move(ER,RF);
       printw("Error: Pin=%d not PWM\n",pin);
       show(uno);
-      stepCommand(7);
+      stepCommand();
     }
 }
 
@@ -247,7 +258,7 @@ void delay(int ms)
   passTime(); 
   if(logging==YES)wLog("delay",ms,-1);
   msleep(ms);
-  stepCommand(8);
+  stepCommand();
 }
 
 void delayMicroseconds(int us)
@@ -255,10 +266,26 @@ void delayMicroseconds(int us)
   passTime();
   if(logging==YES)wLog("delayMicroseconds",us,-1);
   msleep(us);
-  stepCommand(9);
+  stepCommand();
 }
 
 //------ Math ------------------------------
+void test_math()
+{
+  double r,x,z;
+  int y;
+  y = min(1,2);
+  y = max(1,2);
+  y = abs(1);
+  r = pow(x,z);
+  r = sqrt(y);
+}
+
+
+double sq(double x)
+{
+  return(sqrt(x));
+}
 
 int map(int x, int fromLow, int fromHigh, int toLow, int toHigh)
 {
@@ -278,7 +305,7 @@ int constrain(int x, int a, int b)
 }
 
 //------ Trigonometry ----------------------
-void test1()
+void test_trigonometry()
 {
   double x;
   x = sin(1);
@@ -288,17 +315,25 @@ void test1()
 //------ Random Numbers --------------------
 void randomSeed(int seed)
 {
-  unimplemented("randomSeed()");
+  srand(seed);
 }
 
-void random(int max)
+long random(long upperLimit)
 {
-  unimplemented("random(1)");
+  long x = RAND_MAX/upperLimit;
+  x = long(rand()/x);
+  return(x);
 }
 
-void random(int min, int max)
+long random(long lowerLimit, long upperLimit)
 {
-  unimplemented("random(2)");
+  long interval, temp=0;
+  if (lowerLimit<upperLimit) 
+    { 
+      interval = upperLimit - lowerLimit;
+      temp = lowerLimit + random(interval);
+    }
+  return(temp);
 }
 
 
@@ -413,8 +448,8 @@ int serial::peek()
 
 void serial::flush() 
 {
-  strcpy(serialBuffer,"flush");
-  showSerial();
+  //strcpy(serialBuffer,"flush");
+  showSerial("flush",1);
 }
 
 void serial::print(int x) 
@@ -422,8 +457,8 @@ void serial::print(int x)
   passTime();
   if(logging==YES)wLog("serial:print",x,-1);
   sprintf(stemp,"%d",x);
-  strcat(serialBuffer,stemp);
-  showSerial();
+  //strcat(serialBuffer,stemp);
+  showSerial(stemp,0);
 }
 
 void serial::print(int x,int base) 
@@ -431,8 +466,8 @@ void serial::print(int x,int base)
   passTime();
   if(logging==YES)wLog("serial:print base",x,-1);
   sprintf(stemp,"%d",x);
-  strcat(serialBuffer,stemp);
-  showSerial();
+  //strcat(serialBuffer,stemp);
+  showSerial(stemp,0);
 }
 
 void serial::print(const char *p) 
@@ -440,35 +475,35 @@ void serial::print(const char *p)
   passTime();
   if(logging==YES)wLogChar("serial:print",p,-1);
   sprintf(stemp,"%s",p);
-  strcat(serialBuffer,stemp);
-  showSerial();
+  //strcat(serialBuffer,stemp);
+  showSerial(stemp,0);
 }
 
 void serial::println(int x) 
 {
   passTime();
   if(logging==YES)wLog("serial:println",x,-1);
-  sprintf(stemp,"%d\n",x);
-  strcat(serialBuffer,stemp);
-  showSerial();
+  sprintf(stemp,"%d",x);
+  //strcat(serialBuffer,stemp);
+  showSerial(stemp,1);
 }
 
 void serial::println(const char *p) 
 {
   passTime();
   if(logging==YES)wLogChar("serial:println",p,-1);
-  sprintf(stemp,"%s\n",p);
-  strcat(serialBuffer,stemp);
-  showSerial();
+  sprintf(stemp,"%s",p);
+  //strcat(serialBuffer,stemp);
+  showSerial(stemp,1);
 }
 
 void serial::write(char *p) 
 {
    passTime();
    if(logging==YES)wLogChar("serial:write",p,-1);
-   sprintf(stemp,"%s\n",p);
-   strcat(serialBuffer,stemp);
-   showSerial();
+   sprintf(stemp,"%s",p);
+   //strcat(serialBuffer,stemp);
+   showSerial(stemp,1);
 }
 
 //======================================================

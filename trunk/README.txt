@@ -2,7 +2,7 @@
 SIMUINO is a Arduino Simulator. Simple and basic. 
 Code: c/c++
 Platform: Linux (Ubuntu)0
-Version: 0.5
+Version: 0.6
 
 Developed by Benny Saxen, ADCAJO
 ==================================================
@@ -29,11 +29,12 @@ Quick starter guide:
 
 Test your own sketch in simuino:
 
-1. Copy your sketch (source c-file) to directory/file "simuino/sketch/sketch.pde"
+1. Copy your sketch (pde-file) to directory/file "simuino/sketch/sketch.pde"
 
 2. Compile "g++ -O2 -o simuino simuino.c -lncurses"
 
 3. Run: ./simuino    
+
    If your sketch code contains a row:  // simuino: <your_application_name>
    the name of your application is displayed in the middle of the board.
 
@@ -129,6 +130,70 @@ The SIMUNIO displayes 4 windows:
 
      Display the command entered.
 
+--------------------------------------------------
+5. Supported Language Functions
+--------------------------------------------------
+Not supported functions are implemented with a dummy, in order to compile without errors.
+
+Digital I/O
+	pinMode()		Yes
+	digitalWrite()		Yes
+	digitalRead()		Yes
+Analog I/O
+	analogReference()	No
+	analogRead()		Yes
+	analogWrite() - PWM	Yes
+Advanced I/O
+	tone()			No
+	noTone()		No
+	shiftOut()		No
+	shiftIn()		No
+	pulseIn()		No
+Time
+	millis()		No
+	micros()		No
+	delay()			Yes
+	delayMicroseconds()	Yes
+Math
+	min()			Yes
+	max()			Yes
+	abs()			Yes
+	constrain()		Yes
+	map()			Yes
+	pow()			Yes
+	sqrt()			Yes
+Trigonometry
+	sin()			Yes
+	cos()			Yes
+	tan()			Yes
+	Random Numbers		
+	       randomSeed()	Yes
+	       random()		Yes
+Bits and Bytes
+	lowByte()		No
+	highByte()		No
+	bitRead()		No
+	bitWrite()		No
+	bitSet()		No
+	bitClear()		No
+	bit()			No
+External Interrupts
+	attachInterrupt()	No
+	detachInterrupt()	No
+Interrupts
+	interrupts()		No	
+	noInterrupts()		No
+Communication
+	Serial			
+		begin()		Yes
+		end()		Yes
+		available()	No
+		read()		No
+		peek()		No
+		flush()		Yes
+		print()		Yes
+		println()	Yes
+		write()		Yes
 --------------------------------------------------
 End of README
 --------------------------------------------------

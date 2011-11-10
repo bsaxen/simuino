@@ -31,9 +31,11 @@ int   baud = 0;
 int   logging = YES;
 char  logBuffer[100][100];
 int   logSize = 1;
+int   serialSize = 1;
 int   g[14][900];
 int   serialMode = OFF;
-char  serialBuffer[240],stemp[80];
+char  serialBuffer[100][100];
+int   rememberNewLine;
 
 int conn;
 
@@ -90,7 +92,8 @@ void wLogChar(const char *p, const char *value1, int value2)
   int i;
   char temp[100],temp2[100];
 
-  sprintf(temp," ");
+  //sprintf(temp," ");
+  strcpy(temp," ");
   if(value2 > -2)
   {
    sprintf(temp," %d,%d ",nloop,timeFromStart);
@@ -157,11 +160,26 @@ void show(WINDOW *win)
   iDelay(TEMPO);
 }
 
-void showSerial()
+void showSerial(const char *m, int newLine)
 {
-  wmove(ser,1,0);
-  wprintw(ser,"%s",serialBuffer);
+  int i;
+
+  if(rememberNewLine == 1)
+    {
+      for(i=1;i<serialSize;i++)strcpy(serialBuffer[i],serialBuffer[i+1]);
+      strcpy(serialBuffer[serialSize],m);
+    }
+  else
+    strcat(serialBuffer[serialSize],m);
+
+  wclear(ser);
+  for(i=1;i<=serialSize;i++)
+    {
+      wmove(ser,i-1,0);
+      wprintw(ser,"%s",serialBuffer[i]);
+    } 
   wrefresh(ser);
+  rememberNewLine = newLine;
 }
 
 void getAppName(char *app)
@@ -212,10 +230,9 @@ void boardInit()
 
 void unimplemented(const char *f)
 {
-  wmove(ser,0,0);
-  wprintw(ser,"unimplemented: %s\n",f);
-  wrefresh(ser); 
-  iDelay(100);
+  char temp[200];
+  sprintf(temp,"unimplemented: %s\n",f);
+  showSerial(temp,1);
 }
 
 int readExt()

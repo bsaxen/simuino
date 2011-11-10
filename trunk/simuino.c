@@ -25,7 +25,7 @@ int nloop         = 0;
 int timeFromStart = 0;
 
 
-void stepCommand(int x);
+void stepCommand();
 
 #include "simuino_lib.c"
 #include "arduino_lib.c"
@@ -62,7 +62,7 @@ void runSim(int n)
   return;
 }    
 
-void stepCommand(int x)
+void stepCommand()
 {
   int ch;
 
@@ -75,7 +75,6 @@ void stepCommand(int x)
     {
       ch = getchar();
       if (ch=='q')stepStep = 0;
-     // Serial.println(x);
     }
 }
 
@@ -88,6 +87,8 @@ int main(int argc, char *argv[])
   int nhist;
 
   getAppName(appName);
+
+  //setStartTime();
 
   initscr();
   clear();
@@ -111,6 +112,7 @@ int main(int argc, char *argv[])
   init_pair(3,COLOR_BLUE,COLOR_WHITE); 
   init_pair(4,COLOR_RED,COLOR_WHITE); 
   init_pair(5,COLOR_MAGENTA,COLOR_WHITE); 
+  init_pair(6,COLOR_WHITE,COLOR_BLACK); 
   
 /*     COLOR_BLACK   0 */
 /*     COLOR_RED     1 */
@@ -122,8 +124,8 @@ int main(int argc, char *argv[])
 /*     COLOR_WHITE   7 */
 
 // Board Window    
-  uno=newwin(AP+4,70,0,0);
-  wbkgd(uno,COLOR_PAIR(3));
+  uno=newwin(AP+3,61,0,0);
+  wbkgd(uno,COLOR_PAIR(6));
 
   wmove(uno,DP-1,RF);waddch(uno,ACS_ULCORNER); 
   wmove(uno,DP-1,RF+60);waddch(uno,ACS_URCORNER); 
@@ -155,33 +157,28 @@ int main(int argc, char *argv[])
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
   wmove(uno,0,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.5");
+  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.6");
   wrefresh(uno);
 
   // Serial Window
-  //ser=newwin(5,70,AP+5,0);
-  //wbkgd(ser,COLOR_PAIR(5));
-  ser=newwin(row,20,0,72);
-  wbkgd(ser,COLOR_PAIR(4));
-
+  serialSize = row;
+  ser=newwin(row,col,0,61+30+2);
+  wbkgd(ser,COLOR_PAIR(3));
   wmove(ser,0,0); 
   wprintw(ser,"[Serial Interface]");
   wrefresh(ser);
 
   // Log Window
   logSize = row;
-  slog=newwin(row,29,0,col-30);
+  slog=newwin(row,30,0,62);
   wbkgd(slog,COLOR_PAIR(4));
+  wmove(slog,0,0); 
+  wprintw(slog,"[Log]");
   wrefresh(slog);
 
   // Command Window
-  //com=newwin(AP+10,20,0,72);
-  //wbkgd(com,COLOR_PAIR(4));
-  com=newwin(5,70,AP+5,0);
+  com=newwin(5,61,AP+4,0);
   wbkgd(com,COLOR_PAIR(5));
-
-  wmove(com,0,0);
-
   wrefresh(com);
 
 
@@ -189,7 +186,7 @@ int main(int argc, char *argv[])
   setup();
 
   nhist = readExt();
-  wmove(com,0,1);
+  wmove(com,0,0);
   wprintw(com,"Scenario: %d loops",nhist);
   wrefresh(com); 
 
