@@ -42,21 +42,14 @@ void runSim(int n)
   if(n == 1)
     {
       nloop++;
-    //  wLogChar("--- Loop: "," ",nloop);
       loop();
-      //Serial.flush();
     }
   else if(n > 1)
     {
       for(i=0;i<n-currentLoop;i++)
 	{
 	  nloop++;
-	  wmove(com,1,1);
-	  wprintw(com,"Loop:     %d",nloop);
-	  wrefresh(com); 
-
 	  loop();
-	//  Serial.flush();
 	}
     }
   return;
@@ -66,11 +59,6 @@ void stepCommand()
 {
   int ch;
 
-  wmove(com,1,1);
-  wprintw(com,"Loop:     %d",nloop);
-  wmove(com,2,1);
-  wprintw(com,"Step:     %d",timeFromStart);
-  wrefresh(com);
   if(stepStep == 1)
     {
       ch = getchar();
@@ -85,6 +73,9 @@ int main(int argc, char *argv[])
   int i,x;
   int ch;
   int nhist;
+
+
+
 
   getAppName(appName);
 
@@ -157,32 +148,32 @@ int main(int argc, char *argv[])
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
   wmove(uno,0,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.6");
+  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.7");
   wrefresh(uno);
 
   // Serial Window
   serialSize = row;
   ser=newwin(row,col,0,61+30+2);
   wbkgd(ser,COLOR_PAIR(3));
-  wmove(ser,0,0); 
-  wprintw(ser,"[Serial Interface]");
   wrefresh(ser);
 
   // Log Window
   logSize = row;
   slog=newwin(row,30,0,62);
   wbkgd(slog,COLOR_PAIR(4));
-  wmove(slog,0,0); 
-  wprintw(slog,"[Log]");
   wrefresh(slog);
 
-  // Command Window
+  // Message Window
   com=newwin(5,61,AP+4,0);
   wbkgd(com,COLOR_PAIR(5));
   wrefresh(com);
 
 
   boardInit();
+  readSketchInfo();
+  readConfig();
+  showConfig();
+
   setup();
 
   nhist = readExt();
@@ -193,9 +184,7 @@ int main(int argc, char *argv[])
   while((ch!='q')&&(ch!='Q'))  
     {
       wLog("--- Loop: ",nloop+1,-2);
-      //wprintw(com,"Loop:     %d",nloop+1);
       ch = getchar();
-
       wmove(com,1,1);
 
       if (ch=='r')

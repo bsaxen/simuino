@@ -1,8 +1,8 @@
 ==================================================
 SIMUINO is a Arduino Simulator. Simple and basic. 
 Code: c/c++
-Platform: Linux (Ubuntu)0
-Version: 0.6
+Platform: Linux (Ubuntu)
+Version: 0.7
 
 Developed by Benny Saxen, ADCAJO
 ==================================================
@@ -35,8 +35,6 @@ Test your own sketch in simuino:
 
 3. Run: ./simuino    
 
-   If your sketch code contains a row:  // simuino: <your_application_name>
-   the name of your application is displayed in the middle of the board.
 
 
 --------------------------------------------------
@@ -108,7 +106,7 @@ The SIMUNIO displayes 4 windows:
  - The Arduino board with the pin-layout
  - Serial Interface
  - Logs
- - Commands
+ - Messages
 
 4.1  Arduino board Window
      
@@ -125,10 +123,11 @@ The SIMUNIO displayes 4 windows:
 
      Most functions in the Arduino reference library will be displayed.
      Every line has two index: loop number, pseudo-time-elapsed.
+     The log-text can be customized to be more readable for the specific appliaction, se 6 below.
 
-4.4  Command
+4.4  Message
 
-     Display the command entered.
+     Shows any error messages and length (no of loops) of scenario.
 
 --------------------------------------------------
 5. Supported Language Functions
@@ -194,6 +193,36 @@ Communication
 		print()		Yes
 		println()	Yes
 		write()		Yes
+--------------------------------------------------
+6. Sketch information
+--------------------------------------------------
+
+If your sketch code contains a row:  // simuino: <your_application_name>
+the name of your application is displayed in the middle of the board.
+
+Customized logging:
+
+Add the following rows in your sketch with suitable log-text according to your specific sketch.
+
+Example:
+
+// PINMODE_OUT        2  "your log text for pin 2"
+// PINMODE_IN         4  "your log text for pin 4"
+// DIGITALWRITE_LOW  11  "your log text for pin 11 when HIGH"
+// DIGITALWRITE_HIGH 11  "your log text for pin 11 when LOW"
+// ANALOGREAD         1  "your log text for pin 1"
+// DIGITALREAD       10  "your log text for pin 10"
+// ANALOGWRITE       14  "your log text for pin 14"
+
+--------------------------------------------------
+7. Configuration
+--------------------------------------------------
+
+The following parameters are configured in the file, config.txt :
+
+LOG_LEVEL  1		 // Level of information to be displayed during simulation (0,1,2,3)
+DELAY    100		 // Delay in ms between each instruction
+
 --------------------------------------------------
 End of README
 --------------------------------------------------

@@ -4,7 +4,7 @@
 
 //------ Constants -------------------------
 #define LOW    0
-#define HIGH   5
+#define HIGH   1
 #define INPUT  1
 #define OUTPUT 2
 
@@ -39,51 +39,82 @@ char  stemp[80];
 
 void pinMode(int pin,int mode)
 {
-
-  if(mode == INPUT || mode == OUTPUT || mode == PWM)
+  char temp[80];
+  
+  if(mode == INPUT || mode == OUTPUT)
     {
       digitalMode[pin] = mode;
       wmove(uno,DP-1,digPinPos[pin]);
       waddch(uno,ACS_VLINE);
       wmove(uno,DP-2,digPinPos[pin]-1);
+
       if(mode==INPUT)
 	{
+	  strcpy(temp,textPinModeIn[pin]);
 	  wprintw(uno,"In");
-	  if(logging==YES)wLog("pinMode IN",pin,-1);
+	  if(confLogLev > 1)
+	    {
+	      if(strstr(temp,"void"))
+		wLog("pinMode IN",pin,-1);
+	      else
+		wLog(temp,pin,-1);
+	    }
 	}
+
       if(mode==OUTPUT)
 	{
+	  strcpy(temp,textPinModeOut[pin]);
 	  wprintw(uno,"Out");
-	  if(logging==YES)wLog("pinMode OUT",pin,-1);
+	  if(confLogLev > 1)
+	    {
+	      if(strstr(temp,"void"))
+		wLog("pinMode OUT",pin,-1);
+	      else
+		wLog(temp,pin,-1);
+	    }
 	}
-      if(mode==PWM)
-	{
-	  wprintw(uno,"PWM");
-	  if(logging==YES)wLog("pinMode PWM",pin,-1);
-	}
+
       show(uno);
+    }
+  else
+    {
+      showError("Unknown Pin Mode",mode);
+      wLog("pinMode ",pin,-1);
     }
 }
 
 void digitalWrite(int pin,int value)
 {
-
+  char temp[80];
   passTime();
   if(digitalMode[pin] == OUTPUT)
     {
-
       digitalPin[nloop][pin] = value;
 
       wmove(uno,DP,digPinPos[pin]);
       if(value==HIGH)
 	{
+	  strcpy(temp,textDigitalWriteHigh[pin]);
 	  waddch(uno,ACS_DIAMOND);
-	  if(logging==YES)wLog("digitalWrite HIGH",pin,-1);
+	  if(confLogLev > 0)
+	    { 
+	      if(strstr(temp,"void"))
+		wLog("digitalWrite HIGH",pin,-1);
+	      else
+		wLog(temp,pin,-1);
+	    }
 	}
       if(value==LOW)
 	{
+	  strcpy(temp,textDigitalWriteLow[pin]);
 	  waddch(uno,ACS_BULLET);
-	  if(logging==YES)wLog("digitalWrite LOW",pin,-1);
+	  if(confLogLev > 0)
+	    {
+	      if(strstr(temp,"void"))
+		wLog("digitalWrite LOW",pin,-1);
+	      else
+		wLog(temp,pin,-1);
+	    }
 	}
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno,"w");
@@ -97,9 +128,8 @@ void digitalWrite(int pin,int value)
     }
   else
     {
-      wmove(uno,ER,RF);
-      wprintw(uno,"Error: Wrong pin=%d mode. Should be OUTPUT\n",pin);
-      show(uno);
+      showError("Wrong pin mode. Should be OUTPUT",pin);
+      wLog("digitalWrite",pin,-1);
       stepCommand();
     }
 }
@@ -107,6 +137,7 @@ void digitalWrite(int pin,int value)
 int digitalRead(int pin)
 {
   int value=0;
+  char temp[80];
 
   passTime();
   if(digitalMode[pin] == INPUT)
@@ -116,7 +147,16 @@ int digitalRead(int pin)
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno,"r");
       show(uno);
-      if(logging==YES)wLog("digitalRead",pin,value);
+
+      strcpy(temp,textDigitalRead[pin]);
+      if(confLogLev > 0)
+	{
+	  if(strstr(temp,"void"))
+	    wLog("digitalRead",pin,value);
+	  else
+	    wLog(temp,pin,value);
+	}
+
       stepCommand();
       wmove(uno,DP,digPinPos[pin]);
       wprintw(uno,"%1d",value);
@@ -126,9 +166,8 @@ int digitalRead(int pin)
     }
   else
     {
-      move(ER,RF);
-      printw("Error: Wrong pin=%d mode. Should be INPUT\n",pin);
-      show(uno);
+      showError("Wrong pin mode. Should be INPUT",pin);
+      wLog("digitalRead",pin,value);
       stepCommand();
     }
   return(value);
@@ -146,15 +185,16 @@ int analogRead(int pin)  // Values 0 to 1023
 {
 
   int value;
+  char temp[80];
 
   passTime();
   value = analogPin[nloop][pin];
 
   if(value > 1023 || value < 0)
     {
-      move(ER,RF);
-      printw("Error: Analog pin=%d value out of range =%d\n",pin,value);
-      show(uno);
+      sprintf(temp,"%d Analog pin=%d value out of range = %d",timeFromStart,pin,value);
+      showError(temp,-1);
+      value = 0;
     }
   
   wmove(uno,AP,anaPinPos[pin]-3);
@@ -162,7 +202,16 @@ int analogRead(int pin)  // Values 0 to 1023
   wmove(uno,AP-2,anaPinPos[pin]);
   wprintw(uno,"r");
   show(uno);
-  if(logging==YES)wLog("analogRead",pin,value);
+
+  strcpy(temp,textAnalogRead[pin]);
+  if(confLogLev > 0)
+    {
+      if(strstr(temp,"void"))
+	wLog("analogRead",pin,value);
+      else
+	wLog(temp,pin,value);
+    }
+
   stepCommand();
   wmove(uno,AP-2,anaPinPos[pin]);
   wprintw(uno," ");
@@ -179,10 +228,28 @@ int analogRead(int pin)  // Values 0 to 1023
 void analogWrite(int pin,int value) 
 // Values 0 to 255   PWM: only pin 3,5,6,9,10,11
 {
+  char temp[80];
+
   passTime();
+
+  if(digitalMode[pin] != OUTPUT)
+    {
+      showError("Pin is not in OUPUT mode: ",pin);
+      wLog("analogWrite",pin,value);
+      stepCommand();
+      return;
+    }
+
   if(pin==3 || pin==5 || pin==6 || pin==9 || pin==10 || pin==11)
     {
 
+      if(value > 256 || value < 0)
+	{
+	  sprintf(temp,"%d AnalogWrite pin=%d value out of range = %d",timeFromStart,pin,value);
+	  showError(temp,-1);
+	  value = 0;
+	}
+      
       digitalPin[nloop][pin] = value;
 
       wmove(uno,DP,digPinPos[pin]-2);
@@ -190,7 +257,15 @@ void analogWrite(int pin,int value)
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno,"a");
       show(uno);
-      if(logging==YES)wLog("analogWrite",pin,value);
+
+      strcpy(temp,textAnalogWrite[pin]);
+      if(confLogLev > 0)
+	{
+	  if(strstr(temp,"void"))
+	    wLog("analogWrite",pin,value);
+	  else
+	    wLog(temp,pin,value);
+	}
       stepCommand();
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno," ");
@@ -198,11 +273,11 @@ void analogWrite(int pin,int value)
     }
   else
     {
-      move(ER,RF);
-      printw("Error: Pin=%d not PWM\n",pin);
-      show(uno);
+      showError("Pin is not of PWM type",pin);
+      wLog("analogWrite",pin,value);
       stepCommand();
     }
+  return;
 }
 
 //------ Advanced I/O ----------------------
@@ -229,16 +304,12 @@ void shiftOut(int dataPin, int clockPin, int bitOrder, int value)
 
 unsigned long pulseIn(int pin, int value)
 {
-  int res=0;
-  res = pin*1000;
-  return(res);
+  unimplemented("pulseIn()");
 }
 
 unsigned long pulseIn(int pin, int value, unsigned long timeout)
 {
-  int res=0;
-  res = pin*1000;
-  return(res);
+  unimplemented("pulseIn()");
 }
 
 //------ Time ------------------------------
@@ -256,7 +327,7 @@ unsigned long micros()
 void delay(int ms)
 {
   passTime(); 
-  if(logging==YES)wLog("delay",ms,-1);
+  if(confLogLev > 1)wLog("delay",ms,-1);
   msleep(ms);
   stepCommand();
 }
@@ -264,7 +335,7 @@ void delay(int ms)
 void delayMicroseconds(int us)
 {
   passTime();
-  if(logging==YES)wLog("delayMicroseconds",us,-1);
+  if(confLogLev > 1)wLog("delayMicroseconds",us,-1);
   msleep(us);
   stepCommand();
 }
@@ -448,61 +519,54 @@ int serial::peek()
 
 void serial::flush() 
 {
-  //strcpy(serialBuffer,"flush");
   showSerial("flush",1);
 }
 
 void serial::print(int x) 
 {
   passTime();
-  if(logging==YES)wLog("serial:print",x,-1);
+  if(confLogLev > 2)wLog("serial:print",x,-1);
   sprintf(stemp,"%d",x);
-  //strcat(serialBuffer,stemp);
   showSerial(stemp,0);
 }
 
 void serial::print(int x,int base) 
 {
   passTime();
-  if(logging==YES)wLog("serial:print base",x,-1);
+  if(confLogLev > 2)wLog("serial:print base",x,-1);
   sprintf(stemp,"%d",x);
-  //strcat(serialBuffer,stemp);
   showSerial(stemp,0);
 }
 
 void serial::print(const char *p) 
 {
   passTime();
-  if(logging==YES)wLogChar("serial:print",p,-1);
+  if(confLogLev > 2)wLogChar("serial:print",p,-1);
   sprintf(stemp,"%s",p);
-  //strcat(serialBuffer,stemp);
   showSerial(stemp,0);
 }
 
 void serial::println(int x) 
 {
   passTime();
-  if(logging==YES)wLog("serial:println",x,-1);
+  if(confLogLev > 2)wLog("serial:println",x,-1);
   sprintf(stemp,"%d",x);
-  //strcat(serialBuffer,stemp);
   showSerial(stemp,1);
 }
 
 void serial::println(const char *p) 
 {
   passTime();
-  if(logging==YES)wLogChar("serial:println",p,-1);
+  if(confLogLev > 2)wLogChar("serial:println",p,-1);
   sprintf(stemp,"%s",p);
-  //strcat(serialBuffer,stemp);
   showSerial(stemp,1);
 }
 
 void serial::write(char *p) 
 {
    passTime();
-   if(logging==YES)wLogChar("serial:write",p,-1);
+   if(confLogLev > 2)wLogChar("serial:write",p,-1);
    sprintf(stemp,"%s",p);
-   //strcat(serialBuffer,stemp);
    showSerial(stemp,1);
 }
 
@@ -517,15 +581,15 @@ void serial::write(char *p)
 
 /* void Ethernet::begin(char *mac,char *ip)  */
 /* { */
-/*   if(logging==YES)wLog("Ethernet.begin",-1,-1); */
+/*   if(confLogLev > 0)wLog("Ethernet.begin",-1,-1); */
 /* } */
 /* void Ethernet::begin(char *mac,char *ip,char *gateway)  */
 /* { */
-/*   if(logging==YES)wLog("Ethernet.begin",-1,-1); */
+/*   if(confLogLev > 0)wLog("Ethernet.begin",-1,-1); */
 /* } */
 /* void Ethernet::begin(char *mac,char *ip,char *gateway, char *subnet)  */
 /* { */
-/*   if(logging==YES)wLog("Ethernet.begin",-1,-1); */
+/*   if(confLogLev > 0)wLog("Ethernet.begin",-1,-1); */
 /* } */
 
 /* class Server { */
@@ -539,21 +603,21 @@ void serial::write(char *p)
 
 /* void Server::Server(int port)  */
 /* { */
-/*   if(logging==YES)wLog("Server.Server",port,-1); */
+/*   if(confLogLev > 0)wLog("Server.Server",port,-1); */
 /* } */
 /* void Server::begin()  */
 /* { */
-/*   if(logging==YES)wLog("Server.begin",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.begin",-1,-1); */
 /* } */
 /* Client Server::available()  */
 /* { */
 /*   Client x = Client(); */
-/*   if(logging==YES)wLog("Server.available",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.available",-1,-1); */
 /*   return(x),  */
 /* } */
 /* void Server::write(char x)  */
 /* { */
-/*   if(logging==YES)wLog("Server.write",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.write",-1,-1); */
 /*   sprintf(stemp,"%c",x); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -561,7 +625,7 @@ void serial::write(char *p)
 /* } */
 /* void Server::write(int x)  */
 /* { */
-/*   if(logging==YES)wLog("Server.write",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.write",-1,-1); */
 /*   sprintf(stemp,"%d",x); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -569,7 +633,7 @@ void serial::write(char *p)
 /* } */
 /* void Server::print(char x)  */
 /* { */
-/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
 /*   sprintf(stemp,"%c",x); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -577,7 +641,7 @@ void serial::write(char *p)
 /* } */
 /* void Server::print(int x)  */
 /* { */
-/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
 /*   sprintf(stemp,"%d",x); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -585,7 +649,7 @@ void serial::write(char *p)
 /* } */
 /* void Server::print(char *x)  */
 /* { */
-/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
 /*   sprintf(stemp,"%s",x); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -597,7 +661,7 @@ void serial::write(char *p)
 /*   //DEC for decimal (base 10) */
 /*   //OCT for octal (base 8) */
 /*   //HEX for hexadecimal (base 16) */
-/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
 /*   sprintf(stemp,"%c",x); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -605,7 +669,7 @@ void serial::write(char *p)
 /* } */
 /* void Server::print(int x,char *base)  */
 /* { */
-/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
 /*   sprintf(stemp,"%d",x); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -613,7 +677,7 @@ void serial::write(char *p)
 /* } */
 /* void Server::print(char *x,char *base)  */
 /* { */
-/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
 /*   sprintf(stemp,"%s",x); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -621,7 +685,7 @@ void serial::write(char *p)
 /* } */
 /* void Server::println()  */
 /* { */
-/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
 /*   sprintf(stemp,"\n"); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -629,7 +693,7 @@ void serial::write(char *p)
 /* } */
 /* void Server::println(char x)  */
 /* { */
-/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
 /*   sprintf(stemp,"%c\n",x); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -637,7 +701,7 @@ void serial::write(char *p)
 /* } */
 /* void Server::println(int x)  */
 /* { */
-/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
 /*   sprintf(stemp,"%d\n",x); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -645,7 +709,7 @@ void serial::write(char *p)
 /* } */
 /* void Server::println(char *x)  */
 /* { */
-/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
 /*   sprintf(stemp,"%s\n",x); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -653,7 +717,7 @@ void serial::write(char *p)
 /* } */
 /* void Server::println(char x,char *base)  */
 /* { */
-/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
 /*   sprintf(stemp,"%c\n",x); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -661,7 +725,7 @@ void serial::write(char *p)
 /* } */
 /* void Server::println(int x,char *base)  */
 /* { */
-/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
 /*   sprintf(stemp,"%d\n",x); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -669,7 +733,7 @@ void serial::write(char *p)
 /* } */
 /* void Server::println(char *x,char *base)  */
 /* { */
-/*   if(logging==YES)wLog("Server.print",-1,-1); */
+/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
 /*   sprintf(stemp,"%s\n",x); */
 /*   strcat(ethernetBuffer,stemp); */
 /*   showEthernet(); */
@@ -692,7 +756,7 @@ void serial::write(char *p)
 
 /* void serial::print(int x)  */
 /* { */
-/*   if(logging==YES)wLog("serial print",x,-1); */
+/*   if(confLogLev > 0)wLog("serial print",x,-1); */
 /*   sprintf(stemp,"%d",x); */
 /*   strcat(serialBuffer,stemp); */
 /*   showSerial(); */

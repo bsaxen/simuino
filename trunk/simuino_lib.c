@@ -13,10 +13,6 @@
 #define FREE   0
 #define RX     3
 #define TX     4
-#define PWM    5
-
-#define TEMPO  100
-
 
 int   row,col;
 int   graph_x = 10,graph_y = 10;
@@ -28,22 +24,33 @@ int   digitalPin[HIST_MAX][100];
 int   digitalMode[100];
 int   paceMaker = 0;
 int   baud = 0;
+int   error = 0;
 int   logging = YES;
 char  logBuffer[100][100];
 int   logSize = 1;
 int   serialSize = 1;
-int   g[14][900];
 int   serialMode = OFF;
 char  serialBuffer[100][100];
 int   rememberNewLine;
+char  textPinModeIn[14][80];
+char  textPinModeOut[14][80];
+char  textDigitalWriteLow[14][80];
+char  textDigitalWriteHigh[14][80];
+char  textAnalogWrite[14][80];
+char  textAnalogRead[14][80];
+char  textDigitalRead[14][80];
 
-int conn;
+int   conn;
+
+// Configuration default values
+int   confDelay  = 100;
+int   confLogLev =   1;
 
 WINDOW *uno,*ser,*slog,*com;
 static struct termios orig, nnew;
 static int peek = -1;
 
-void wLog(const char *p, int value1, int value2);
+
 //===================================================
 void passTime()
 {
@@ -55,11 +62,12 @@ void wLog(const char *p, int value1, int value2)
   int i;
   char temp[100],temp2[100];
 
- sprintf(temp," "); 
- if(value2 > -2)
-  {
-   sprintf(temp," %d,%d ",nloop,timeFromStart);
-  }
+  sprintf(temp," ");
+
+  if(value2 > -2)
+    {
+      sprintf(temp," %d,%d ",nloop,timeFromStart);
+    }
   strcat(temp,p);
  
 
@@ -73,6 +81,12 @@ void wLog(const char *p, int value1, int value2)
     {
       sprintf(temp2," %d",value2);
       strcat(temp,temp2);
+    }
+
+  if(error == 1)
+    {
+      temp[0]='*';
+      error = 0;
     }
 
   for(i=logSize;i>0;i--)strcpy(logBuffer[i],logBuffer[i-1]);
@@ -95,9 +109,9 @@ void wLogChar(const char *p, const char *value1, int value2)
   //sprintf(temp," ");
   strcpy(temp," ");
   if(value2 > -2)
-  {
-   sprintf(temp," %d,%d ",nloop,timeFromStart);
-  }  
+    {
+      sprintf(temp," %d,%d ",nloop,timeFromStart);
+    }  
   strcat(temp,p);
   
 
@@ -149,16 +163,38 @@ int msleep(unsigned long milisec)
 
 void iDelay(int ms)
 {
-  char msg[200];
   msleep(ms);
 }
 
 void show(WINDOW *win)
 {
-  wmove(win,0,0);
   wrefresh(win);
-  iDelay(TEMPO);
+  iDelay(confDelay);
 }
+
+void showError(const char *m, int value)
+{
+  error = 1;
+  wmove(com,2,1);
+  wprintw(com,"                                       ");
+  wmove(com,2,1);
+  if(value == -1)
+    wprintw(com,"Error %s",m);
+  else
+    wprintw(com,"Error %s %d",m,value);
+
+  show(com);
+}
+
+void showConfig()
+{
+  wmove(com,0,20);
+  wprintw(com," Delay=%d",confDelay);
+  wprintw(com," LogLevel=%d",confLogLev);
+  show(com);
+}
+
+
 
 void showSerial(const char *m, int newLine)
 {
@@ -208,6 +244,79 @@ void getAppName(char *app)
   fclose(in);  
 }
 
+int wCustomLog(char *in, char *out)
+{
+  char *q,*p;
+  int pin;
+
+  p = strstr(in,":");
+  p++;
+  sscanf(p,"%d",&pin);
+  p = strstr(p,"\"");
+  p++;
+  q = strstr(p,"\"");
+  strcpy(q,"\0");
+  strcpy(out,p);
+
+  return(pin);
+}
+
+void readSketchInfo()
+{
+  FILE *in;
+  char row[80],res[40],*p,value[5];
+  int pin;
+
+  in = fopen("sketch/sketch.pde","r");
+  if(in == NULL)
+    {
+      showError("Unable to open sketch",-1);
+    }
+  else
+    {
+      while (fgets(row,80,in)!=NULL)
+	{
+	  if(p=strstr(row,"PINMODE_IN:"))
+	    {
+	      pin = wCustomLog(p,res);
+	      strcpy(textPinModeIn[pin],res);
+	    }
+	  if(p=strstr(row,"PINMODE_OUT:"))
+	    {
+	      pin = wCustomLog(p,res);
+	      strcpy(textPinModeOut[pin],res);
+	    }
+	  if(p=strstr(row,"DIGITALWRITE_LOW:"))
+	    {
+	      pin = wCustomLog(p,res);
+	      strcpy(textDigitalWriteLow[pin],res);
+	    }
+	  if(p=strstr(row,"DIGITALWRITE_HIGH:"))
+	    {
+	      pin = wCustomLog(p,res);
+	      strcpy(textDigitalWriteHigh[pin],res);
+	    }
+	  if(p=strstr(row,"ANALOGREAD:"))
+	    {
+	      pin = wCustomLog(p,res);
+	      strcpy(textAnalogRead[pin],res);
+	    }
+	  if(p=strstr(row,"DIGITALREAD:"))
+	    {
+	      pin = wCustomLog(p,res);
+	      strcpy(textDigitalRead[pin],res);
+	    }
+	  if(p=strstr(row,"ANALOGWRITE:"))
+	    {
+	      pin = wCustomLog(p,res);
+	      strcpy(textAnalogWrite[pin],res);
+	    }
+	}
+    }
+  fclose(in);  
+}
+
+
 void boardInit()
 {
   int i,j;
@@ -215,16 +324,25 @@ void boardInit()
   nloop = 0;
   for(i=0;i<14;i++)
     {
-//      digitalPin[i]      = 0;
-      digitalMode[i]     = FREE;
+      digitalMode[i] = FREE;
+      strcpy(textPinModeIn[i],"void");
+      strcpy(textPinModeOut[i],"void");
+
+      strcpy(textDigitalWriteLow[i],"void");
+      strcpy(textDigitalWriteHigh[i],"void");
+
+      strcpy(textAnalogWrite[i],"void");
+      strcpy(textAnalogRead[i],"void");
+
+      strcpy(textDigitalRead[i],"void");
     }
   for(i=0;i<14;i++)
     {
       for(j=0;j<HIST_MAX;j++)
-      {
+	{
           analogPin[j][i]   = 0;
           digitalPin[j][i]  = 0;
-      }
+	}
     }
 }
 
@@ -232,7 +350,7 @@ void unimplemented(const char *f)
 {
   char temp[200];
   sprintf(temp,"unimplemented: %s\n",f);
-  showSerial(temp,1);
+  wLog(temp,-1,-1);
 }
 
 int readExt()
@@ -244,8 +362,7 @@ int readExt()
   in = fopen("scenario/analogPins.txt","r");
   if(in == NULL)
     {
-      printf("Unable to open analogue scenario\n");
-      //exit(0);
+      showError("Unable to open analog scenario",-1);
     }
   else
     {
@@ -253,8 +370,8 @@ int readExt()
 	{
 	  sscanf(row,"%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5);
 	  if(temp<HIST_MAX)
-           {
-	     res1=temp;
+	    {
+	      res1=temp;
 	      analogPin[temp][0]= x0;
 	      analogPin[temp][1]= x1;
 	      analogPin[temp][2]= x2;
@@ -269,8 +386,7 @@ int readExt()
   in = fopen("scenario/digitalPins.txt","r");
   if(in == NULL)
     {
-      printf("Unable to open digital scenario\n");
-      //exit(0);
+      showError("Unable to open digital scenario",-1);
     }
   else
     {
@@ -278,8 +394,8 @@ int readExt()
         {
           sscanf(row,"%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5,&x6,&x7,&x8,&x9,&x9,&x10,&x11,&x12,&x13);
           if(temp<HIST_MAX)
-           {
-	     res2 = temp;
+	    {
+	      res2 = temp;
               digitalPin[temp][0]= x0;
               digitalPin[temp][1]= x1;
               digitalPin[temp][2]= x2;
@@ -297,9 +413,41 @@ int readExt()
             }
         }
     }
-  fclose(in)
-;
+  fclose(in);
+
   if(res1 > res2) res = res1;
   else res = res2;
   return(res);
+}
+
+void readConfig()
+{
+  FILE *in;
+  char row[80],*p,temp[40];
+  int x;
+
+  in = fopen("config.txt","r");
+  if(in == NULL)
+    {
+      showError("Unable to open config.txt",-1);
+    }
+  else
+    {
+      while (fgets(row,80,in)!=NULL)
+	{
+	  if(row[0] != '#')
+	    {
+	      if(p=strstr(row,"LOG_LEVEL"))
+		{
+		  sscanf(p,"%s%d",temp,&confLogLev);
+		}
+	      if(p=strstr(row,"DELAY"))
+		{
+		  sscanf(p,"%s%d",temp,&confDelay);
+		}
+	    }
+	 
+	}
+    }
+  fclose(in);
 }
