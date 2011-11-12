@@ -165,11 +165,11 @@ void passTime()
 
   i = timeFromStart;
 
-  if(interruptMode[0] == LOW && interrupt[i][0] == 0)
-    {
-      if(confLogLev > 0)wLog("InterruptLOW",0,-1);
-      interrupt0();
-    }
+//  if(interruptMode[0] == LOW && interrupt[i][0] == 0)
+//    {
+//      if(confLogLev > 0)wLog("InterruptLOW",0,-1);
+//      interrupt0();
+//    }
 
   if(interruptMode[0] == RISING && interrupt[i][0] == 1 && interrupt[i-1][0] == 0)
     {
