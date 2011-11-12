@@ -189,6 +189,25 @@ void passTime()
       interrupt0();
     }
 
+
+  if(interruptMode[1] == RISING && interrupt[i][1] == 1 && interrupt[i-1][1] == 0)
+    {
+      if(confLogLev > 0)wLog("InterruptRISING",1,-1);
+      interrupt1();
+    }
+  
+  if(interruptMode[1] == FALLING && interrupt[i][1] == 0 && interrupt[i-1][1] == 1)
+    {
+      if(confLogLev > 0)wLog("InterruptFALLING",1,-1);
+      interrupt1();
+    }
+
+  if(interruptMode[1] == CHANGE && interrupt[i][1] != interrupt[i-1][1])
+    {
+      if(confLogLev > 0)wLog("InterruptCHANGE",1,-1);
+      interrupt1();
+    }
+
 }
 
 void wLogChar(const char *p, const char *value1, int value2)
