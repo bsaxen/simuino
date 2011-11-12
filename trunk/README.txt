@@ -2,7 +2,7 @@
 SIMUINO is a Arduino Simulator. Simple and basic. 
 Code: c/c++
 Platform: Linux (Ubuntu)
-Version: 0.7
+Version: 0.8
 
 Developed by Benny Saxen, ADCAJO
 ==================================================
@@ -132,7 +132,7 @@ The SIMUNIO displayes 4 windows:
 --------------------------------------------------
 5. Supported Language Functions
 --------------------------------------------------
-Not supported functions are implemented with a dummy, in order to compile without errors.
+Unsupported functions are implemented with a dummy, in order to compile without errors.
 
 Digital I/O
 	pinMode()		Yes
@@ -149,8 +149,8 @@ Advanced I/O
 	shiftIn()		No
 	pulseIn()		No
 Time
-	millis()		No
-	micros()		No
+	millis()		Yes
+	micros()		Yes
 	delay()			Yes
 	delayMicroseconds()	Yes
 Math
@@ -177,8 +177,8 @@ Bits and Bytes
 	bitClear()		No
 	bit()			No
 External Interrupts
-	attachInterrupt()	No
-	detachInterrupt()	No
+	attachInterrupt()	Yes
+	detachInterrupt()	Yes
 Interrupts
 	interrupts()		No	
 	noInterrupts()		No

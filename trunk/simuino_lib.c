@@ -19,8 +19,10 @@ int   graph_x = 10,graph_y = 10;
 int   digPinPos[14];
 int   anaPinPos[6];
 char  appName[80];
-int   analogPin[HIST_MAX][100];
-int   digitalPin[HIST_MAX][100];
+int   analogPin[LOOP_MAX][10];
+int   digitalPin[LOOP_MAX][20];
+int   interrupt[STEP_MAX][2];
+int   interruptMode[2];
 int   digitalMode[100];
 int   paceMaker = 0;
 int   baud = 0;
@@ -39,6 +41,7 @@ char  textDigitalWriteHigh[14][80];
 char  textAnalogWrite[14][80];
 char  textAnalogRead[14][80];
 char  textDigitalRead[14][80];
+int   nInterrupts = 0;
 
 int   conn;
 
@@ -52,10 +55,56 @@ static int peek = -1;
 
 
 //===================================================
-void passTime()
+int __nsleep(const struct timespec *req, struct timespec *rem)  
+{  
+  struct timespec temp_rem;  
+  if(nanosleep(req,rem)==-1)  
+    __nsleep(rem,&temp_rem);  
+  else  
+    return 1;  
+}  
+   
+int msleep(unsigned long milisec)  
+{  
+  struct timespec req={0},rem={0};  
+  time_t sec=(int)(milisec/1000);  
+  milisec=milisec-(sec*1000);  
+  req.tv_sec=sec;  
+  req.tv_nsec=milisec*1000000L;  
+  __nsleep(&req,&rem);  
+  return 1;  
+}  
+
+
+void iDelay(int ms)
 {
-  timeFromStart++;
+  msleep(ms);
 }
+
+void show(WINDOW *win)
+{
+  wrefresh(win);
+  iDelay(confDelay);
+}
+
+
+void showError(const char *m, int value)
+{
+  error = 1;
+  wmove(com,2,1);
+  wprintw(com,"                                       ");
+  wmove(com,2,1);
+  if(value == -1)
+    wprintw(com,"Error %s",m);
+  else
+    wprintw(com,"Error %s %d",m,value);
+
+  show(com);
+}
+
+
+
+
 
 void wLog(const char *p, int value1, int value2)
 {
@@ -101,6 +150,47 @@ void wLog(const char *p, int value1, int value2)
   wrefresh(slog);
 }
 
+void passTime()
+{
+  int i;
+
+  if(timeFromStart >= STEP_MAX)
+    {
+      wLog("Log Limit reached",STEP_MAX,-1); 
+      return;
+    }
+
+  timeFromStart++;
+
+
+  i = timeFromStart;
+
+  if(interruptMode[0] == LOW && interrupt[i][0] == 0)
+    {
+      if(confLogLev > 0)wLog("InterruptLOW",0,-1);
+      interrupt0();
+    }
+
+  if(interruptMode[0] == RISING && interrupt[i][0] == 1 && interrupt[i-1][0] == 0)
+    {
+      if(confLogLev > 0)wLog("InterruptRISING",0,-1);
+      interrupt0();
+    }
+  
+  if(interruptMode[0] == FALLING && interrupt[i][0] == 0 && interrupt[i-1][0] == 1)
+    {
+      if(confLogLev > 0)wLog("InterruptFALLING",0,-1);
+      interrupt0();
+    }
+
+  if(interruptMode[0] == CHANGE && interrupt[i][0] != interrupt[i-1][0])
+    {
+      if(confLogLev > 0)wLog("InterruptCHANGE",0,-1);
+      interrupt0();
+    }
+
+}
+
 void wLogChar(const char *p, const char *value1, int value2)
 {
   int i;
@@ -140,55 +230,11 @@ void wLogChar(const char *p, const char *value1, int value2)
 }
 
 
-int __nsleep(const struct timespec *req, struct timespec *rem)  
-{  
-  struct timespec temp_rem;  
-  if(nanosleep(req,rem)==-1)  
-    __nsleep(rem,&temp_rem);  
-  else  
-    return 1;  
-}  
-   
-int msleep(unsigned long milisec)  
-{  
-  struct timespec req={0},rem={0};  
-  time_t sec=(int)(milisec/1000);  
-  milisec=milisec-(sec*1000);  
-  req.tv_sec=sec;  
-  req.tv_nsec=milisec*1000000L;  
-  __nsleep(&req,&rem);  
-  return 1;  
-}  
 
-
-void iDelay(int ms)
-{
-  msleep(ms);
-}
-
-void show(WINDOW *win)
-{
-  wrefresh(win);
-  iDelay(confDelay);
-}
-
-void showError(const char *m, int value)
-{
-  error = 1;
-  wmove(com,2,1);
-  wprintw(com,"                                       ");
-  wmove(com,2,1);
-  if(value == -1)
-    wprintw(com,"Error %s",m);
-  else
-    wprintw(com,"Error %s %d",m,value);
-
-  show(com);
-}
 
 void showConfig()
 {
-  wmove(com,0,20);
+  wmove(com,0,35);
   wprintw(com," Delay=%d",confDelay);
   wprintw(com," LogLevel=%d",confLogLev);
   show(com);
@@ -338,7 +384,7 @@ void boardInit()
     }
   for(i=0;i<14;i++)
     {
-      for(j=0;j<HIST_MAX;j++)
+      for(j=0;j<LOOP_MAX;j++)
 	{
           analogPin[j][i]   = 0;
           digitalPin[j][i]  = 0;
@@ -356,9 +402,39 @@ void unimplemented(const char *f)
 int readExt()
 {
   FILE *in;
-  char row[80],*p;
+  char row[80],*p,ss[80];
   int x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,temp,res1=0,res2=0,res=0;
+  int i;
 
+  in = fopen("scenario/interrupts.txt","r");
+  if(in == NULL)
+    {
+      showError("Unable to open interrupts scenario",-1);
+    }
+  else
+    {
+      while (fgets(row,80,in)!=NULL)
+	{
+	  if(row[0] != '#')
+	    {
+	      sscanf(row,"%d%d%d",&temp,&x0,&x1);
+	      if(temp<STEP_MAX)
+		{
+		  nInterrupts++;
+		  for(i=temp;i<STEP_MAX;i++)
+		    {
+		      interrupt[i][0] = x0;
+		      interrupt[i][1] = x1;
+		    }
+		}
+	      else
+		showError("Interrupt scenario to long",temp);
+	    }
+	}
+    }
+  fclose(in); 
+
+  
   in = fopen("scenario/analogPins.txt","r");
   if(in == NULL)
     {
@@ -368,16 +444,21 @@ int readExt()
     {
       while (fgets(row,80,in)!=NULL)
 	{
-	  sscanf(row,"%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5);
-	  if(temp<HIST_MAX)
+	  if(row[0] != '#')
 	    {
-	      res1=temp;
-	      analogPin[temp][0]= x0;
-	      analogPin[temp][1]= x1;
-	      analogPin[temp][2]= x2;
-	      analogPin[temp][3]= x3;
-	      analogPin[temp][4]= x4;
-	      analogPin[temp][5]= x5;
+	      sscanf(row,"%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5);
+	      if(temp<LOOP_MAX)
+		{
+		  res1=temp;
+		  analogPin[temp][0]= x0;
+		  analogPin[temp][1]= x1;
+		  analogPin[temp][2]= x2;
+		  analogPin[temp][3]= x3;
+		  analogPin[temp][4]= x4;
+		  analogPin[temp][5]= x5;
+		}
+	      else
+		showError("analogPin scenario to long",-1);
 	    }
 	}
     }
@@ -392,25 +473,30 @@ int readExt()
     {
       while (fgets(row,80,in)!=NULL)
         {
-          sscanf(row,"%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5,&x6,&x7,&x8,&x9,&x9,&x10,&x11,&x12,&x13);
-          if(temp<HIST_MAX)
+	  if(row[0] != '#')
 	    {
-	      res2 = temp;
-              digitalPin[temp][0]= x0;
-              digitalPin[temp][1]= x1;
-              digitalPin[temp][2]= x2;
-              digitalPin[temp][3]= x3;
-              digitalPin[temp][4]= x4;
-              digitalPin[temp][5]= x5;
-              digitalPin[temp][6]= x6;
-              digitalPin[temp][7]= x7;
-              digitalPin[temp][8]= x8;
-              digitalPin[temp][9]= x9;
-              digitalPin[temp][10]= x10;
-              digitalPin[temp][11]= x11;
-              digitalPin[temp][12]= x12;
-              digitalPin[temp][13]= x13;
-            }
+	      sscanf(row,"%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5,&x6,&x7,&x8,&x9,&x9,&x10,&x11,&x12,&x13);
+	      if(temp<LOOP_MAX)
+		{
+		  res2 = temp;
+		  digitalPin[temp][0]= x0;
+		  digitalPin[temp][1]= x1;
+		  digitalPin[temp][2]= x2;
+		  digitalPin[temp][3]= x3;
+		  digitalPin[temp][4]= x4;
+		  digitalPin[temp][5]= x5;
+		  digitalPin[temp][6]= x6;
+		  digitalPin[temp][7]= x7;
+		  digitalPin[temp][8]= x8;
+		  digitalPin[temp][9]= x9;
+		  digitalPin[temp][10]= x10;
+		  digitalPin[temp][11]= x11;
+		  digitalPin[temp][12]= x12;
+		  digitalPin[temp][13]= x13;
+		}
+	      else
+		showError("digital scenario to long",-1);
+	    }
         }
     }
   fclose(in);

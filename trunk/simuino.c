@@ -2,7 +2,25 @@
 //  Developed by Benny Saxen, ADCAJO
 //================================================
 
-#define HIST_MAX  100
+//------ Constants -------------------------
+#define LOW    0
+#define HIGH   1
+#define INPUT  1
+#define OUTPUT 2
+
+#define BYTE   1
+#define BIN    2
+#define OCT    3
+#define DEC    4
+#define HEX    5
+
+#define CHANGE  1
+#define RISING  2
+#define FALLING 3
+
+
+#define STEP_MAX  1000
+#define LOOP_MAX  100
 
 #define DP 5
 #define AP 15
@@ -24,6 +42,9 @@ int stepStep = 0;
 int nloop         = 0;
 int timeFromStart = 0;
 
+void (*interrupt0)();
+void (*interrupt1)();
+
 
 void stepCommand();
 
@@ -42,14 +63,14 @@ void runSim(int n)
   if(n == 1)
     {
       nloop++;
-      loop();
+      if(nloop < LOOP_MAX)loop();
     }
   else if(n > 1)
     {
       for(i=0;i<n-currentLoop;i++)
 	{
 	  nloop++;
-	  loop();
+	  if(nloop < LOOP_MAX)loop();
 	}
     }
   return;
@@ -148,7 +169,7 @@ int main(int argc, char *argv[])
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
   wmove(uno,0,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.7");
+  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.8");
   wrefresh(uno);
 
   // Serial Window
@@ -178,7 +199,7 @@ int main(int argc, char *argv[])
 
   nhist = readExt();
   wmove(com,0,0);
-  wprintw(com,"Scenario: %d loops",nhist);
+  wprintw(com,"Scenario Loops=%d Interrupts=%d ",nhist,nInterrupts);
   wrefresh(com); 
 
   while((ch!='q')&&(ch!='Q'))  

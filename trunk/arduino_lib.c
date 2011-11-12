@@ -2,21 +2,6 @@
 //  Developed by Benny Saxen, ADCAJO
 //================================================
 
-//------ Constants -------------------------
-#define LOW    0
-#define HIGH   1
-#define INPUT  1
-#define OUTPUT 2
-
-#define BYTE   1
-#define BIN    2
-#define OCT    3
-#define DEC    4
-#define HEX    5
-
-#define CHANGE  2
-#define RISING  3
-#define FALLING 4
 
 
 // Math function min and max
@@ -316,12 +301,14 @@ unsigned long pulseIn(int pin, int value, unsigned long timeout)
 
 unsigned long millis()
 {
-  unimplemented("millis()");
+  //unimplemented("millis()");
+  return(timeFromStart*100);
 }
 
 unsigned long micros()
 {
-  unimplemented("micros()");
+  //unimplemented("micros()");
+  return(timeFromStart*100000);
 }
 
 void delay(int ms)
@@ -449,13 +436,42 @@ unsigned char bit(unsigned char x)
 
 void attachInterrupt(int interrupt,void(*func)(),int mode)
 {
-  unimplemented("attachInterrupt()");
+
+  interruptMode[interrupt] = mode;
+
+  if(interrupt == 0)
+    {
+      interrupt0 = func;
+    }
+  if(interrupt == 1)
+    {
+      interrupt1 = func;
+    }
+
+  if(interrupt != 0 && interrupt != 1)
+    showError("Unsupported interrupt number",interrupt);
+
+  if(confLogLev > 0)wLog("attachInterrupt",interrupt,-1);
+
 }
 
 //---------------------------------------------------
 void detachInterrupt(int interrupt)
 {
-  unimplemented("detachInterrupt()");
+
+  if(interrupt == 0)
+    {
+      interrupt0 = NULL;
+    }
+  if(interrupt == 1)
+    {
+      interrupt1 = NULL;
+    }
+  
+  if(interrupt != 0 && interrupt != 1)
+    showError("Unsupported interrupt number",interrupt);
+    
+  if(confLogLev > 0)wLog("detachInterrupt",interrupt,-1);
 }
 
 //------ Interrupts ------------------------

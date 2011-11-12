@@ -26,12 +26,34 @@
 
 // ========== End of Simuino Lines ===============
 
+volatile int state = LOW;
+
+
+void test()
+{
+  digitalWrite(7,LOW);
+  digitalWrite(7,HIGH);
+}
+
+
 void setup()
 {
   int i;
+
   Serial.begin(9600);
-  for(i=0;i<=6;i++)  pinMode(i,INPUT); 
-  for(i=7;i<=13;i++) pinMode(i,OUTPUT); 
+
+  pinMode(0,INPUT);
+  pinMode(1,INPUT);
+  pinMode(2,OUTPUT);
+  pinMode(3,OUTPUT);
+  pinMode(4,INPUT);
+  pinMode(5,INPUT);
+  pinMode(6,INPUT);
+  pinMode(7,OUTPUT);
+ 
+  for(i=8;i<=13;i++) pinMode(i,OUTPUT); 
+
+  attachInterrupt(0, test, CHANGE);
 }
 	 
 
@@ -39,17 +61,26 @@ void loop()
 {
   int i,x;
 
-  for(i=0;i<=6;i++)
-    {
-      x = digitalRead(i);
-      Serial.print(x);
-      Serial.print(",");
-    } 
+
+  x = digitalRead(0);
+  Serial.print(x);
+  Serial.print(",");
+ 
+  x = digitalRead(1);
+  Serial.print(x);
+  Serial.print(",");
+ 
   Serial.println("-");
 
-  for(i=7;i<=13;i++)digitalWrite(i,LOW);
+  long mil = millis();
+  Serial.println(mil);
 
-  analogWrite(3,134);
+  long mic = micros();
+  Serial.println(mic);
+
+  for(i=8;i<=13;i++)digitalWrite(i,LOW);
+
+  analogWrite(9,134);
 
   for(i=0;i<=5;i++)
     {
@@ -59,5 +90,5 @@ void loop()
     }
   Serial.println("-");
   delay(300);
-  for(i=7;i<=13;i++)digitalWrite(i,HIGH);
+  for(i=8;i<=13;i++)digitalWrite(i,HIGH);
 }
