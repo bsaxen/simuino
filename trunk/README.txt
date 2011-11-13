@@ -1,8 +1,8 @@
 ==================================================
 SIMUINO is a Arduino Simulator. Simple and basic. 
-Code: c/c++
+Code: c++
 Platform: Linux (Ubuntu)
-Version: 0.8
+Version: 0.9
 
 Developed by Benny Saxen, ADCAJO
 ==================================================
@@ -20,11 +20,15 @@ Quick starter guide:
 3. Go to directory simuino. Compile: g++ -O2 -o simuino simuino.c -lncurses
    You need to have installed packages for ncurses-dev.
 
-4. Run: ./simuino 
+4. Run: ./simuino     
+   The setup() function will be executed and halt before loop().
+   Make sure the size of your terminal window is big enough. 
 
-5. Press "r" to run one loop() sequence. Can be repeated.
-
-5. Quit:  press "q"
+5. Press "r" to run one loop() sequence. Can be repeated. 
+   Press "s" to step one instruction within a loop.
+   Press "g" to complete a loop or run all loops defined in a scenario.
+   
+6. Quit:  press "q". Works only on loop-level, i e the loop has to be completed.
 
 
 Test your own sketch in simuino:
@@ -97,6 +101,24 @@ The other columns is the value to be read for pins D0 - A13.
 
 
 Using the examples om the pindata files above, the command g will run the loop 16 times. The values of the analog pins will be zero for loop number 11- 16.
+
+
+The content of interrupts.txt:
+
+#  interrupts
+16 1 0
+19 0 0
+25 1 0
+30 1 1
+40 0 1
+55 1 1
+
+The first column specifies the step number.
+Interrupt0 is the second column.
+Interrupt1 is the third column.
+
+The values of the interrupt pins (2 and 3) for other stepnumbers are filled in by simuino. 
+For instance, using the example above will give Interrupt0 value 1 for step 17 and 18.
 
 --------------------------------------------------
 4. Display
@@ -222,7 +244,7 @@ The following parameters are configured in the file, config.txt :
 
 LOG_LEVEL  1		 // Level of information to be displayed during simulation (0,1,2,3)
 DELAY    100		 // Delay in ms between each instruction
-
+LOG_FILE   0		 // Save the log information to the file: log.txt (YES=1,NO=0)
 --------------------------------------------------
 End of README
 --------------------------------------------------

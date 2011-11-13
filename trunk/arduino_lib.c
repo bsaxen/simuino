@@ -105,8 +105,8 @@ void digitalWrite(int pin,int value)
       wprintw(uno,"w");
       show(uno);
       stepCommand();
-      wmove(uno,DP,digPinPos[pin]);
-      wprintw(uno,"%1d",value);
+      wmove(uno,DP,digPinPos[pin]-2);
+      wprintw(uno,"%3d",value);
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno," ");
       show(uno);

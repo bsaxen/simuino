@@ -31,8 +31,8 @@
 #define ON     1
 #define OFF    0
 
-#define YES    10
-#define NO     20
+#define YES    1
+#define NO     2
 
 // Configuration
 int stepStep = 0;
@@ -83,7 +83,7 @@ void stepCommand()
   if(stepStep == 1)
     {
       ch = getchar();
-      if (ch=='q')stepStep = 0;
+      if (ch=='g')stepStep = 0;
     }
 }
 
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
   wmove(uno,0,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.8");
+  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.9");
   wrefresh(uno);
 
   // Serial Window
@@ -194,6 +194,7 @@ int main(int argc, char *argv[])
   readSketchInfo();
   readConfig();
   showConfig();
+  if(confLogFile == YES)resetFile("log.txt");
 
   setup();
 

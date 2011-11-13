@@ -46,8 +46,9 @@ int   nInterrupts = 0;
 int   conn;
 
 // Configuration default values
-int   confDelay  = 100;
-int   confLogLev =   1;
+int   confDelay   = 100;
+int   confLogLev  =   1;
+int   confLogFile =   0;
 
 WINDOW *uno,*ser,*slog,*com;
 static struct termios orig, nnew;
@@ -55,6 +56,8 @@ static int peek = -1;
 
 
 //===================================================
+
+
 int __nsleep(const struct timespec *req, struct timespec *rem)  
 {  
   struct timespec temp_rem;  
@@ -103,6 +106,41 @@ void showError(const char *m, int value)
 }
 
 
+void resetFile(const char *filename)
+{
+  FILE *out;
+  time_t lt;
+
+  out = fopen(filename,"w");
+  if(out == NULL)
+    {
+      showError("Unable to reset file ",-1);
+    }
+  else
+    {
+      lt = time(NULL);
+      fprintf(out,"# Simuino Log File %s",ctime(&lt));
+    }
+
+  fclose(out);
+}
+
+void logFile(char *m)
+{
+  FILE *out;
+
+  out = fopen("log.txt","a");
+  if(out == NULL)
+    {
+      showError("Unable to open log.txt",-1);
+    }
+  else
+    {
+      fprintf(out,"%s\n",m);
+    }
+
+  fclose(out);
+}
 
 
 
@@ -140,6 +178,8 @@ void wLog(const char *p, int value1, int value2)
 
   for(i=logSize;i>0;i--)strcpy(logBuffer[i],logBuffer[i-1]);
   strcpy(logBuffer[0],temp);
+
+  if(confLogFile==YES)logFile(temp);
 
   wclear(slog);
   for(i=0;i<logSize;i++)
@@ -549,6 +589,10 @@ void readConfig()
 	      if(p=strstr(row,"DELAY"))
 		{
 		  sscanf(p,"%s%d",temp,&confDelay);
+		}
+	      if(p=strstr(row,"LOG_FILE"))
+		{
+		  sscanf(p,"%s%d",temp,&confLogFile);
 		}
 	    }
 	 
