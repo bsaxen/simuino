@@ -293,9 +293,10 @@ void wLogChar(const char *p, const char *value1, int value2)
 
 void showConfig()
 {
-  wmove(com,0,35);
-  wprintw(com," Delay=%d",confDelay);
-  wprintw(com," LogLevel=%d",confLogLev);
+  wmove(com,2,0);
+  wprintw(com," Delay=%d",confDelay);wmove(com,3,0);
+  wprintw(com," LogLevel=%d",confLogLev);wmove(com,4,0);
+  wprintw(com," LogFile=%d",confLogFile);
   show(com);
 }
 

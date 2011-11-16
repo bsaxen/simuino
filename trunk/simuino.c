@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
 
   // Message Window
   com=newwin(5,61,AP+4,0);
-  wbkgd(com,COLOR_PAIR(5));
+  wbkgd(com,COLOR_PAIR(6));
   wrefresh(com);
 
 
