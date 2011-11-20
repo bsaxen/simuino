@@ -20,7 +20,7 @@
 
 
 #define STEP_MAX  1000
-#define LOOP_MAX  100
+#define LOOP_MAX  200
 
 #define DP 5
 #define AP 15
@@ -63,14 +63,24 @@ void runSim(int n)
   if(n == 1)
     {
       nloop++;
-      if(nloop < LOOP_MAX)loop();
+      if(nloop < LOOP_MAX)
+	{
+	  passTime();
+	  wLog("Loop",-1,-1);
+	  loop();
+	}
     }
   else if(n > 1)
     {
       for(i=0;i<n-currentLoop;i++)
 	{
 	  nloop++;
-	  if(nloop < LOOP_MAX)loop();
+	  if(nloop < LOOP_MAX)
+	    {
+	      passTime();
+	      wLog("Loop",-1,-1);
+	      loop();
+	    }
 	}
     }
   return;
@@ -169,7 +179,7 @@ int main(int argc, char *argv[])
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
   wmove(uno,0,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.9");
+  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.9.1");
   wrefresh(uno);
 
   // Serial Window
@@ -185,7 +195,7 @@ int main(int argc, char *argv[])
   wrefresh(slog);
 
   // Message Window
-  com=newwin(5,61,AP+4,0);
+  com=newwin(20,61,AP+4,0);
   wbkgd(com,COLOR_PAIR(6));
   wrefresh(com);
 
@@ -199,13 +209,13 @@ int main(int argc, char *argv[])
   setup();
 
   nhist = readExt();
-  wmove(com,0,0);
+  wmove(com,1,0);
   wprintw(com,"Scenario Loops=%d Interrupts=%d ",nhist,nInterrupts);
   wrefresh(com); 
 
   while((ch!='q')&&(ch!='Q'))  
     {
-      wLog("--- Loop: ",nloop+1,-2);
+      //     wLog("Loop: ",nloop+1,-1);
       ch = getchar();
       wmove(com,1,1);
 

@@ -94,9 +94,9 @@ void show(WINDOW *win)
 void showError(const char *m, int value)
 {
   error = 1;
-  wmove(com,2,1);
+  wmove(com,0,0);
   wprintw(com,"                                       ");
-  wmove(com,2,1);
+  wmove(com,0,0);
   if(value == -1)
     wprintw(com,"Error %s",m);
   else
@@ -294,9 +294,10 @@ void wLogChar(const char *p, const char *value1, int value2)
 void showConfig()
 {
   wmove(com,2,0);
-  wprintw(com," Delay=%d",confDelay);wmove(com,3,0);
-  wprintw(com," LogLevel=%d",confLogLev);wmove(com,4,0);
-  wprintw(com," LogFile=%d",confLogFile);
+  wprintw(com,"---Configuration---");wmove(com,3,0);
+  wprintw(com," Delay    = %d",confDelay);wmove(com,4,0);
+  wprintw(com," LogLevel = %d",confLogLev);wmove(com,5,0);
+  wprintw(com," LogFile  = %d",confLogFile);
   show(com);
 }
 
