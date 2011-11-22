@@ -57,68 +57,68 @@ g    run complete scenario, according to the content in scenario/digitalPins.txt
 -------------------------------------------------- 
 
 In order to be able to run specific scenarios, controlled by values read from pins,
-it is possible to specify what value shall be read per loop and pin.
+it is possible to specify what value shall be read per step/instruction and pin.
+Only changes is needed to be specified, example:
 
-The files, analogPins.txt and digitalPins.txt are located in the subdirectory "scenario".
+10   123
+14   150
+20    45
 
-The content of analogPins.txt:
-----------------------------------
-1 100 101 102 103 104 100
-2 200 101 102 103 104  70
-3 300 101 102 103 104  80
-4 400 101 102 103 104  75
-5 500 101 102 103 104 120
-6 600 101 102 103 104  40
-7 700 101 102 103 104 100
-8 800 101 102 103 104  50
-9 900 101 102 103 104 106
-10 1000 101 102 103 104 105
-----------------------------------
-The first column specifies the loop number (in this example the scenario runs the loop from 1 to 10). 
-The other columns is the value to be read for pins A0 - A5.
+will generate:
 
-The content of digitalPins.txt:
-----------------------------------
-1  1 0 1 0 1 0 1 0 1 0 1 0 1 0
-2  0 1 0 1 0 1 0 1 0 1 0 1 0 1
-3  1 0 0 0 1 0 1 0 1 0 1 0 1 0
-4  0 1 0 1 0 1 0 1 0 1 0 1 0 1
-5  1 0 0 0 1 0 1 0 1 0 1 0 1 0
-6  0 1 0 1 0 1 0 1 0 1 0 1 0 1
-7  1 0 0 0 1 0 1 0 1 0 1 0 1 0
-8  0 1 0 1 0 1 0 1 0 1 0 1 0 1
-9  1 0 0 0 1 0 1 0 1 0 1 0 1 0
-10 0 1 0 1 0 1 0 1 0 1 0 1 0 1
-11 1 0 0 0 1 0 1 0 1 0 1 0 1 0
-12 0 1 0 1 0 1 0 1 0 1 0 1 0 1
-13 1 0 0 0 1 0 1 0 1 0 1 0 1 0
-14 0 1 0 1 0 1 0 1 0 1 0 1 0 1
-15 1 0 0 0 1 0 1 0 1 0 1 0 1 0
-16 0 1 0 1 0 1 0 1 0 1 0 1 0 1
-----------------------------------
-The first column specifies the loop number. 
-The other columns is the value to be read for pins D0 - A13.
+10   123
+11   123
+12   123
+13   123
+14   150
+15   150
+16   150
+17   150
+18   150
+19   150
+20    45
+21    45
+ 
+and so on...
 
+The scenario file, scenario.txt is located in the subdirectory "scenario".
 
-Using the examples om the pindata files above, the command g will run the loop 16 times. The values of the analog pins will be zero for loop number 11- 16.
+Below is an example of a scenario file.
+-----------------------------------------
 
-
-The content of interrupts.txt:
-
-#  interrupts
+#  Simuino scenario file
+# start_digital_pins
+#   0  1  2  3  4  5  6  7  8  9 10 11 12 13
+#-------------------------------------------
+0   1  0  1  0  0  0  0  0  0  0  0  0  0  0
+100 0  1  0  0  0  0  0  0  0  0  0  0  0  0
+200 1  0  1  0  0  0  0  0  0  0  0  0  0  0
+300 1  1  0  0  0  0  0  0  0  0  0  0  0  0
+# end_digital_pins
+# start_analog_pins
+#     0   1   2   3   4   5
+#--------------------------
+0    37   0   0   0   0   0 
+100  56   0   0   0   0   0 
+200   0   0   0   0   0   0 
+300 123   0   0   0   0   0 
+# end_analog pins
+# start_interrupts
+#  0 1
+#-----
 16 1 0
 19 0 0
 25 1 0
 30 1 1
 40 0 1
 55 1 1
+# end_interrupts
 
-The first column specifies the step number.
-Interrupt0 is the second column.
-Interrupt1 is the third column.
+-------------------
+End of example
 
-The values of the interrupt pins (2 and 3) for other stepnumbers are filled in by simuino. 
-For instance, using the example above will give Interrupt0 value 1 for step 17 and 18.
+
+Note - Simuino is uses the tags: start_  end_  for reading correct values from the file.
 
 --------------------------------------------------
 4. Display
