@@ -144,8 +144,8 @@ The SIMUNIO displayes 4 windows:
 4.3  Logs 
 
      Most functions in the Arduino reference library will be displayed.
-     Every line has two index: loop number, pseudo-time-elapsed.
-     The log-text can be customized to be more readable for the specific appliaction, se 6 below.
+     Every line has two index: loop number, pseudo-time-elapsed, i.e steps/instructions.
+     The log-text can be customized to be more readable for the specific appliaction, see chapter 6 below.
 
 4.4  Message
 
@@ -243,7 +243,7 @@ Example:
 The following parameters are configured in the file, config.txt :
 
 LOG_LEVEL  1		 // Level of information to be displayed during simulation (0,1,2,3)
-DELAY    100		 // Delay in ms between each instruction
+DELAY    100		 // Delay in ms between each step/instruction
 LOG_FILE   0		 // Save the log information to the file: log.txt (YES=1,NO=0)
 --------------------------------------------------
 End of README
