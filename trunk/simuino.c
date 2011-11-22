@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
   wmove(uno,0,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.9.1");
+  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.9.2");
   wrefresh(uno);
 
   // Serial Window
@@ -203,15 +203,15 @@ int main(int argc, char *argv[])
   boardInit();
   readSketchInfo();
   readConfig();
+  readExt();
   showConfig();
   if(confLogFile == YES)resetFile("log.txt");
 
+
+
   setup();
 
-  nhist = readExt();
-  wmove(com,1,0);
-  wprintw(com,"Scenario Loops=%d Interrupts=%d ",nhist,nInterrupts);
-  wrefresh(com); 
+
 
   while((ch!='q')&&(ch!='Q'))  
     {

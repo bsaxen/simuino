@@ -1,4 +1,4 @@
-# Simuino Configuration File Version 0.9.1
+# Simuino Configuration File Version 0.9.2
 #==========================================
 LOG_LEVEL  2
 DELAY    100

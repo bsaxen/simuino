@@ -19,8 +19,8 @@ int   graph_x = 10,graph_y = 10;
 int   digPinPos[14];
 int   anaPinPos[6];
 char  appName[80];
-int   analogPin[LOOP_MAX][10];
-int   digitalPin[LOOP_MAX][20];
+int   analogPin[STEP_MAX][6];
+int   digitalPin[STEP_MAX][14];
 int   interrupt[STEP_MAX][2];
 int   interruptMode[2];
 int   digitalMode[100];
@@ -28,7 +28,7 @@ int   paceMaker = 0;
 int   baud = 0;
 int   error = 0;
 int   logging = YES;
-char  logBuffer[100][100];
+char  logBuffer[STEP_MAX][100];
 int   logSize = 1;
 int   serialSize = 1;
 int   serialMode = OFF;
@@ -41,7 +41,9 @@ char  textDigitalWriteHigh[14][80];
 char  textAnalogWrite[14][80];
 char  textAnalogRead[14][80];
 char  textDigitalRead[14][80];
-int   nInterrupts = 0;
+int   scenAnalog    = 0;
+int   scenDigital   = 0;
+int   scenInterrupt = 0;
 
 int   conn;
 
@@ -205,11 +207,11 @@ void passTime()
 
   i = timeFromStart;
 
-//  if(interruptMode[0] == LOW && interrupt[i][0] == 0)
-//    {
-//      if(confLogLev > 0)wLog("InterruptLOW",0,-1);
-//      interrupt0();
-//    }
+  //  if(interruptMode[0] == LOW && interrupt[i][0] == 0)
+  //    {
+  //      if(confLogLev > 0)wLog("InterruptLOW",0,-1);
+  //      interrupt0();
+  //    }
 
   if(interruptMode[0] == RISING && interrupt[i][0] == 1 && interrupt[i-1][0] == 0)
     {
@@ -294,9 +296,13 @@ void wLogChar(const char *p, const char *value1, int value2)
 void showConfig()
 {
   wmove(com,2,0);
-  wprintw(com,"---Configuration---");wmove(com,3,0);
-  wprintw(com," Delay    = %d",confDelay);wmove(com,4,0);
-  wprintw(com," LogLevel = %d",confLogLev);wmove(com,5,0);
+  wprintw(com,"---Scenario Steps---");               wmove(com,3,0);
+  wprintw(com," Analog Pins    = %d",scenAnalog);    wmove(com,4,0);
+  wprintw(com," Digital Pins   = %d",scenDigital);   wmove(com,5,0);
+  wprintw(com," Interrupts     = %d",scenInterrupt); wmove(com,7,0);
+  wprintw(com,"---Configuration---");                wmove(com,8,0);
+  wprintw(com," Delay    = %d",confDelay);           wmove(com,9,0);
+  wprintw(com," LogLevel = %d",confLogLev);          wmove(com,10,0);
   wprintw(com," LogFile  = %d",confLogFile);
   show(com);
 }
@@ -460,111 +466,101 @@ void unimplemented(const char *f)
   wLog(temp,-1,-1);
 }
 
-int readExt()
+void readExt()
 {
   FILE *in;
-  char row[80],*p,ss[80];
-  int x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,temp,res1=0,res2=0,res=0;
-  int i;
+  char row[120],*p,scenType[200], junk[20];
+  int x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,temp;
+  int i,state=0;
 
-  in = fopen("scenario/interrupts.txt","r");
+  in = fopen("scenario/scenario.txt","r");
   if(in == NULL)
     {
-      showError("Unable to open interrupts scenario",-1);
+      showError("Unable to open scenario",-1);
     }
   else
     {
       while (fgets(row,80,in)!=NULL)
 	{
+	  if(row[0] == '#')
+	    {	
+	      if(p=strstr(row,"start_interrupts"))  state = 1;
+	      if(p=strstr(row,"start_digital_pins"))state = 2;
+	      if(p=strstr(row,"start_analog_pins")) state = 3;
+	      if(p=strstr(row,"end_interrupts"))  state = 0;
+	      if(p=strstr(row,"end_digital_pins"))state = 0;
+	      if(p=strstr(row,"end_analog_pins")) state = 0;
+	    }
+
 	  if(row[0] != '#')
-	    {
-	      sscanf(row,"%d%d%d",&temp,&x0,&x1);
-	      if(temp<STEP_MAX)
+	    {	      
+	      if(state==1)//Interrupts
 		{
-		  nInterrupts++;
-		  for(i=temp;i<STEP_MAX;i++)
+		  sscanf(row,"%d%d%d",&temp,&x0,&x1);
+		  if(temp<STEP_MAX)
 		    {
-		      interrupt[i][0] = x0;
-		      interrupt[i][1] = x1;
+		      scenInterrupt++;
+		      for(i=temp;i<STEP_MAX;i++)
+			{
+			  interrupt[i][0] = x0;
+			  interrupt[i][1] = x1;
+			}
 		    }
+		  else
+		    showError("Interrupt scenario to long",temp);
 		}
-	      else
-		showError("Interrupt scenario to long",temp);
+	      if(state==2) // Digital Pins
+		{
+		  sscanf(row,"%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5,&x6,&x7,&x8,&x9,&x9,&x10,&x11,&x12,&x13);
+		  if(temp<STEP_MAX)
+		    {
+		      scenDigital++;
+		      for(i=temp;i<STEP_MAX;i++)
+			{
+			  digitalPin[i][0]= x0;
+			  digitalPin[i][1]= x1;
+			  digitalPin[i][2]= x2;
+			  digitalPin[i][3]= x3;
+			  digitalPin[i][4]= x4;
+			  digitalPin[i][5]= x5;
+			  digitalPin[i][6]= x6;
+			  digitalPin[i][7]= x7;
+			  digitalPin[i][8]= x8;
+			  digitalPin[i][9]= x9;
+			  digitalPin[i][10]= x10;
+			  digitalPin[i][11]= x11;
+			  digitalPin[i][12]= x12;
+			  digitalPin[i][13]= x13;
+			}
+		    }
+		  else
+		    showError("digital scenario to long",-1);
+		}
+	      if(state==3) // Analog Pins
+		{
+		  sscanf(row,"%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5);
+		  if(temp<STEP_MAX)
+		    {
+		      scenAnalog++;
+		      for(i=temp;i<STEP_MAX;i++)
+			{
+			  analogPin[i][0]= x0;
+			  analogPin[i][1]= x1;
+			  analogPin[i][2]= x2;
+			  analogPin[i][3]= x3;
+			  analogPin[i][4]= x4;
+			  analogPin[i][5]= x5;
+			}
+		    }
+		  else
+		    showError("analogPin scenario to long",-1);
+		}
+	      
 	    }
 	}
-    }
-  fclose(in); 
-
-  
-  in = fopen("scenario/analogPins.txt","r");
-  if(in == NULL)
-    {
-      showError("Unable to open analog scenario",-1);
-    }
-  else
-    {
-      while (fgets(row,80,in)!=NULL)
-	{
-	  if(row[0] != '#')
-	    {
-	      sscanf(row,"%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5);
-	      if(temp<LOOP_MAX)
-		{
-		  res1=temp;
-		  analogPin[temp][0]= x0;
-		  analogPin[temp][1]= x1;
-		  analogPin[temp][2]= x2;
-		  analogPin[temp][3]= x3;
-		  analogPin[temp][4]= x4;
-		  analogPin[temp][5]= x5;
-		}
-	      else
-		showError("analogPin scenario to long",-1);
-	    }
-	}
-    }
-  fclose(in);  
-
-  in = fopen("scenario/digitalPins.txt","r");
-  if(in == NULL)
-    {
-      showError("Unable to open digital scenario",-1);
-    }
-  else
-    {
-      while (fgets(row,80,in)!=NULL)
-        {
-	  if(row[0] != '#')
-	    {
-	      sscanf(row,"%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5,&x6,&x7,&x8,&x9,&x9,&x10,&x11,&x12,&x13);
-	      if(temp<LOOP_MAX)
-		{
-		  res2 = temp;
-		  digitalPin[temp][0]= x0;
-		  digitalPin[temp][1]= x1;
-		  digitalPin[temp][2]= x2;
-		  digitalPin[temp][3]= x3;
-		  digitalPin[temp][4]= x4;
-		  digitalPin[temp][5]= x5;
-		  digitalPin[temp][6]= x6;
-		  digitalPin[temp][7]= x7;
-		  digitalPin[temp][8]= x8;
-		  digitalPin[temp][9]= x9;
-		  digitalPin[temp][10]= x10;
-		  digitalPin[temp][11]= x11;
-		  digitalPin[temp][12]= x12;
-		  digitalPin[temp][13]= x13;
-		}
-	      else
-		showError("digital scenario to long",-1);
-	    }
-        }
     }
   fclose(in);
-
-  if(res1 > res2) res = res1;
-  else res = res2;
-  return(res);
+  return;
 }
 
 void readConfig()

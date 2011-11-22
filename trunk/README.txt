@@ -2,7 +2,7 @@
 SIMUINO is a Arduino Simulator. Simple and basic. 
 Code: c++
 Platform: Linux (Ubuntu)
-Version: 0.9.1
+Version: 0.9.2
 
 Developed by Benny Saxen, ADCAJO
 ==================================================

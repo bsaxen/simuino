@@ -127,7 +127,7 @@ int digitalRead(int pin)
   passTime();
   if(digitalMode[pin] == INPUT)
     {
-      value = digitalPin[nloop][pin];
+      value = digitalPin[timeFromStart][pin];
  
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno,"r");
@@ -173,7 +173,7 @@ int analogRead(int pin)  // Values 0 to 1023
   char temp[80];
 
   passTime();
-  value = analogPin[nloop][pin];
+  value = analogPin[timeFromStart][pin];
 
   if(value > 1023 || value < 0)
     {
