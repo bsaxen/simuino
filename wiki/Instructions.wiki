@@ -221,7 +221,7 @@ Communication
 6. Sketch information
 --------------------------------------------------
 
-If your sketch code contains a row:  // simuino: <your_application_name>
+If your sketch code contains a row:  // simuino: your_application_name
 the name of your application is displayed in the middle of the board.
 
 Customized logging:
