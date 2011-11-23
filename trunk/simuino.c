@@ -2,7 +2,6 @@
 //  Developed by Benny Saxen, ADCAJO
 //================================================
 
-//------ Constants -------------------------
 #define LOW    0
 #define HIGH   1
 #define INPUT  1
@@ -17,8 +16,6 @@
 #define CHANGE  1
 #define RISING  2
 #define FALLING 3
-
-
 #define STEP_MAX  1000
 #define LOOP_MAX  200
 
@@ -37,7 +34,6 @@
 // Configuration
 int stepStep = 0;
 
-
 // Init
 int nloop         = 0;
 int timeFromStart = 0;
@@ -45,17 +41,15 @@ int timeFromStart = 0;
 void (*interrupt0)();
 void (*interrupt1)();
 
-
 void stepCommand();
 
 #include "simuino_lib.c"
 #include "arduino_lib.c"
 #include "sketch/sketch.pde"
 
-
-// ----- Commands ----------
-
+//====================================
 void runSim(int n)
+//====================================
 {
   int i;
   int currentLoop = nloop;
@@ -86,38 +80,40 @@ void runSim(int n)
   return;
 }    
 
+//====================================
 void stepCommand()
+//====================================
 {
   int ch;
 
   if(stepStep == 1)
     {
       ch = getchar();
-      if (ch=='g')stepStep = 0;
+      if (ch == 'r')
+	{
+	  stepStep = 0;
+	  return;
+	}
+      //while (ch != 's')ch = getchar();
     }
+  return;
 }
 
-
-//========================================
+//====================================
 int main(int argc, char *argv[])
+//====================================
 {
   int i,x;
   int ch;
   int nhist;
 
-
-
-
   getAppName(appName);
-
-  //setStartTime();
 
   initscr();
   clear();
   noecho();
   cbreak();
 
-  /* record kb modes */
   tcgetattr(0, &orig);
   nnew = orig;
   nnew.c_lflag &= ~ICANON;
@@ -136,16 +132,16 @@ int main(int argc, char *argv[])
   init_pair(5,COLOR_MAGENTA,COLOR_WHITE); 
   init_pair(6,COLOR_WHITE,COLOR_BLACK); 
   
-/*     COLOR_BLACK   0 */
-/*     COLOR_RED     1 */
-/*     COLOR_GREEN   2 */
-/*     COLOR_YELLOW  3 */
-/*     COLOR_BLUE    4 */
-/*     COLOR_MAGENTA 5 */
-/*     COLOR_CYAN    6 */
-/*     COLOR_WHITE   7 */
+  /*     COLOR_BLACK   0 */
+  /*     COLOR_RED     1 */
+  /*     COLOR_GREEN   2 */
+  /*     COLOR_YELLOW  3 */
+  /*     COLOR_BLUE    4 */
+  /*     COLOR_MAGENTA 5 */
+  /*     COLOR_CYAN    6 */
+  /*     COLOR_WHITE   7 */
 
-// Board Window    
+  // Board Window    
   uno=newwin(AP+3,61,0,0);
   wbkgd(uno,COLOR_PAIR(6));
 
@@ -179,7 +175,7 @@ int main(int argc, char *argv[])
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
   wmove(uno,0,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.9.2");
+  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.9.3");
   wrefresh(uno);
 
   // Serial Window
@@ -199,7 +195,6 @@ int main(int argc, char *argv[])
   wbkgd(com,COLOR_PAIR(6));
   wrefresh(com);
 
-
   boardInit();
   readSketchInfo();
   readConfig();
@@ -207,13 +202,9 @@ int main(int argc, char *argv[])
   showConfig();
   if(confLogFile == YES)resetFile("log.txt");
 
-
-
   setup();
 
-
-
-  while((ch!='q')&&(ch!='Q'))  
+  while((ch!='q')&&(ch!='x'))  
     {
       //     wLog("Loop: ",nloop+1,-1);
       ch = getchar();
@@ -229,9 +220,29 @@ int main(int argc, char *argv[])
 	  stepStep = 1;
 	  runSim(1); 
 	}
-      if (ch=='g')
+      if (ch=='l') 
 	{
-	  runSim(nhist);   
+	  confLogLev++;
+	  if(confLogLev > 3)confLogLev = 0;
+	  showConfig();
+	}
+      if (ch=='+') 
+	{
+	  confDelay = confDelay + 10;
+	  showConfig();
+	}
+      if (ch=='-') 
+	{
+	  confDelay = confDelay - 10;
+	  if(confDelay < 0)confDelay = 0;
+          if(confDelay > 1000)confDelay = 1000;
+	  showConfig();
+	}
+      if (ch=='f') 
+	{
+	  confLogFile++;
+	  if(confLogFile > 1)confLogFile = 0;
+	  showConfig();
 	}
     }
   

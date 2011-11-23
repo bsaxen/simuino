@@ -541,49 +541,73 @@ void serial::flush()
 void serial::print(int x) 
 {
   passTime();
-  if(confLogLev > 2)wLog("serial:print",x,-1);
   sprintf(stemp,"%d",x);
   showSerial(stemp,0);
+  if(confLogLev > 2)
+    {
+      wLog("serial:print",x,-1);
+      stepCommand();
+    }
 }
 
 void serial::print(int x,int base) 
 {
   passTime();
-  if(confLogLev > 2)wLog("serial:print base",x,-1);
   sprintf(stemp,"%d",x);
   showSerial(stemp,0);
+  if(confLogLev > 2)
+    {
+      wLog("serial:print base",x,-1);
+      stepCommand();
+    }
 }
 
 void serial::print(const char *p) 
 {
   passTime();
-  if(confLogLev > 2)wLogChar("serial:print",p,-1);
   sprintf(stemp,"%s",p);
   showSerial(stemp,0);
+  if(confLogLev > 2)
+    {
+      wLogChar("serial:print",p,-1);
+      stepCommand();
+    }
 }
 
 void serial::println(int x) 
 {
   passTime();
-  if(confLogLev > 2)wLog("serial:println",x,-1);
   sprintf(stemp,"%d",x);
   showSerial(stemp,1);
+  if(confLogLev > 2)
+    {
+      wLog("serial:println",x,-1);
+      stepCommand();
+    }
 }
 
 void serial::println(const char *p) 
 {
   passTime();
-  if(confLogLev > 2)wLogChar("serial:println",p,-1);
   sprintf(stemp,"%s",p);
   showSerial(stemp,1);
+  if(confLogLev > 2)
+    {
+      wLogChar("serial:println",p,-1);
+      stepCommand();
+    }
 }
 
 void serial::write(char *p) 
 {
-   passTime();
-   if(confLogLev > 2)wLogChar("serial:write",p,-1);
-   sprintf(stemp,"%s",p);
-   showSerial(stemp,1);
+  passTime();
+  sprintf(stemp,"%s",p);
+  showSerial(stemp,1);
+  if(confLogLev > 2)
+    {
+      wLogChar("serial:write",p,-1);
+      stepCommand();
+    }
 }
 
 //======================================================

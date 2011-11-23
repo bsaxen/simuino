@@ -57,10 +57,9 @@ static struct termios orig, nnew;
 static int peek = -1;
 
 
-//===================================================
-
-
+//====================================
 int __nsleep(const struct timespec *req, struct timespec *rem)  
+//====================================
 {  
   struct timespec temp_rem;  
   if(nanosleep(req,rem)==-1)  
@@ -68,8 +67,10 @@ int __nsleep(const struct timespec *req, struct timespec *rem)
   else  
     return 1;  
 }  
-   
+
+//====================================   
 int msleep(unsigned long milisec)  
+//====================================
 {  
   struct timespec req={0},rem={0};  
   time_t sec=(int)(milisec/1000);  
@@ -80,20 +81,24 @@ int msleep(unsigned long milisec)
   return 1;  
 }  
 
-
+//====================================
 void iDelay(int ms)
+//====================================
 {
   msleep(ms);
 }
 
+//====================================
 void show(WINDOW *win)
+//====================================
 {
   wrefresh(win);
   iDelay(confDelay);
 }
 
-
+//====================================
 void showError(const char *m, int value)
+//====================================
 {
   error = 1;
   wmove(com,0,0);
@@ -107,8 +112,9 @@ void showError(const char *m, int value)
   show(com);
 }
 
-
+//====================================
 void resetFile(const char *filename)
+//====================================
 {
   FILE *out;
   time_t lt;
@@ -127,7 +133,9 @@ void resetFile(const char *filename)
   fclose(out);
 }
 
+//====================================
 void logFile(char *m)
+//====================================
 {
   FILE *out;
 
@@ -144,9 +152,9 @@ void logFile(char *m)
   fclose(out);
 }
 
-
-
+//====================================
 void wLog(const char *p, int value1, int value2)
+//====================================
 {
   int i;
   char temp[100],temp2[100];
@@ -155,7 +163,10 @@ void wLog(const char *p, int value1, int value2)
 
   if(value2 > -2)
     {
-      sprintf(temp," %d,%d ",nloop,timeFromStart);
+        if(stepStep)
+	  sprintf(temp,">%d,%d ",nloop,timeFromStart);
+	else
+	  sprintf(temp," %d,%d ",nloop,timeFromStart);
     }
   strcat(temp,p);
  
@@ -192,7 +203,9 @@ void wLog(const char *p, int value1, int value2)
   wrefresh(slog);
 }
 
+//====================================
 void passTime()
+//====================================
 {
   int i;
 
@@ -252,7 +265,9 @@ void passTime()
 
 }
 
+//====================================
 void wLogChar(const char *p, const char *value1, int value2)
+//====================================
 {
   int i;
   char temp[100],temp2[100];
@@ -261,7 +276,10 @@ void wLogChar(const char *p, const char *value1, int value2)
   strcpy(temp," ");
   if(value2 > -2)
     {
-      sprintf(temp," %d,%d ",nloop,timeFromStart);
+      if(stepStep)
+	sprintf(temp,">%d,%d ",nloop,timeFromStart);
+      else
+	sprintf(temp," %d,%d ",nloop,timeFromStart);
     }  
   strcat(temp,p);
   
@@ -278,6 +296,12 @@ void wLogChar(const char *p, const char *value1, int value2)
       strcat(temp,temp2);
     }
 
+  if(error == 1)
+    {
+      temp[0]='*';
+      error = 0;
+    }
+
   for(i=logSize;i>0;i--)strcpy(logBuffer[i],logBuffer[i-1]);
   strcpy(logBuffer[0],temp);
 
@@ -290,10 +314,9 @@ void wLogChar(const char *p, const char *value1, int value2)
   wrefresh(slog);
 }
 
-
-
-
+//====================================
 void showConfig()
+//====================================
 {
   wmove(com,2,0);
   wprintw(com,"---Scenario Steps---");               wmove(com,3,0);
@@ -301,37 +324,50 @@ void showConfig()
   wprintw(com," Digital Pins   = %d",scenDigital);   wmove(com,5,0);
   wprintw(com," Interrupts     = %d",scenInterrupt); wmove(com,7,0);
   wprintw(com,"---Configuration---");                wmove(com,8,0);
-  wprintw(com," Delay    = %d",confDelay);           wmove(com,9,0);
-  wprintw(com," LogLevel = %d",confLogLev);          wmove(com,10,0);
-  wprintw(com," LogFile  = %d",confLogFile);
+  wprintw(com," Delay    = %3d",confDelay);           wmove(com,9,0);
+  wprintw(com," LogLevel = %3d",confLogLev);          wmove(com,10,0);
+  wprintw(com," LogFile  = %3d",confLogFile);
   show(com);
 }
 
 
-
+//====================================
 void showSerial(const char *m, int newLine)
+//====================================
 {
   int i;
 
-  if(rememberNewLine == 1)
+  if(serialMode == ON)
     {
-      for(i=1;i<serialSize;i++)strcpy(serialBuffer[i],serialBuffer[i+1]);
-      strcpy(serialBuffer[serialSize],m);
+      if(rememberNewLine == 1)
+	{
+	  for(i=1;i<serialSize;i++)strcpy(serialBuffer[i],serialBuffer[i+1]);
+	  strcpy(serialBuffer[serialSize],m);
+	}
+      else
+	strcat(serialBuffer[serialSize],m);
+      
+      wclear(ser);
+      for(i=1;i<=serialSize;i++)
+	{
+	  wmove(ser,i-1,0);
+	  wprintw(ser,"%s",serialBuffer[i]);
+	} 
+      wrefresh(ser);
+      rememberNewLine = newLine;
     }
   else
-    strcat(serialBuffer[serialSize],m);
-
-  wclear(ser);
-  for(i=1;i<=serialSize;i++)
     {
-      wmove(ser,i-1,0);
-      wprintw(ser,"%s",serialBuffer[i]);
-    } 
-  wrefresh(ser);
-  rememberNewLine = newLine;
+      showError("Serial output without Serial.begin",timeFromStart);
+/*       wmove(ser,1,0); */
+/*       wprintw(ser,"Try to write to serial output without Serial.begin"); */
+/*       wrefresh(ser); */
+    }
 }
 
+//====================================
 void getAppName(char *app)
+//====================================
 {
   FILE *in;
   char row[80],junk[20],*p;
@@ -357,7 +393,9 @@ void getAppName(char *app)
   fclose(in);  
 }
 
+//====================================
 int wCustomLog(char *in, char *out)
+//====================================
 {
   char *q,*p;
   int pin;
@@ -374,7 +412,9 @@ int wCustomLog(char *in, char *out)
   return(pin);
 }
 
+//====================================
 void readSketchInfo()
+//====================================
 {
   FILE *in;
   char row[80],res[40],*p,value[5];
@@ -429,8 +469,9 @@ void readSketchInfo()
   fclose(in);  
 }
 
-
+//====================================
 void boardInit()
+//====================================
 {
   int i,j;
 
@@ -459,14 +500,18 @@ void boardInit()
     }
 }
 
+//====================================
 void unimplemented(const char *f)
+//====================================
 {
   char temp[200];
   sprintf(temp,"unimplemented: %s\n",f);
   wLog(temp,-1,-1);
 }
 
+//====================================
 void readExt()
+//====================================
 {
   FILE *in;
   char row[120],*p,scenType[200], junk[20];
@@ -554,8 +599,7 @@ void readExt()
 		    }
 		  else
 		    showError("analogPin scenario to long",-1);
-		}
-	      
+		}	      
 	    }
 	}
     }
@@ -563,7 +607,9 @@ void readExt()
   return;
 }
 
+//====================================
 void readConfig()
+//====================================
 {
   FILE *in;
   char row[80],*p,temp[40];
@@ -598,3 +644,6 @@ void readConfig()
     }
   fclose(in);
 }
+//====================================
+// End of file
+//====================================

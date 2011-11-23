@@ -2,7 +2,7 @@
 SIMUINO is a Arduino Simulator. Simple and basic. 
 Code: c++
 Platform: Linux (Ubuntu)
-Version: 0.9.2
+Version: 0.9.3
 
 Developed by Benny Saxen, ADCAJO
 ==================================================
@@ -25,8 +25,8 @@ Quick starter guide:
    Make sure the size of your terminal window is big enough. 
 
 5. Press "r" to run one loop() sequence. Can be repeated. 
-   Press "s" to step one instruction within a loop.
-   Press "g" to complete a loop or run all loops defined in a scenario.
+   Press "s" to step one instruction within a loop. Press "r" to complete the loop.
+
    
 6. Quit:  press "q". Works only on loop-level, i e the loop has to be completed.
 
@@ -46,10 +46,16 @@ Test your own sketch in simuino:
 --------------------------------------------------
 Available commands:
 
-q    quit
-r    run one loop() sequence
-s    step one instruction
-g    run complete scenario, according to the content in scenario/digitalPins.txt and analogPins.txt
+r         run one loop() sequence
+s         step one instruction
+
+Available when loop completed, i.e. not during stepping
+q         quit
+x         quit
++         increase delay by 10ms
+-         decrease delay by 10ms
+l	  change log level, toggles 0,1,2,3
+f	  activate writing log information to file log.txt. Toggles on/off (1/0)
 
 
 --------------------------------------------------
@@ -243,7 +249,7 @@ Example:
 The following parameters are configured in the file, config.txt :
 
 LOG_LEVEL  1		 // Level of information to be displayed during simulation (0,1,2,3)
-DELAY    100		 // Delay in ms between each step/instruction
+DELAY    100		 // Delay in ms between each step/instruction  (0 - 1000)
 LOG_FILE   0		 // Save the log information to the file: log.txt (YES=1,NO=0)
 --------------------------------------------------
 End of README
