@@ -16,8 +16,8 @@
 #define CHANGE  1
 #define RISING  2
 #define FALLING 3
-#define STEP_MAX  1000
-#define LOOP_MAX  200
+#define SCEN_MAX  100
+#define LOG_MAX  200
 
 #define DP 5
 #define AP 15
@@ -57,24 +57,18 @@ void runSim(int n)
   if(n == 1)
     {
       nloop++;
-      if(nloop < LOOP_MAX)
-	{
-	  passTime();
-	  wLog("Loop",-1,-1);
-	  loop();
-	}
+      passTime();
+      wLog("Loop",-1,-1);
+      loop();
     }
   else if(n > 1)
     {
       for(i=0;i<n-currentLoop;i++)
 	{
 	  nloop++;
-	  if(nloop < LOOP_MAX)
-	    {
-	      passTime();
-	      wLog("Loop",-1,-1);
-	      loop();
-	    }
+	  passTime();
+	  wLog("Loop",-1,-1);
+	  loop();
 	}
     }
   return;
@@ -94,7 +88,6 @@ void stepCommand()
 	  stepStep = 0;
 	  return;
 	}
-      //while (ch != 's')ch = getchar();
     }
   return;
 }
@@ -123,7 +116,7 @@ int main(int argc, char *argv[])
   nnew.c_cc[VTIME] = 0;
   tcsetattr(0, TCSANOW, &nnew);
 
-  getmaxyx(stdscr,row,col);
+  getmaxyx(stdscr,s_row,s_col);
   start_color();
   init_pair(1,COLOR_BLACK,COLOR_BLUE);
   init_pair(2,COLOR_BLACK,COLOR_GREEN);
@@ -175,18 +168,18 @@ int main(int argc, char *argv[])
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
   wmove(uno,0,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.9.3");
+  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer v0.9.4");
   wrefresh(uno);
 
   // Serial Window
-  serialSize = row;
-  ser=newwin(row,col,0,61+30+2);
+  serialSize = s_row;
+  ser=newwin(s_row,s_col,0,61+40+2);
   wbkgd(ser,COLOR_PAIR(3));
   wrefresh(ser);
 
   // Log Window
-  logSize = row;
-  slog=newwin(row,30,0,62);
+  logSize = s_row;
+  slog=newwin(s_row,40,0,62);
   wbkgd(slog,COLOR_PAIR(4));
   wrefresh(slog);
 
@@ -198,7 +191,7 @@ int main(int argc, char *argv[])
   boardInit();
   readSketchInfo();
   readConfig();
-  readExt();
+  readScenario();
   showConfig();
   if(confLogFile == YES)resetFile("log.txt");
 
@@ -250,5 +243,7 @@ int main(int argc, char *argv[])
   delwin(uno);
   endwin();
 }
-
+//====================================
+// End of file
+//====================================
 

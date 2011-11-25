@@ -2,6 +2,15 @@
 //  Developed by Benny Saxen, ADCAJO
 //================================================
 
+#define A0 0
+#define A1 1
+#define A2 2
+#define A3 3
+#define A4 4
+#define A5 5
+
+#define byte int
+
 
 
 // Math function min and max
@@ -14,6 +23,8 @@
 #endif
   
 char  stemp[80];
+
+//typedef std::string String;
 
 //=====================================
 // Functions
@@ -74,7 +85,7 @@ void digitalWrite(int pin,int value)
   passTime();
   if(digitalMode[pin] == OUTPUT)
     {
-      digitalPin[nloop][pin] = value;
+      s_digitalPin[nloop][pin] = value;
 
       wmove(uno,DP,digPinPos[pin]);
       if(value==HIGH)
@@ -127,7 +138,7 @@ int digitalRead(int pin)
   passTime();
   if(digitalMode[pin] == INPUT)
     {
-      value = digitalPin[timeFromStart][pin];
+      value = getDigitalPinValue(pin,timeFromStart);
  
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno,"r");
@@ -173,7 +184,7 @@ int analogRead(int pin)  // Values 0 to 1023
   char temp[80];
 
   passTime();
-  value = analogPin[timeFromStart][pin];
+  value = getAnalogPinValue(pin,timeFromStart);
 
   if(value > 1023 || value < 0)
     {
@@ -235,7 +246,7 @@ void analogWrite(int pin,int value)
 	  value = 0;
 	}
       
-      digitalPin[nloop][pin] = value;
+      s_digitalPin[nloop][pin] = value;
 
       wmove(uno,DP,digPinPos[pin]-2);
       wprintw(uno,"%3d",value);
@@ -496,12 +507,16 @@ class serial {
   void print(int x);
   void print(int x,int base);
   void print(const char *p);
+  void println();
   void println(int x);
+  void println(int x,int base);
   void println(const char *p);
+  void write(int p);
   void write(char *p);
+  void write(char *p, int len);
 };
 
-serial Serial;
+serial Serial,Serial1,Serial2,Serial3;
 
 void serial::begin(int baudRate) 
 {
@@ -520,11 +535,13 @@ void serial::end()
 
 int serial::available()  // returns the number of bytes available to read
 {
+  unimplemented("Serial.available");
   return(1);
 }
 
 int serial::read() // the first byte of incoming serial data available (or -1 if no data is available)
 {
+  unimplemented("Serial.read");
   return(-1);
 }
 
@@ -574,6 +591,18 @@ void serial::print(const char *p)
     }
 }
 
+void serial::println() 
+{
+  passTime();
+  //sprintf(stemp,"%d",x);
+  showSerial(stemp,1);
+  if(confLogLev > 2)
+    {
+      wLog("serial:println()",-1,-1);
+      stepCommand();
+    }
+}
+
 void serial::println(int x) 
 {
   passTime();
@@ -582,6 +611,18 @@ void serial::println(int x)
   if(confLogLev > 2)
     {
       wLog("serial:println",x,-1);
+      stepCommand();
+    }
+}
+
+void serial::println(int x, int base) 
+{
+  passTime();
+  sprintf(stemp,"%d",x);
+  showSerial(stemp,1);
+  if(confLogLev > 2)
+    {
+      wLog("serial:println base",x,-1);
       stepCommand();
     }
 }
@@ -598,6 +639,18 @@ void serial::println(const char *p)
     }
 }
 
+void serial::write(int p) 
+{
+  passTime();
+  sprintf(stemp,"%d",p);
+  showSerial(stemp,1);
+  if(confLogLev > 2)
+    {
+      wLog("serial:write(val)",p,-1);
+      stepCommand();
+    }
+}
+
 void serial::write(char *p) 
 {
   passTime();
@@ -605,10 +658,23 @@ void serial::write(char *p)
   showSerial(stemp,1);
   if(confLogLev > 2)
     {
-      wLogChar("serial:write",p,-1);
+      wLogChar("serial:write(str)",p,-1);
       stepCommand();
     }
 }
+
+void serial::write(char *p, int len) 
+{
+  passTime();
+  sprintf(stemp,"%s",p);
+  showSerial(stemp,1);
+  if(confLogLev > 2)
+    {
+      wLogChar("serial:write(len)",p,-1);
+      stepCommand();
+    }
+}
+
 
 //======================================================
 // Ethernet Library
@@ -802,3 +868,7 @@ void serial::write(char *p)
 /*   showSerial(); */
 /*   passTime(); */
 /* } */
+
+//====================================
+// End of file
+//====================================

@@ -1,11 +1,13 @@
 //================================================
 //  Developed by Benny Saxen, ADCAJO
 //================================================
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h> 
 #include <math.h> 
+#include <ctype.h>
 #include <termios.h>
 #include <unistd.h>
 #include <ncurses.h>
@@ -14,21 +16,24 @@
 #define RX     3
 #define TX     4
 
-int   row,col;
+int   s_row,s_col;
 int   graph_x = 10,graph_y = 10;
 int   digPinPos[14];
 int   anaPinPos[6];
 char  appName[80];
-int   analogPin[STEP_MAX][6];
-int   digitalPin[STEP_MAX][14];
-int   interrupt[STEP_MAX][2];
+int   s_analogPin[SCEN_MAX][6];
+int   s_digitalPin[SCEN_MAX][14];
+int   s_interrupt[SCEN_MAX][2];
+int   s_analogStep[SCEN_MAX];
+int   s_digitalStep[SCEN_MAX];
+int   s_interruptStep[SCEN_MAX];
 int   interruptMode[2];
 int   digitalMode[100];
 int   paceMaker = 0;
 int   baud = 0;
 int   error = 0;
 int   logging = YES;
-char  logBuffer[STEP_MAX][100];
+char  logBuffer[LOG_MAX][100];
 int   logSize = 1;
 int   serialSize = 1;
 int   serialMode = OFF;
@@ -56,6 +61,44 @@ WINDOW *uno,*ser,*slog,*com;
 static struct termios orig, nnew;
 static int peek = -1;
 
+//====================================
+int getAnalogPinValue(int pin,int step)
+//====================================
+{  
+  int i;
+  for (i=0;i<scenAnalog;i++)
+  {
+    if(step > s_analogStep[i] && step < s_analogStep[i+1])
+       return(s_analogPin[i][pin]);
+  }
+  if(step > s_analogStep[scenAnalog]) return(s_analogPin[scenAnalog][pin]);
+}  
+
+//====================================
+int getDigitalPinValue(int pin,int step)
+//====================================
+{  
+  int i;
+  for (i=0;i<scenDigital;i++)
+  {
+    if(step > s_digitalStep[i] && step < s_digitalStep[i+1])
+       return(s_digitalPin[i][pin]);
+  }
+  if(step > s_digitalStep[scenDigital]) return(s_digitalPin[scenDigital][pin]);
+}  
+
+//====================================
+int getInterruptValue(int pin,int step)
+//====================================
+{  
+  int i;
+  for (i=0;i<scenInterrupt;i++)
+  {
+    if(step > s_interruptStep[i] && step < s_interruptStep[i+1])
+       return(s_interrupt[i][pin]);
+  }
+  if(step > s_interruptStep[scenInterrupt]) return(s_interrupt[scenInterrupt][pin]);
+}  
 
 //====================================
 int __nsleep(const struct timespec *req, struct timespec *rem)  
@@ -207,18 +250,18 @@ void wLog(const char *p, int value1, int value2)
 void passTime()
 //====================================
 {
-  int i;
+  int i,ir0_1,ir0_2,ir1_1,ir1_2;
 
-  if(timeFromStart >= STEP_MAX)
-    {
-      wLog("Log Limit reached",STEP_MAX,-1); 
-      return;
-    }
 
   timeFromStart++;
 
 
   i = timeFromStart;
+
+  ir0_1 = getInterruptValue(0,i);
+  ir0_2 = getInterruptValue(0,i-1);
+  ir1_1 = getInterruptValue(1,i);
+  ir1_2 = getInterruptValue(1,i-1);
 
   //  if(interruptMode[0] == LOW && interrupt[i][0] == 0)
   //    {
@@ -226,38 +269,39 @@ void passTime()
   //      interrupt0();
   //    }
 
-  if(interruptMode[0] == RISING && interrupt[i][0] == 1 && interrupt[i-1][0] == 0)
+
+  if(interruptMode[0] == RISING && ir0_1 == 1 && ir0_2 == 0)
     {
       if(confLogLev > 0)wLog("InterruptRISING",0,-1);
       interrupt0();
     }
   
-  if(interruptMode[0] == FALLING && interrupt[i][0] == 0 && interrupt[i-1][0] == 1)
+  if(interruptMode[0] == FALLING && ir0_1 == 0 && ir0_2 == 1)
     {
       if(confLogLev > 0)wLog("InterruptFALLING",0,-1);
       interrupt0();
     }
 
-  if(interruptMode[0] == CHANGE && interrupt[i][0] != interrupt[i-1][0])
+  if(interruptMode[0] == CHANGE && ir0_1 != ir0_2)
     {
       if(confLogLev > 0)wLog("InterruptCHANGE",0,-1);
       interrupt0();
     }
 
 
-  if(interruptMode[1] == RISING && interrupt[i][1] == 1 && interrupt[i-1][1] == 0)
+  if(interruptMode[1] == RISING && ir1_1 == 1 && ir1_2 == 0)
     {
       if(confLogLev > 0)wLog("InterruptRISING",1,-1);
       interrupt1();
     }
   
-  if(interruptMode[1] == FALLING && interrupt[i][1] == 0 && interrupt[i-1][1] == 1)
+  if(interruptMode[1] == FALLING && ir1_1 == 0 && ir1_2 == 1)
     {
       if(confLogLev > 0)wLog("InterruptFALLING",1,-1);
       interrupt1();
     }
 
-  if(interruptMode[1] == CHANGE && interrupt[i][1] != interrupt[i-1][1])
+  if(interruptMode[1] == CHANGE && ir1_1 != ir1_2)
     {
       if(confLogLev > 0)wLog("InterruptCHANGE",1,-1);
       interrupt1();
@@ -272,7 +316,6 @@ void wLogChar(const char *p, const char *value1, int value2)
   int i;
   char temp[100],temp2[100];
 
-  //sprintf(temp," ");
   strcpy(temp," ");
   if(value2 > -2)
     {
@@ -324,8 +367,8 @@ void showConfig()
   wprintw(com," Digital Pins   = %d",scenDigital);   wmove(com,5,0);
   wprintw(com," Interrupts     = %d",scenInterrupt); wmove(com,7,0);
   wprintw(com,"---Configuration---");                wmove(com,8,0);
-  wprintw(com," Delay    = %3d",confDelay);           wmove(com,9,0);
-  wprintw(com," LogLevel = %3d",confLogLev);          wmove(com,10,0);
+  wprintw(com," Delay    = %3d",confDelay);          wmove(com,9,0);
+  wprintw(com," LogLevel = %3d",confLogLev);         wmove(com,10,0);
   wprintw(com," LogFile  = %3d",confLogFile);
   show(com);
 }
@@ -359,9 +402,6 @@ void showSerial(const char *m, int newLine)
   else
     {
       showError("Serial output without Serial.begin",timeFromStart);
-/*       wmove(ser,1,0); */
-/*       wprintw(ser,"Try to write to serial output without Serial.begin"); */
-/*       wrefresh(ser); */
     }
 }
 
@@ -492,10 +532,10 @@ void boardInit()
     }
   for(i=0;i<14;i++)
     {
-      for(j=0;j<LOOP_MAX;j++)
+      for(j=0;j<SCEN_MAX;j++)
 	{
-          analogPin[j][i]   = 0;
-          digitalPin[j][i]  = 0;
+          s_analogPin[j][i]   = 0;
+          s_digitalPin[j][i]  = 0;
 	}
     }
 }
@@ -510,7 +550,7 @@ void unimplemented(const char *f)
 }
 
 //====================================
-void readExt()
+void readScenario()
 //====================================
 {
   FILE *in;
@@ -542,63 +582,45 @@ void readExt()
 	      if(state==1)//Interrupts
 		{
 		  sscanf(row,"%d%d%d",&temp,&x0,&x1);
-		  if(temp<STEP_MAX)
-		    {
 		      scenInterrupt++;
-		      for(i=temp;i<STEP_MAX;i++)
-			{
-			  interrupt[i][0] = x0;
-			  interrupt[i][1] = x1;
-			}
-		    }
-		  else
-		    showError("Interrupt scenario to long",temp);
+	              i = scenInterrupt;
+                          s_interruptStep[i] = temp;
+			  s_interrupt[i][0]  = x0;
+			  s_interrupt[i][1]  = x1;
 		}
 	      if(state==2) // Digital Pins
 		{
 		  sscanf(row,"%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5,&x6,&x7,&x8,&x9,&x9,&x10,&x11,&x12,&x13);
-		  if(temp<STEP_MAX)
-		    {
 		      scenDigital++;
-		      for(i=temp;i<STEP_MAX;i++)
-			{
-			  digitalPin[i][0]= x0;
-			  digitalPin[i][1]= x1;
-			  digitalPin[i][2]= x2;
-			  digitalPin[i][3]= x3;
-			  digitalPin[i][4]= x4;
-			  digitalPin[i][5]= x5;
-			  digitalPin[i][6]= x6;
-			  digitalPin[i][7]= x7;
-			  digitalPin[i][8]= x8;
-			  digitalPin[i][9]= x9;
-			  digitalPin[i][10]= x10;
-			  digitalPin[i][11]= x11;
-			  digitalPin[i][12]= x12;
-			  digitalPin[i][13]= x13;
-			}
-		    }
-		  else
-		    showError("digital scenario to long",-1);
+                      i = scenDigital;
+                          s_digitalStep[i] = temp;
+			  s_digitalPin[i][0]= x0;
+			  s_digitalPin[i][1]= x1;
+			  s_digitalPin[i][2]= x2;
+			  s_digitalPin[i][3]= x3;
+			  s_digitalPin[i][4]= x4;
+			  s_digitalPin[i][5]= x5;
+			  s_digitalPin[i][6]= x6;
+			  s_digitalPin[i][7]= x7;
+			  s_digitalPin[i][8]= x8;
+			  s_digitalPin[i][9]= x9;
+			  s_digitalPin[i][10]= x10;
+			  s_digitalPin[i][11]= x11;
+			  s_digitalPin[i][12]= x12;
+			  s_digitalPin[i][13]= x13;
 		}
 	      if(state==3) // Analog Pins
 		{
 		  sscanf(row,"%d%d%d%d%d%d%d",&temp,&x0,&x1,&x2,&x3,&x4,&x5);
-		  if(temp<STEP_MAX)
-		    {
 		      scenAnalog++;
-		      for(i=temp;i<STEP_MAX;i++)
-			{
-			  analogPin[i][0]= x0;
-			  analogPin[i][1]= x1;
-			  analogPin[i][2]= x2;
-			  analogPin[i][3]= x3;
-			  analogPin[i][4]= x4;
-			  analogPin[i][5]= x5;
-			}
-		    }
-		  else
-		    showError("analogPin scenario to long",-1);
+                      i = scenAnalog;
+                          s_analogStep[i] = temp;
+			  s_analogPin[i][0]= x0;
+			  s_analogPin[i][1]= x1;
+			  s_analogPin[i][2]= x2;
+			  s_analogPin[i][3]= x3;
+			  s_analogPin[i][4]= x4;
+			  s_analogPin[i][5]= x5;
 		}	      
 	    }
 	}
