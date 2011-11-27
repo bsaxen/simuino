@@ -381,12 +381,12 @@ void init(char *fileName)
 
   // Message Window
   com=newwin(12,61,AP+4,0);
-  wbkgd(com,COLOR_PAIR(4));
+  wbkgd(com,COLOR_PAIR(6));
   wrefresh(com);
 
   // Help Window
   hlp=newwin(s_row,61,AP+4+13,0);
-  wbkgd(hlp,COLOR_PAIR(4));
+  wbkgd(hlp,COLOR_PAIR(6));
   wrefresh(hlp);
  
   readSimulation(fileName);
