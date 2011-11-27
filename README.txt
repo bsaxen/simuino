@@ -7,6 +7,15 @@ Version: 0.0.1
 Developed by Benny Saxen, ADCAJO
 ==================================================
 
+Content:
+
+1. Get started
+2. Commands
+3. Display
+4. Sketch information
+5. Configuration
+6. Scenarios
+7. Supported language functions
 
 --------------------------------------------------
 1. Get started
@@ -46,7 +55,7 @@ Available commands:
  i  show sketch information
 
 --------------------------------------------------
-4. Display
+3. Display
 --------------------------------------------------
 The SIMUNIO displayes 4 windows:
 
@@ -55,35 +64,35 @@ The SIMUNIO displayes 4 windows:
  - Logs
  - Messages
 
-4.1  Arduino board Window
+3.1  Arduino board Window
      
      For each pin the following data will be displayed:
 	 Input or Output pin (in/out)
 	 Reading or writing  (r/w)
 	 Digital HIGH or LOW value (5 or 0) and values of analog pin (0 - 1023)
 
-4.2  Serial Interface
+3.2  Serial Interface
 
      Anything printed on this interface will be shown here.
 
-4.3  Logs 
+3.3  Logs 
 
      Most functions in the Arduino reference library will be displayed.
      Every line has two index: loop number, pseudo-time-elapsed, i.e steps/instructions.
-     The log-text can be customized to be more readable for the specific appliaction, see chapter 6 below.
+     The log-text can be customized to be more readable for the specific appliaction, see chapter 4 below.
 
-4.4  Message
+3.4  Message
 
      Shows any error messages and length (no of loops) of scenario.
 
 
 --------------------------------------------------
-6. Sketch information
+4. Sketch information
 --------------------------------------------------
 
 Customized logging:
 
-Add the following rows in your sketch with suitable log-text according to your specific sketch.
+Add the following rows in your sketch with suitable log-text according to your specific application.
 
 Example:
 // SKETCH_NAME           My_sketch_name
@@ -95,8 +104,10 @@ Example:
 // DIGITALREAD       10  "your log text for pin 10"
 // ANALOGWRITE       14  "your log text for pin 14"
 
+This will make Simuino show your text in the log window.
+
 --------------------------------------------------
-7. Configuration
+5. Configuration
 --------------------------------------------------
 
 The following parameters are configured in the file, config.txt :
@@ -104,6 +115,140 @@ The following parameters are configured in the file, config.txt :
 LOG_LEVEL  2		 // Level of information to be displayed during simulation (0,1,2,3)
 DELAY    100		 // Delay in ms between each step/instruction  (0 - 1000)
 LOG_FILE   0		 // Save the log information to the file: log.txt (YES=1,NO=0)
+
+--------------------------------------------------
+6. Scenarios
+-------------------------------------------------- 
+
+In order to be able to run specific scenarios, controlled by values read from pins,
+it is possible to specify what value shall be read per step/instruction and pin.
+Only changes is needed to be specified, example:
+
+10   123
+14   150
+20    45
+
+will generate:
+
+10   123
+11   123
+12   123
+13   123
+14   150
+15   150
+16   150
+17   150
+18   150
+19   150
+20    45
+21    45
+ 
+and so on...
+
+The scenario file, scenario.txt is located in the subdirectory "servuino".
+
+Below is an example of a scenario file.
+-----------------------------------------
+
+#  Simuino scenario file
+# start_digital_pins
+#   0  1  2  3  4  5  6  7  8  9 10 11 12 13
+#-------------------------------------------
+0   1  0  1  0  0  0  0  0  0  0  0  0  0  0
+100 0  1  0  0  0  0  0  0  0  0  0  0  0  0
+200 1  0  1  0  0  0  0  0  0  0  0  0  0  0
+300 1  1  0  0  0  0  0  0  0  0  0  0  0  0
+# end_digital_pins
+# start_analog_pins
+#     0   1   2   3   4   5
+#--------------------------
+0    37   0   0   0   0   0 
+100  56   0   0   0   0   0 
+200   0   0   0   0   0   0 
+300 123   0   0   0   0   0 
+# end_analog pins
+# start_interrupts
+#  0 1
+#-----
+16 1 0
+19 0 0
+25 1 0
+30 1 1
+40 0 1
+55 1 1
+# end_interrupts
+
+-------------------
+End of example
+
+
+Note - Servuino is uses the tags: start_  end_  for reading correct values from the file.
+
+--------------------------------------------------
+7. Supported language functions
+--------------------------------------------------
+Unsupported functions are implemented with a dummy, in order to compile without errors.
+
+Digital I/O
+	pinMode()		Yes
+	digitalWrite()		Yes
+	digitalRead()		Yes
+Analog I/O
+	analogReference()	No
+	analogRead()		Yes
+	analogWrite() - PWM	Yes
+Advanced I/O
+	tone()			No
+	noTone()		No
+	shiftOut()		No
+	shiftIn()		No
+	pulseIn()		No
+Time
+	millis()		Yes
+	micros()		Yes
+	delay()			Yes
+	delayMicroseconds()	Yes
+Math
+	min()			Yes
+	max()			Yes
+	abs()			Yes
+	constrain()		Yes
+	map()			Yes
+	pow()			Yes
+	sqrt()			Yes
+Trigonometry
+	sin()			Yes
+	cos()			Yes
+	tan()			Yes
+	Random Numbers		
+	       randomSeed()	Yes
+	       random()		Yes
+Bits and Bytes
+	lowByte()		No
+	highByte()		No
+	bitRead()		No
+	bitWrite()		No
+	bitSet()		No
+	bitClear()		No
+	bit()			No
+External Interrupts
+	attachInterrupt()	Yes
+	detachInterrupt()	Yes
+Interrupts
+	interrupts()		No	
+	noInterrupts()		No
+Communication
+	Serial			
+		begin()		Yes
+		end()		Yes
+		available()	No
+		read()		No
+		peek()		No
+		flush()		Yes
+		print()		Yes
+		println()	Yes
+		write()		Yes
+
 --------------------------------------------------
 End of README
 --------------------------------------------------
