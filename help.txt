@@ -1,0 +1,15 @@
+Available Commands:
+===================================
+ s  step
+ r  run a loop
+ g  run complete simulation
+ a  re-run simulation
+ q  quit anytime, except during execution of a command
+
+ l  toggles log level (3: shows delay and serial)
+ +  increase delay in stepping by +10
+ -  decrease delay in stepping by -10
+ f  records logging to file when ON. Toggles ON/OFF (1/0)
+
+ h  show this information
+ i  show sketch information

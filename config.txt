@@ -1,0 +1,5 @@
+# Sermuino Configuration File
+#==============================
+LOG_LEVEL  2
+DELAY    100
+LOG_FILE   0
