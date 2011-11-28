@@ -2,7 +2,7 @@
 SIMUINO is a Arduino Simulator. 
 Code: c++
 Platform: Linux (Ubuntu)
-Version: 0.0.1
+Version: 0.0.3
 
 Developed by Benny Saxen, ADCAJO
 ==================================================
@@ -145,44 +145,40 @@ will generate:
  
 and so on...
 
-The scenario file, scenario.txt is located in the subdirectory "servuino".
+The scenario data is specified in your sketch-file, se example below..
 
 Below is an example of a scenario file.
 -----------------------------------------
-
-#  Simuino scenario file
-# start_digital_pins
-#   0  1  2  3  4  5  6  7  8  9 10 11 12 13
-#-------------------------------------------
-0   1  0  1  0  0  0  0  0  0  0  0  0  0  0
-100 0  1  0  0  0  0  0  0  0  0  0  0  0  0
-200 1  0  1  0  0  0  0  0  0  0  0  0  0  0
-300 1  1  0  0  0  0  0  0  0  0  0  0  0  0
-# end_digital_pins
-# start_analog_pins
-#     0   1   2   3   4   5
-#--------------------------
-0    37   0   0   0   0   0 
-100  56   0   0   0   0   0 
-200   0   0   0   0   0   0 
-300 123   0   0   0   0   0 
-# end_analog pins
-# start_interrupts
-#  0 1
-#-----
-16 1 0
-19 0 0
-25 1 0
-30 1 1
-40 0 1
-55 1 1
-# end_interrupts
-
+//  digital_pins
+//           step 0  1  2  3  4  5  6  7  8  9 10 11 12 13
+//          --- -------------------------------------------
+// SCENDIGPIN 0   1  0  1  0  0  0  0  0  0  0  0  0  0  0
+// SCENDIGPIN 100 0  1  0  0  0  0  0  0  0  0  0  0  0  0
+// SCENDIGPIN 200 1  0  1  0  0  0  0  0  0  0  0  0  0  0
+// SCENDIGPIN 300 1  1  0  0  0  0  0  0  0  0  0  0  0  0
+//
+//  analog_pins
+//            step    0   1   2   3   4   5
+//            ------------------------------
+// SCENANAPIN   0    37   0   0   0   0  11 
+// SCENANAPIN 100    56   0   0   0   0  12 
+// SCENANAPIN 200     0   0   0   0   0  13 
+// SCENANAPIN 300   123   0   0   0   0  14 
+//
+//  interrupts
+//          step 0 1
+//         ----------
+// SCENINRPT 16  1 0
+// SCENINRPT 19  0 0
+// SCENINRPT 25  1 0
+// SCENINRPT 30  1 1
+// SCENINRPT 40  0 1
+// SCENINRPT 55  1 1
 -------------------
 End of example
 
 
-Note - Servuino is uses the tags: start_  end_  for reading correct values from the file.
+Note - The data has to be given in ascending step order.
 
 --------------------------------------------------
 7. Supported language functions
