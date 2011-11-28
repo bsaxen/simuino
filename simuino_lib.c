@@ -27,7 +27,7 @@ int   paceMaker = 0;
 int   baud = 0;
 int   error = 0;
 int   logging = YES;
-char  logBuffer[LOG_MAX][100];
+char  logBuffer[MAX_LOG][100];
 int   logSize = 1;
 int   serialSize = 1;
 int   serialMode = OFF;
@@ -208,18 +208,20 @@ void showConfig()
 {
   wclear(com);
   wmove(com,2,0);
-  wprintw(com,"---Scenario Steps---");               wmove(com,3,0);
-  wprintw(com," Steps   = %d(%d)",currentStep,g_steps);       wmove(com,4,0);
-  wprintw(com," Loops   = %d(%d)",currentLoop,g_loops);       wmove(com,5,0);
+  wprintw(com," Steps = %d(%d) Loops = %d(%d)",currentStep,g_steps,currentLoop,g_loops);
+
   if(loopPos[currentLoop+1] > 0)
     wprintw(com," Next loop at step (%d)",loopPos[currentLoop+1]);
   else
     wprintw(com," Last loop");
-  wmove(com,7,0);
-  wprintw(com,"---Configuration---");                wmove(com,8,0);
-  wprintw(com," Delay    = %3d",confDelay);          wmove(com,9,0);
-  wprintw(com," LogLevel = %3d",confLogLev);         wmove(com,10,0);
-  wprintw(com," LogFile  = %3d",confLogFile);
+
+  wmove(com,3,0);
+  wprintw(com," Next event: %s",simulation[currentStep+1]);   
+
+  wmove(com,4,0);
+  wprintw(com," Delay = %d",confDelay);   
+  wprintw(com," LogLevel = %d",confLogLev);  
+  wprintw(com," LogFile = %d",confLogFile);
   show(com);
 }
 
@@ -402,7 +404,7 @@ void boardInit()
 
   currentLoop = 0;
 
-  for(i=0;i<LOG_MAX;i++)
+  for(i=0;i<MAX_LOG;i++)
     {
        strcpy(logBuffer[i]," ");
     }
@@ -413,6 +415,10 @@ void boardInit()
   for(i=0;i<MAX_LOOP;i++)
     {
       loopPos[i] = 0;
+    }
+  for(i=0;i<MAX_SERIAL;i++)
+    {
+      strcpy(serialBuffer[i],"");
     }
   for(i=0;i<MAX_PIN_DIGITAL;i++)
     {

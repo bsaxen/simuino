@@ -19,8 +19,8 @@
 #define CHANGE  1
 #define RISING  2
 #define FALLING 3
-//#define SCEN_MAX 100
-#define LOG_MAX  200
+#define MAX_SERIAL 100
+#define MAX_LOG  200
 #define MAX_STEP 2000
 #define MAX_LOOP 2000
 #define MAX_PIN_ANALOG 6
@@ -364,7 +364,7 @@ void init(char *fileName)
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
   wmove(uno,0,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer 0.0.2");
+  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer 0.0.3");
   wrefresh(uno);
 
   // Serial Window
@@ -376,16 +376,16 @@ void init(char *fileName)
   // Log Window
   logSize = s_row;
   slog=newwin(s_row,40,0,62);
-  wbkgd(slog,COLOR_PAIR(6));
+  wbkgd(slog,COLOR_PAIR(4));
   wrefresh(slog);
 
   // Message Window
-  com=newwin(12,61,AP+4,0);
+  com=newwin(6,61,AP+4,0);
   wbkgd(com,COLOR_PAIR(6));
   wrefresh(com);
 
   // Help Window
-  hlp=newwin(s_row,61,AP+4+13,0);
+  hlp=newwin(s_row-(AP+3)-6,61,AP+4+6,0);
   wbkgd(hlp,COLOR_PAIR(6));
   wrefresh(hlp);
  
@@ -401,21 +401,16 @@ void openCommand()
   while(strstr(str,"ex") == NULL)
   {
     wmove(uno,DP+6,RF+5);
-    wprintw(uno,"                                    ");
-    //wclear(uno);
-    //mvwgetstr(com,30,0,str);
+    wprintw(uno,"                                            ");
     mvwprintw(uno,DP+6,RF+6,">>");
-    //mvwprintw(com,3,0,"c1>");
-    //mvwprintw(ser,30,0,"c3>");
     wrefresh(uno);
-    //wrefresh(com);
-    //wrefresh(ser);    
     wgetstr(uno,str);
-    //ch = getchar();
-    wLog(str,-1,-1);
+    if(strstr(str,"config"))
+      {
+      }
   }
   wmove(uno,DP+6,RF+5);
-  wprintw(uno,"                                    ");
+  wprintw(uno,"                                              ");
   wrefresh(uno);
 }
 
@@ -430,7 +425,7 @@ int main(int argc, char *argv[])
 
   if (argc != 2)
     {
-      printf("Usage: termuino <servuino data file> \n");
+      printf("Usage: simuino <servuino data file> \n");
       exit(0);
     }
 
@@ -450,7 +445,6 @@ int main(int argc, char *argv[])
         {
           openCommand();
         }
-
       if (ch=='h')
 	{
 	  readHelp(tempName);
