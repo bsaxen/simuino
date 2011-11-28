@@ -300,17 +300,17 @@ void init(char *fileName)
 
   initscr();
   clear();
-  noecho();
+  //noecho();
   cbreak();
 
-  tcgetattr(0, &orig);
-  nnew = orig;
-  nnew.c_lflag &= ~ICANON;
-  nnew.c_lflag &= ~ECHO;
-  nnew.c_lflag &= ~ISIG;
-  nnew.c_cc[VMIN] = 1;
-  nnew.c_cc[VTIME] = 0;
-  tcsetattr(0, TCSANOW, &nnew);
+  //tcgetattr(0, &orig);
+  //nnew = orig;
+  //nnew.c_lflag &= ~ICANON;
+  //nnew.c_lflag &= ~ECHO;
+  //nnew.c_lflag &= ~ISIG;
+  //nnew.c_cc[VMIN] = 1;
+  //nnew.c_cc[VTIME] = 0;
+  //tcsetattr(0, TCSANOW, &nnew);
 
   getmaxyx(stdscr,s_row,s_col);
   start_color();
@@ -376,7 +376,7 @@ void init(char *fileName)
   // Log Window
   logSize = s_row;
   slog=newwin(s_row,40,0,62);
-  wbkgd(slog,COLOR_PAIR(4));
+  wbkgd(slog,COLOR_PAIR(6));
   wrefresh(slog);
 
   // Message Window
@@ -391,6 +391,32 @@ void init(char *fileName)
  
   readSimulation(fileName);
   showConfig();
+}
+//====================================
+void openCommand()
+//====================================
+{
+  int ch;
+  char str[80];
+  while(strstr(str,"ex") == NULL)
+  {
+    wmove(uno,DP+6,RF+5);
+    wprintw(uno,"                                    ");
+    //wclear(uno);
+    //mvwgetstr(com,30,0,str);
+    mvwprintw(uno,DP+6,RF+6,">>");
+    //mvwprintw(com,3,0,"c1>");
+    //mvwprintw(ser,30,0,"c3>");
+    wrefresh(uno);
+    //wrefresh(com);
+    //wrefresh(ser);    
+    wgetstr(uno,str);
+    //ch = getchar();
+    wLog(str,-1,-1);
+  }
+  wmove(uno,DP+6,RF+5);
+  wprintw(uno,"                                    ");
+  wrefresh(uno);
 }
 
 //====================================
@@ -419,6 +445,11 @@ int main(int argc, char *argv[])
   while((ch!='q')&&(ch!='x'))  
     {
       ch = getchar();
+
+      if (ch=='c')
+        {
+          openCommand();
+        }
 
       if (ch=='h')
 	{
@@ -474,8 +505,11 @@ int main(int argc, char *argv[])
 	}
     }
   
-  tcsetattr(0,TCSANOW, &orig);
+  //tcsetattr(0,TCSANOW, &orig);
   delwin(uno);
+  delwin(ser);
+  delwin(slog);
+  delwin(hlp);
   endwin();
 }
 //====================================
