@@ -57,6 +57,7 @@ WINDOW *uno,*ser,*slog,*msg;
 static struct termios orig, nnew;
 static int peek = -1;
 
+void wLog(const char *p, int value1, int value2);
 
 //====================================
 int __nsleep(const struct timespec *req, struct timespec *rem)  
@@ -102,16 +103,11 @@ void show(WINDOW *win)
 void showError(const char *m, int value)
 //====================================
 {
+  char err_msg[300];
+  strcpy(err_msg,"ERROR ");
+  strcat(err_msg,m);
+  wLog(err_msg,value,-1);
   error = 1;
-  wclear(msg);
-  wmove(msg,0,0);
-  wprintw(msg,"                                       ");
-  wmove(msg,0,0);
-  if(value == -1)
-    wprintw(msg,"Error %s",m);
-  else
-    wprintw(msg,"Error %s %d",m,value);
-  show(msg);
 }
 //====================================
 void saveConfig()
@@ -240,7 +236,7 @@ void unoInfo()
   if(loopPos[currentLoop+1] > 0)
     wprintw(uno," Next loop at step %d",loopPos[currentLoop+1]);
   else
-    wprintw(uno," Last loop");
+    wprintw(uno,"                        ");
 
   wmove(uno,11,0);
   wprintw(uno," Next: %s",simulation[currentStep+1]);
@@ -355,7 +351,7 @@ void getString(char *in, char *out)
   q = strstr(p,"'");
   strcpy(q,"\0");
   strcpy(out,p);
-
+  //wLog(out,-1,-1);
   return;
 }
 

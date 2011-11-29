@@ -66,9 +66,9 @@ int g_value = 0;
 void (*interrupt0)();
 void (*interrupt1)();
 
-char  simulation[MAX_STEP][80];
+char  simulation[MAX_STEP][SIZE_ROW];
 int   loopPos[MAX_LOOP];
-char  fileServuino[80];
+char  fileServuino[SIZE_ROW];
 
 #include "simuino_lib.c"
 #include "decode_lib.c"
@@ -82,7 +82,6 @@ int readEvent(char *ev, int step)
     strcpy(ev,simulation[step]);
   else
     return(0);
-  // wLog(ev,step,-1);
   return(step);
 }    
 
@@ -101,15 +100,12 @@ void runStep(int dir)
 
   if(currentStep > loopPos[currentLoop+1] && loopPos[currentLoop+1] !=0)
     {
-//      unoInfo();
       currentLoop++;
     }
 
   res = readEvent(event,currentStep);
   if(res != 0)
     {
-//wLog(event,step,8);
- //     unoInfo();
       if(p=strstr(event,"pinMode"))
 	{
 	  sscanf(event,"%d %s %s %d",&step,temp,mode,&pin);
@@ -189,14 +185,13 @@ void runStep(int dir)
       else
 	unimplemented(temp);
 
-      //wLog("-----",-1,-1);
       show(slog);
     }
   else
     showError("Unable to step ",currentStep);
 
   unoInfo();
-  //iDelay(confDelay);
+
   return;
 }    
 
@@ -237,7 +232,6 @@ void readSimulation(char *fileName)
   char row[SIZE_ROW],*p,temp[40];
   int step=0,loop=0;
 
-
   g_steps = 0;
   g_loops = 0;
   in = fopen(fileName,"r");
@@ -249,6 +243,7 @@ void readSimulation(char *fileName)
     {
       while (fgets(row,SIZE_ROW,in)!=NULL)
 	{
+
 	  if(row[0] != '#')
 	    {
 	      g_steps++;
@@ -461,6 +456,7 @@ void init(char *fileName)
   show(ser);
 
   readSimulation(fileName);
+
   unoInfo();
 }
 //====================================
@@ -539,8 +535,9 @@ int main(int argc, char *argv[])
   strcpy(fileServuino,argv[1]);
 
   init(fileServuino);
+
   readConfig();
-  //showConfig();
+
   if(confLogFile == YES)resetFile("log.txt");
   readMsg(tempName);
 
