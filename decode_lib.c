@@ -63,8 +63,7 @@ void pinMode(int pin,int mode)
 	    wLog("pinMode OUT",pin,-1);
 	  else
 	    wLog(temp,pin,-1);
-	}
-      
+	}      
       show(uno);
     }
   else
