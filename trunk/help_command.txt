@@ -1,0 +1,7 @@
+ex              exit command mode
+help            show this information
+scen            show scenario data
+conf            display configuration
+delay <x>       set delay to x
+log   <x>       set log level to x
+file  <ON/OFF>  record log to file: log.txt

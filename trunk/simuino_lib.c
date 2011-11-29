@@ -53,7 +53,7 @@ int   confDelay   = 100;
 int   confLogLev  =   1;
 int   confLogFile =   0;
 
-WINDOW *uno,*ser,*slog,*com,*hlp;
+WINDOW *uno,*ser,*slog,*msg;
 static struct termios orig, nnew;
 static int peek = -1;
 
@@ -93,7 +93,7 @@ void iDelay(int ms)
 void show(WINDOW *win)
 //====================================
 {
-
+  box(win,0,0);
   wrefresh(win);
   iDelay(confDelay);
 }
@@ -103,15 +103,38 @@ void showError(const char *m, int value)
 //====================================
 {
   error = 1;
-  wmove(com,0,0);
-  wprintw(com,"                                       ");
-  wmove(com,0,0);
+  wclear(msg);
+  wmove(msg,0,0);
+  wprintw(msg,"                                       ");
+  wmove(msg,0,0);
   if(value == -1)
-    wprintw(com,"Error %s",m);
+    wprintw(msg,"Error %s",m);
   else
-    wprintw(com,"Error %s %d",m,value);
+    wprintw(msg,"Error %s %d",m,value);
+  show(msg);
+}
+//====================================
+void saveConfig()
+//====================================
+{
+  FILE *out;
+  time_t lt;
 
-  show(com);
+  out = fopen("config.txt","w");
+  if(out == NULL)
+    {
+      showError("Unable to open config.txt ",-1);
+    }
+  else
+    {
+      lt = time(NULL);
+      fprintf(out,"# Simuino Configuration %s",ctime(&lt));
+      fprintf(out,"DELAY      %d\n",confDelay);
+      fprintf(out,"LOG_LEVEL  %d\n",confLogLev);
+      fprintf(out,"LOG_FILE   %d\n",confLogFile);
+    }
+
+  fclose(out);
 }
 
 //====================================
@@ -196,33 +219,33 @@ void wLog(const char *p, int value1, int value2)
   wclear(slog);
   for(i=0;i<logSize;i++)
     {
-      wmove(slog,i,0);
+      wmove(slog,i+1,1);
       wprintw(slog,"%s",logBuffer[i]);
     } 
-  wrefresh(slog);
+  show(slog);
 }
 
+
 //====================================
-void showConfig()
+void unoInfo()
 //====================================
 {
-  wclear(com);
-  wmove(com,2,0);
-  wprintw(com," Steps = %d(%d) Loops = %d(%d)",currentStep,g_steps,currentLoop,g_loops);
+  wmove(uno,8,0); 
+  wprintw(uno," Sketch: %s",appName);
+  wmove(uno,9,0);
+  wprintw(uno," Scenario: Dig=%d Ana=%d Interrupt=%d",scenDigital,scenAnalog,scenInterrupt);
+  wmove(uno,10,0);
+  wprintw(uno," Steps = %d(%d) Loops = %d(%d)",currentStep,g_steps,currentLoop,g_loops);
 
   if(loopPos[currentLoop+1] > 0)
-    wprintw(com," Next loop at step (%d)",loopPos[currentLoop+1]);
+    wprintw(uno," Next loop at step %d",loopPos[currentLoop+1]);
   else
-    wprintw(com," Last loop");
+    wprintw(uno," Last loop");
 
-  wmove(com,3,0);
-  wprintw(com," Next event: %s",simulation[currentStep+1]);   
+  wmove(uno,11,0);
+  wprintw(uno," Next: %s",simulation[currentStep+1]);
 
-  wmove(com,4,0);
-  wprintw(com," Delay = %d",confDelay);   
-  wprintw(com," LogLevel = %d",confLogLev);  
-  wprintw(com," LogFile = %d",confLogFile);
-  show(com);
+  show(uno);
 }
 
 //====================================
@@ -264,10 +287,10 @@ void wLogChar(const char *p, const char *value1, int value2)
   wclear(slog);
   for(i=0;i<logSize;i++)
     {
-      wmove(slog,i,0);
+      wmove(slog,i+1,0);
       wprintw(slog,"%s",logBuffer[i]);
     } 
-  wrefresh(slog);
+  show(slog);
 }
 
 
@@ -290,10 +313,10 @@ void showSerial(const char *m, int newLine)
       wclear(ser);
       for(i=1;i<=serialSize;i++)
 	{
-	  wmove(ser,i-1,0);
+	  wmove(ser,i-1,1);
 	  wprintw(ser,"%s",serialBuffer[i]);
 	} 
-      wrefresh(ser);
+      show(ser);
       rememberNewLine = newLine;
     }
   else

@@ -2,7 +2,7 @@
 SIMUINO is a Arduino Simulator. 
 Code: c++
 Platform: Linux (Ubuntu)
-Version: 0.0.3
+Version: 0.0.4
 
 Developed by Benny Saxen, ADCAJO
 ==================================================
@@ -45,19 +45,13 @@ Available commands:
  g  run complete simulation
  a  re-run simulation
  q  quit anytime, except during execution of a command
-
- l  toggles log level (3: shows delay and serial)
- +  increase delay in stepping by +10
- -  decrease delay in stepping by -10
- f  records logging to file when ON. Toggles ON/OFF (1/0)
-
+ c  enter command mode
  h  show this information
- i  show sketch information
 
 --------------------------------------------------
 3. Display
 --------------------------------------------------
-The SIMUNIO displayes 4 windows:
+The SIMUNIO displays 4 windows
 
  - The Arduino board with the pin-layout
  - Serial Interface
