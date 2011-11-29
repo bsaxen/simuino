@@ -1,4 +1,4 @@
-# Simuino Configuration Tue Nov 29 13:58:39 2011
+# Simuino Configuration Tue Nov 29 18:01:23 2011
 DELAY      50
 LOG_LEVEL  3
 LOG_FILE   0

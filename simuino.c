@@ -26,6 +26,8 @@
 #define MAX_PIN_ANALOG 6
 #define MAX_PIN_DIGITAL 14
 
+#define SIZE_ROW 120
+
 #define UNO_H  19
 #define UNO_W  61
 #define UNO_COLOR 6
@@ -88,7 +90,7 @@ int readEvent(char *ev, int step)
 void runStep(int dir)
 //====================================
 {
-  char row[120],event[80],temp[80],mode[5],*p,temp2[80],temp3[80];
+  char row[SIZE_ROW],event[SIZE_ROW],temp[SIZE_ROW],mode[5],*p,temp2[SIZE_ROW],temp3[SIZE_ROW];
   int res  = 0,value = 0;
   int step = 0,pin,x,y;
 
@@ -232,7 +234,7 @@ void readSimulation(char *fileName)
 //====================================
 {
   FILE *in;
-  char row[80],*p,temp[40];
+  char row[SIZE_ROW],*p,temp[40];
   int step=0,loop=0;
 
 
@@ -245,7 +247,7 @@ void readSimulation(char *fileName)
     }
   else
     {
-      while (fgets(row,80,in)!=NULL)
+      while (fgets(row,SIZE_ROW,in)!=NULL)
 	{
 	  if(row[0] != '#')
 	    {
@@ -280,7 +282,7 @@ void showScenario(char *fileName)
 //====================================
 {
   FILE *in;
-  char row[80];
+  char row[SIZE_ROW];
   int i=0;
 
   wclear(msg);
@@ -291,7 +293,7 @@ void showScenario(char *fileName)
     }
   else
     {
-      while (fgets(row,120,in)!=NULL && i < s_row-1)
+      while (fgets(row,SIZE_ROW,in)!=NULL && i < s_row-1)
         {
           if(strstr(row,"// SCEN"))
           {
@@ -311,7 +313,7 @@ void readMsg(char *fileName)
 //====================================
 {
   FILE *in;
-  char row[80];
+  char row[SIZE_ROW];
   int i=0;
 
   wclear(msg);
@@ -322,7 +324,7 @@ void readMsg(char *fileName)
     }
   else
     {
-      while (fgets(row,120,in)!=NULL && i < s_row-1)
+      while (fgets(row,SIZE_ROW,in)!=NULL && i < s_row-1)
 	{
           i++;
 	  wmove(msg,i,1);
