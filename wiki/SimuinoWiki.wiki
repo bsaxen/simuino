@@ -30,31 +30,31 @@ Quick starter guide:
 --------------------------------------------------
 2. Commands
 --------------------------------------------------
-Available commands:
- s  step
- r  run a loop
- g  run complete simulation
- a  re-run simulation
- q  quit anytime, except during execution of a command
- c  enter command mode
- h  show this information
+Available commands:<br>
+ s  step<br>
+ r  run a loop<br>
+ g  run complete simulation<br>
+ a  re-run simulation<br>
+ q  quit anytime, except during execution of a command<br>
+ c  enter command mode<br>
+ h  show this information<br>
 
 --------------------------------------------------
 3. Display
 --------------------------------------------------
 The SIMUNIO displays 4 windows
 
- - The Arduino board with the pin-layout
- - Serial Interface
- - Logs
- - Messages
+ - The Arduino board with the pin-layout<br>
+ - Serial Interface<br>
+ - Logs<br>
+ - Messages<br>
 
 3.1  Arduino board Window
      
-     For each pin the following data will be displayed:
-	 Input or Output pin (in/out)
-	 Reading or writing  (r/w)
-	 Digital HIGH or LOW value (5 or 0) and values of analog pin (0 - 1023)
+     For each pin the following data will be displayed:<br>
+	 Input or Output pin (in/out)<br>
+	 Reading or writing  (r/w)<br>
+	 Digital HIGH or LOW value (5 or 0) and values of analog pin (0 - 1023)<br>
 
 3.2  Serial Interface
 
@@ -63,7 +63,7 @@ The SIMUNIO displays 4 windows
 3.3  Logs 
 
      Most functions in the Arduino reference library will be displayed.
-     Every line has two index: loop number, pseudo-time-elapsed, i.e steps/instructions.
+     Every line has two index: loop number, pseudo-time-elapsed, i.e steps/instructions.<br>
      The log-text can be customized to be more readable for the specific appliaction, see chapter 4 below.
 
 3.4  Message
@@ -79,15 +79,15 @@ Customized logging:
 
 Add the following rows in your sketch with suitable log-text according to your specific application.
 
-Example:
-// SKETCH_NAME           My_sketch_name
-// PINMODE_OUT        2  "your log text for pin 2"
-// PINMODE_IN         4  "your log text for pin 4"
-// DIGITALWRITE_LOW  11  "your log text for pin 11 when HIGH"
-// DIGITALWRITE_HIGH 11  "your log text for pin 11 when LOW"
-// ANALOGREAD         1  "your log text for pin 1"
-// DIGITALREAD       10  "your log text for pin 10"
-// ANALOGWRITE       14  "your log text for pin 14"
+Example:<br>
+// SKETCH_NAME           My_sketch_name<br>
+// PINMODE_OUT        2  "your log text for pin 2"<br>
+// PINMODE_IN         4  "your log text for pin 4"<br>
+// DIGITALWRITE_LOW  11  "your log text for pin 11 when HIGH"<br>
+// DIGITALWRITE_HIGH 11  "your log text for pin 11 when LOW"<br>
+// ANALOGREAD         1  "your log text for pin 1"<br>
+// DIGITALREAD       10  "your log text for pin 10"<br>
+// ANALOGWRITE       14  "your log text for pin 14"<br>
 
 This will make Simuino show your text in the log window.
 
@@ -97,9 +97,9 @@ This will make Simuino show your text in the log window.
 
 The following parameters are configured in the file, config.txt :
 
-LOG_LEVEL  2		 // Level of information to be displayed during simulation (0,1,2,3)
-DELAY    100		 // Delay in ms between each step/instruction  (0 - 1000)
-LOG_FILE   0		 // Save the log information to the file: log.txt (YES=1,NO=0)
+LOG_LEVEL  2		 // Level of information to be displayed during simulation (0,1,2,3)<br>
+DELAY    100		 // Delay in ms between each step/instruction  (0 - 1000)<br>
+LOG_FILE   0		 // Save the log information to the file: log.txt (YES=1,NO=0)<br>
 
 --------------------------------------------------
 6. Scenarios
@@ -109,24 +109,24 @@ In order to be able to run specific scenarios, controlled by values read from pi
 it is possible to specify what value shall be read per step/instruction and pin.
 Only changes is needed to be specified, example:
 
-10   123
-14   150
-20    45
+10   123<br>
+14   150<br>
+20    45<br>
 
 will generate:
 
-10   123
-11   123
-12   123
-13   123
-14   150
-15   150
-16   150
-17   150
-18   150
-19   150
-20    45
-21    45
+10   123<br>
+11   123<br>
+12   123<br>
+13   123<br>
+14   150<br>
+15   150<br>
+16   150<br>
+17   150<br>
+18   150<br>
+19   150<br>
+20    45<br>
+21    45<br>
  
 and so on...
 
@@ -134,31 +134,31 @@ The scenario data is specified in your sketch-file, se example below..
 
 Below is an example of a scenario file.
 -----------------------------------------
-//  digital_pins
-//           step 0  1  2  3  4  5  6  7  8  9 10 11 12 13
-//          --- -------------------------------------------
-// SCENDIGPIN 0   1  0  1  0  0  0  0  0  0  0  0  0  0  0
-// SCENDIGPIN 100 0  1  0  0  0  0  0  0  0  0  0  0  0  0
-// SCENDIGPIN 200 1  0  1  0  0  0  0  0  0  0  0  0  0  0
-// SCENDIGPIN 300 1  1  0  0  0  0  0  0  0  0  0  0  0  0
+//  digital_pins<br>
+//           step 0  1  2  3  4  5  6  7  8  9 10 11 12 13<br>
+//          --- -------------------------------------------<br>
+// SCENDIGPIN 0   1  0  1  0  0  0  0  0  0  0  0  0  0  0<br>
+// SCENDIGPIN 100 0  1  0  0  0  0  0  0  0  0  0  0  0  0<br>
+// SCENDIGPIN 200 1  0  1  0  0  0  0  0  0  0  0  0  0  0<br>
+// SCENDIGPIN 300 1  1  0  0  0  0  0  0  0  0  0  0  0  0<br>
 //
 //  analog_pins
-//            step    0   1   2   3   4   5
-//            ------------------------------
-// SCENANAPIN   0    37   0   0   0   0  11 
-// SCENANAPIN 100    56   0   0   0   0  12 
-// SCENANAPIN 200     0   0   0   0   0  13 
-// SCENANAPIN 300   123   0   0   0   0  14 
+//            step    0   1   2   3   4   5<br>
+//            ------------------------------<br>
+// SCENANAPIN   0    37   0   0   0   0  11 <br>
+// SCENANAPIN 100    56   0   0   0   0  12 <br>
+// SCENANAPIN 200     0   0   0   0   0  13 <br>
+// SCENANAPIN 300   123   0   0   0   0  14 <br>
 //
 //  interrupts
-//          step 0 1
-//         ----------
-// SCENINRPT 16  1 0
-// SCENINRPT 19  0 0
-// SCENINRPT 25  1 0
-// SCENINRPT 30  1 1
-// SCENINRPT 40  0 1
-// SCENINRPT 55  1 1
+//          step 0 1<br>
+//         ----------<br>
+// SCENINRPT 16  1 0<br>
+// SCENINRPT 19  0 0<br>
+// SCENINRPT 25  1 0<br>
+// SCENINRPT 30  1 1<br>
+// SCENINRPT 40  0 1<br>
+// SCENINRPT 55  1 1<br>
 -------------------
 End of example
 
