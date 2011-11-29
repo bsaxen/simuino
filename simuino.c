@@ -384,7 +384,6 @@ void init(char *fileName)
   /*     COLOR_WHITE   7 */
 
   // Board Window    
-  //uno=newwin(AP+3,61,0,0);
   uno_w = UNO_W;
   uno_h = UNO_H;
   uno=newwin(uno_h,uno_w,0,0);
