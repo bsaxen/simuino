@@ -287,7 +287,7 @@ void wLogChar(const char *p, const char *value1, int value2)
   wclear(slog);
   for(i=0;i<logSize;i++)
     {
-      wmove(slog,i+1,0);
+      wmove(slog,i+1,1);
       wprintw(slog,"%s",logBuffer[i]);
     } 
   show(slog);
