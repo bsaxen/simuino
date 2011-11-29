@@ -1,6 +1,6 @@
 Content:
 
-1. Get started
+1. Get started<br>
 2. Commands
 3. Display
 4. Sketch information
