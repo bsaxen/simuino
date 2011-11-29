@@ -170,62 +170,62 @@ Note - The data has to be given in ascending step order.
 --------------------------------------------------
 Unsupported functions are implemented with a dummy, in order to compile without errors.
 
-Digital I/O
-	pinMode()		Yes
-	digitalWrite()		Yes
-	digitalRead()		Yes
-Analog I/O
-	analogReference()	No
-	analogRead()		Yes
-	analogWrite() - PWM	Yes
-Advanced I/O
-	tone()			No
-	noTone()		No
-	shiftOut()		No
-	shiftIn()		No
-	pulseIn()		No
-Time
-	millis()		Yes
-	micros()		Yes
-	delay()			Yes
-	delayMicroseconds()	Yes
-Math
-	min()			Yes
-	max()			Yes
-	abs()			Yes
-	constrain()		Yes
-	map()			Yes
-	pow()			Yes
-	sqrt()			Yes
-Trigonometry
-	sin()			Yes
-	cos()			Yes
-	tan()			Yes
-	Random Numbers		
-	       randomSeed()	Yes
-	       random()		Yes
-Bits and Bytes
-	lowByte()		No
-	highByte()		No
-	bitRead()		No
-	bitWrite()		No
-	bitSet()		No
-	bitClear()		No
-	bit()			No
-External Interrupts
-	attachInterrupt()	Yes
-	detachInterrupt()	Yes
-Interrupts
-	interrupts()		No	
-	noInterrupts()		No
-Communication
-	Serial			
-		begin()		Yes
-		end()		Yes
-		available()	No
-		read()		No
-		peek()		No
-		flush()		Yes
-		print()		Yes
-		println()	Yes
-		write()		Yes
+Digital I/O<br>
+	pinMode()		Yes<br>
+	digitalWrite()		Yes<br>
+	digitalRead()		Yes<br>
+Analog I/O<br>
+	analogReference()	No<br>
+	analogRead()		Yes<br>
+	analogWrite() - PWM	Yes<br>
+Advanced I/O<br>
+	tone()			No<br>
+	noTone()		No<br>
+	shiftOut()		No<br>
+	shiftIn()		No<br>
+	pulseIn()		No<br>
+Time<br>
+	millis()		Yes<br>
+	micros()		Yes<br>
+	delay()			Yes<br>
+	delayMicroseconds()	Yes<br>
+Math<br>
+	min()			Yes<br>
+	max()			Yes<br>
+	abs()			Yes<br>
+	constrain()		Yes<br>
+	map()			Yes<br>
+	pow()			Yes<br>
+	sqrt()			Yes<br>
+Trigonometry<br>
+	sin()			Yes<br>
+	cos()			Yes<br>
+	tan()			Yes<br>
+	Random Numbers		<br>
+	       randomSeed()	Yes<br>
+	       random()		Yes<br>
+Bits and Bytes<br>
+	lowByte()		No<br>
+	highByte()		No<br>
+	bitRead()		No<br>
+	bitWrite()		No<br>
+	bitSet()		No<br>
+	bitClear()		No<br>
+	bit()			No<br>
+External Interrupts<br>
+	attachInterrupt()	Yes<br>
+	detachInterrupt()	Yes<br>
+Interrupts<br>
+	interrupts()		No<br>	
+	noInterrupts()		No<br>
+Communication<br>
+	Serial			<br>
+		begin()		Yes<br>
+		end()		Yes<br>
+		available()	No<br>
+		read()		No<br>
+		peek()		No<br>
+		flush()		Yes<br>
+		print()		Yes<br>
+		println()	Yes<br>
+		write()		Yes<br>
