@@ -54,7 +54,7 @@ The SIMUNIO displays 4 windows
      For each pin the following data will be displayed:<br>
 	 Input or Output pin (in/out)<br>
 	 Reading or writing  (r/w)<br>
-	 Digital HIGH or LOW value (5 or 0) and values of analog pin (0 - 1023)<br>
+	 Digital HIGH or LOW value (1 or 0) and values of analog pin (0 - 1023)<br>
 
 3.2  Serial Interface
 
