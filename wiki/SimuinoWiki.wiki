@@ -41,13 +41,13 @@ Repeat step 6 - 10 if you make any changes in your sketch( i.e. logic, scenario,
 2. Commands
 --------------------------------------------------
 Commands in Run Mode:
- s  step
- r  run a loop
- g  run complete simulation
- a  re-run simulation
- q  quit anytime, except during execution of a command
- c  enter admin mode
- h  show this information
+ s  step<br>
+ r  run a loop<br>
+ g  run complete simulation<br>
+ a  re-run simulation<br>
+ q  quit anytime, except during execution of a command<br>
+ c  enter admin mode<br>
+ h  show this information<br>
 
 Commands in Admin Mode:
 ex               exit command mode
