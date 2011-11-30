@@ -20,24 +20,49 @@ Quick starter guide:
 3. Go to directory simuino. Compile: g++ -O2 -o simuino simuino.c -lncurses
    You need to have installed packages for ncurses-dev.
 
-4. Run script:   sh runSimuino  <your sketch.pde>  <simulation length in steps>
+4. Run Simuino:  ./simuino
    Note - expand the size of your terminal !
 
-   Example:   sh runSimuino  stepper_motor.pde  700
+5. If this is the first time you start Simuino. Type 'c' to enter admin-mode.
+   Enter 'conf'  - the configuration is shown in the message window.
+   Enter 'sketch <path + your sketch file name>'. This will be saved in the config. 
 
-   Command h will show available commands
+6. Enter 'load 300' . This will create simulation of 300 steps. Max steps is 2000
+
+8. Enter 'ex' to leave admin-mode.
+
+9. Type 'h' if you need to see avalable commands in run-mode
+
+10. Start evaluate the simulation by stepping
+
+Repeat step 6 - 10 if you make any changes in your sketch( i.e. logic, scenario,customized log-text)
 
 --------------------------------------------------
 2. Commands
 --------------------------------------------------
-Available commands:<br>
- s  step<br>
- r  run a loop<br>
- g  run complete simulation<br>
- a  re-run simulation<br>
- q  quit anytime, except during execution of a command<br>
- c  enter command mode<br>
- h  show this information<br>
+Commands in Run Mode:
+ s  step
+ r  run a loop
+ g  run complete simulation
+ a  re-run simulation
+ q  quit anytime, except during execution of a command
+ c  enter admin mode
+ h  show this information
+
+Commands in Admin Mode:
+ex               exit command mode
+help             show this information
+load             load configured sketch file
+run   <steps>    generate simulation of length <steps>
+scen             show scenario data
+conf             display configuration
+clear            delete local sketch file and simulation file
+
+sketch <file>    set sketch source file, saved in config
+serv   <file>    set Servuino data file, saved in config
+delay  <x>       set delay to x (ms), saved in config
+log    <x>       set log level to x (0,1,2,3), saved in config
+record <x>       record log to file: log.txt (1/0), saved in config
 
 --------------------------------------------------
 3. Display
@@ -67,9 +92,8 @@ The SIMUNIO displays 4 windows
      The log-text can be customized to be more readable for the specific appliaction, see chapter 4 below.
 
 3.4  Message
-
-     Shows any error messages and length (no of loops) of scenario.
-
+     Used to show misc. information, such as configuration, errors,
+     scenario data, etc.
 
 --------------------------------------------------
 4. Sketch information
