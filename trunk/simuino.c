@@ -10,7 +10,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <ncurses.h>
-
+#include <sys/stat.h>
 
 #define LOW    0
 #define HIGH   1
@@ -240,6 +240,7 @@ void runStep(int dir)
 void openCommand()
 //====================================
 {
+  struct stat st;
   int ch,nsteps=1000,x;
   char *p,str[80],fileName[80],temp[80],syscom[120];
 
@@ -325,7 +326,14 @@ void openCommand()
     if(p=strstr(str,"sketch"))
       {
         sscanf(p,"%s %s",temp,confSketchFile);
-        saveConfig();
+
+	if(stat(confSketchFile,&st) == 0)
+	  {
+	    saveConfig();
+	  }
+        else
+	  putMsg("Sketch not found !");
+
       }
     if(p=strstr(str,"serv")) // Servuino data file
       {
