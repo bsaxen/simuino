@@ -1,3 +1,4 @@
+[Admin Mode]
 ex               exit command mode
 help             show this information
 load             load configured sketch file

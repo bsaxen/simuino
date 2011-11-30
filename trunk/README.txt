@@ -36,9 +36,7 @@ Quick starter guide:
    Enter 'conf'  - the configuration is shown in the message window.
    Enter 'sketch <path + your sketch file name>'. This will be saved in the config. 
 
-6. Enter 'load' . The sketch will be part of the Servuino build.
-
-7. Enter 'run <steps>'  This will create a log-file (servuino/data.su).
+6. Enter 'load 300' . This will create simulation of 300 steps. Max steps is 2000
 
 8. Enter 'ex' to leave admin-mode.
 
@@ -51,14 +49,29 @@ Repeat step 6 - 10 if you make any changes in your sketch( i.e. logic, scenario,
 --------------------------------------------------
 2. Commands
 --------------------------------------------------
-Available commands:
+Commands in Run Mode:
  s  step
  r  run a loop
  g  run complete simulation
  a  re-run simulation
  q  quit anytime, except during execution of a command
- c  enter command mode
+ c  enter admin mode
  h  show this information
+
+Commands in Admin Mode:
+ex               exit command mode
+help             show this information
+load             load configured sketch file
+run   <steps>    generate simulation of length <steps>
+scen             show scenario data
+conf             display configuration
+clear            delete local sketch file and simulation file
+
+sketch <file>    set sketch source file, saved in config
+serv   <file>    set Servuino data file, saved in config
+delay  <x>       set delay to x (ms), saved in config
+log    <x>       set log level to x (0,1,2,3), saved in config
+record <x>       record log to file: log.txt (1/0), saved in config
 
 --------------------------------------------------
 3. Display
@@ -75,7 +88,7 @@ The SIMUNIO displays 4 windows
      For each pin the following data will be displayed:
 	 Input or Output pin (in/out)
 	 Reading or writing  (r/w)
-	 Digital HIGH or LOW value (5 or 0) and values of analog pin (0 - 1023)
+	 Digital HIGH or LOW value (1 or 0) and values of analog pin (0 - 1023)
 
 3.2  Serial Interface
 
@@ -89,7 +102,7 @@ The SIMUNIO displays 4 windows
 
 3.4  Message
 
-     Shows any error messages and length (no of loops) of scenario.
+     Used to show misc. information, such as configuration, errors, scenario data, etc.
 
 
 --------------------------------------------------
@@ -118,10 +131,11 @@ This will make Simuino show your text in the log window.
 
 The following parameters are configured in the file, config.txt :
 
-LOG_LEVEL  2		 // Level of information to be displayed during simulation (0,1,2,3)
-DELAY    100		 // Delay in ms between each step/instruction  (0 - 1000)
-LOG_FILE   0		 // Save the log information to the file: log.txt (YES=1,NO=0)
-
+LOG_LEVEL  2		    // Level of information to be displayed during simulation (0,1,2,3)
+DELAY    100		    // Delay in ms between each step/instruction  (0 - 1000)
+LOG_FILE   0		    // Save the log information to the file: log.txt (YES=1,NO=0)
+SKETCH     <path+name>      // file name of source of the sketch (used when loading)
+SERVUINO   servuino/data.se // where to find simulation data
 --------------------------------------------------
 6. Scenarios
 -------------------------------------------------- 

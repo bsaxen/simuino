@@ -1,9 +1,8 @@
-Available Commands:
-===================================
+[Run Mode]
  s  step
  r  run a loop
  g  run complete simulation
  a  re-run simulation
  q  quit anytime, except during execution of a command
- c  enter command mode
+ c  enter admin mode
  h  show this information
