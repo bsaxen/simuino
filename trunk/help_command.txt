@@ -1,7 +1,12 @@
-ex              exit command mode
-help            show this information
-scen            show scenario data
-conf            display configuration
-delay <x>       set delay to x
-log   <x>       set log level to x
-file  <ON/OFF>  record log to file: log.txt
+ex               exit command mode
+help             show this information
+load             load configured sketch file
+run   <steps>    generate simulation of length <steps>
+scen             show scenario data
+conf             display configuration
+
+sketch <file>    set sketch source file
+serv   <file>    set Servuino data file
+delay  <x>       set delay to x (ms)
+log    <x>       set log level to x (0,1,2,3)
+record <x>       record log to file: log.txt (1/0)
