@@ -49,20 +49,20 @@ Commands in Run Mode:
  c  enter admin mode<br>
  h  show this information<br>
 
-Commands in Admin Mode:
-ex               exit command mode
-help             show this information
-load             load configured sketch file
-run   "steps"    generate simulation of length "steps"
-scen             show scenario data
-conf             display configuration
-clear            delete local sketch file and simulation file
+Commands in Admin Mode:<br>
+ex               exit command mode<br>
+help             show this information<br>
+load             load configured sketch file<br>
+run   "steps"    generate simulation of length "steps"<br>
+scen             show scenario data<br>
+conf             display configuration<br>
+clear            delete local sketch file and simulation file<br>
 
-sketch "file"    set sketch source file, saved in config
-serv   "file"    set Servuino data file, saved in config
-delay  "x"       set delay to x (ms), saved in config
-log    "x"       set log level to x (0,1,2,3), saved in config
-record "x"       record log to file: log.txt (1/0), saved in config
+sketch "file"    set sketch source file, saved in config<br>
+serv   "file"    set Servuino data file, saved in config<br>
+delay  "x"       set delay to x (ms), saved in config<br>
+log    "x"       set log level to x (0,1,2,3), saved in config<br>
+record "x"       record log to file: log.txt (1/0), saved in config<br>
 
 --------------------------------------------------
 3. Display
