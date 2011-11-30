@@ -2,65 +2,6 @@
 //  Developed by Benny Saxen, ADCAJO
 //================================================
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h> 
-#include <math.h> 
-#include <ctype.h>
-#include <termios.h>
-#include <unistd.h>
-#include <ncurses.h>
-
-#define FREE   0
-#define RX     3
-#define TX     4
-
-int   s_row,s_col;
-int   digPinPos[MAX_PIN_DIGITAL];
-int   anaPinPos[MAX_PIN_ANALOG];
-char  appName[80];
-
-int   interruptMode[2];
-int   digitalMode[MAX_PIN_DIGITAL];
-int   paceMaker = 0;
-int   baud = 0;
-int   error = 0;
-int   logging = YES;
-char  logBuffer[MAX_LOG][100];
-int   logSize = 1;
-int   serialSize = 1;
-int   serialMode = OFF;
-char  serialBuffer[100][100];
-int   rememberNewLine;
-char  textPinModeIn[MAX_PIN_DIGITAL][80];
-char  textPinModeOut[MAX_PIN_DIGITAL][80];
-char  textDigitalWriteLow[MAX_PIN_DIGITAL][80];
-char  textDigitalWriteHigh[MAX_PIN_DIGITAL][80];
-char  textAnalogWrite[MAX_PIN_DIGITAL][80];
-char  textAnalogRead[MAX_PIN_ANALOG][80];
-char  textDigitalRead[MAX_PIN_DIGITAL][80];
-int   scenAnalog    = 0;
-int   scenDigital   = 0;
-int   scenInterrupt = 0;
-
-
-
-int   conn;
-
-// Configuration default values
-int   confDelay   = 100;
-int   confLogLev  =   1;
-int   confLogFile =   0;
-char  confSketchFile[200];
-char  confServuinoFile[200];
-
-WINDOW *uno,*ser,*slog,*msg;
-static struct termios orig, nnew;
-static int peek = -1;
-
-void wLog(const char *p, int value1, int value2);
-
 //====================================
 int __nsleep(const struct timespec *req, struct timespec *rem)  
 //====================================
@@ -140,8 +81,8 @@ void showError(const char *m, int value)
   char err_msg[300];
   strcpy(err_msg,"ERROR ");
   strcat(err_msg,m);
-  putMsg(err_msg);
-  //wLog(err_msg,value,-1);
+  //putMsg(err_msg);
+  wLog(err_msg,value,-1);
   error = 1;
 }
 //====================================
@@ -154,7 +95,7 @@ void saveConfig()
   out = fopen("config.txt","w");
   if(out == NULL)
     {
-      showError("Unable to open config.txt ",-1);
+      showError("No config.txt ",-1);
     }
   else
     {
@@ -205,9 +146,10 @@ void logFile(char *m)
   else
     {
       fprintf(out,"%s\n",m);
+      fclose(out);
     }
 
-  fclose(out);
+
 }
 
 //====================================
@@ -396,7 +338,7 @@ void getString(char *in, char *out)
 }
 
 //====================================
-void readSketchInfo(char *fileName)
+void readSketchInfo()
 //====================================
 {
   FILE *in;
@@ -405,8 +347,13 @@ void readSketchInfo(char *fileName)
 
   //wLog("inside",1,2);
 
-  in = fopen(fileName,"r");
-
+  in = fopen("servuino/sketch.pde","r");
+  if(in == NULL)
+    {
+      showError("No servuino/sketch.pde",-1);
+    }
+  else
+    {
       while (fgets(row,80,in)!=NULL)
 	{
 
@@ -451,8 +398,8 @@ void readSketchInfo(char *fileName)
 	      strcpy(textAnalogWrite[pin],res);
 	    }
 	}
-  fclose(in); 
-  //exit(0); 
+      fclose(in); 
+    }
 }
 
 //====================================
@@ -460,6 +407,8 @@ void initSim()
 //====================================
 {
   int i;
+
+  strcpy(appName,"-");
 
   for(i=0;i<MAX_STEP;i++)
     {
@@ -529,7 +478,7 @@ void readConfig()
   in = fopen("config.txt","r");
   if(in == NULL)
     {
-      showError("Unable to open config.txt",-1);
+      showError("No config.txt",-1);
     }
   else
     {
@@ -563,6 +512,292 @@ void readConfig()
     }
   fclose(in);
 }
+//====================================
+int readEvent(char *ev, int step)
+//====================================
+{
+  if(step > 0 && step < MAX_STEP)
+    strcpy(ev,simulation[step]);
+  else
+    return(0);
+  return(step);
+}    
+
+
+
+//====================================
+void runLoop()
+//====================================
+{
+  runStep(FORWARD);
+
+  if(currentLoop ==  g_loops)
+    {
+      while(currentStep < g_steps)
+	runStep(FORWARD);
+    }
+
+  else if(currentLoop >= 0 && currentLoop < g_loops)
+    {
+      while(currentStep < loopPos[currentLoop+1])
+	runStep(FORWARD);
+    }
+  return;
+}    
+
+//====================================
+void runAll()
+//====================================
+{
+  while(currentStep < g_steps)
+    runStep(FORWARD);
+  return;
+}    
+
+//====================================
+void readSimulation(char *fileName)
+//====================================
+{
+  FILE *in;
+  char row[SIZE_ROW],*p,temp[40];
+  int step=0,loop=0;
+
+  g_steps = 0;
+  g_loops = 0;
+  in = fopen(fileName,"r");
+  if(in == NULL)
+    {
+      showError("No simulation file",-1);
+    }
+  else
+    {
+      while (fgets(row,SIZE_ROW,in)!=NULL)
+	{
+
+	  if(row[0] != '#')
+	    {
+	      g_steps++;
+	      sscanf(row,"%d",&step);
+	      if(step == g_steps)
+		strcpy(simulation[step],row);
+	      else
+		{
+		  showError("Simulation step out of order",step);
+		}
+	    }
+	  else if(p=strstr(row,"LOOP"))
+	    {
+	      sscanf(p,"%s%d",temp,&loop);
+	      loopPos[loop] = step;
+	      g_loops++;
+	    }
+          else if(p=strstr(row,"SCENARIODATA"))
+            {
+              sscanf(p,"%s%d%d%d",temp,&scenDigital,&scenAnalog,&scenInterrupt);
+            }
+	}
+        g_loops--;
+        fclose(in);
+    }
+ putMsg("x2");
+  putMsg("ready reading simulation");
+  return;
+}    
+
+//====================================
+void showScenario(char *fileName)
+//====================================
+{
+  FILE *in;
+  char row[SIZE_ROW];
+  int i=0;
+
+  wclear(msg);
+  in = fopen(fileName,"r");
+  if(in == NULL)
+    {
+      showError("Unable to open scenario file",-1);
+    }
+  else
+    {
+      while (fgets(row,SIZE_ROW,in)!=NULL && i < s_row-1)
+        {
+          if(strstr(row,"// SCEN"))
+          {
+            i++;
+            wmove(msg,i,1);
+            wprintw(msg,row);
+          }
+        }
+      if(i == 0)
+      {
+          wmove(msg,1,1); wprintw(msg,"No scenario data in sketch");
+      }
+      show(msg);
+    }
+  fclose(in);
+  return;
+}
+
+//====================================
+void readMsg(char *fileName)
+//====================================
+{
+  FILE *in;
+  char row[SIZE_ROW];
+  int i=0;
+
+  wclear(msg);
+  in = fopen(fileName,"r");
+  if(in == NULL)
+    {
+      showError("Unable to open msg file",-1);
+    }
+  else
+    {
+      while (fgets(row,SIZE_ROW,in)!=NULL && i < s_row-1)
+	{
+          i++;
+	  wmove(msg,i,1);
+	  wprintw(msg,row);
+	}
+      show(msg);
+    }
+  fclose(in);
+  return;
+}    
+
+
+//====================================
+void init()
+//====================================
+{
+  int i;
+  int uno_h=0, uno_w=0;
+  int msg_h=0, msg_w=0;
+  int log_h=0, log_w=0;
+  int ser_h=0, ser_w=0;
+
+  g_value = 0;
+
+  initscr();
+  clear();
+  //noecho();
+  cbreak();
+
+  //tcgetattr(0, &orig);
+  //nnew = orig;
+  //nnew.c_lflag &= ~ICANON;
+  //nnew.c_lflag &= ~ECHO;
+  //nnew.c_lflag &= ~ISIG;
+  //nnew.c_cc[VMIN] = 1;
+  //nnew.c_cc[VTIME] = 0;
+  //tcsetattr(0, TCSANOW, &nnew);
+
+  getmaxyx(stdscr,s_row,s_col);
+  start_color();
+  init_pair(1,COLOR_BLACK,COLOR_BLUE);
+  init_pair(2,COLOR_BLACK,COLOR_GREEN);
+  init_pair(3,COLOR_BLUE,COLOR_WHITE); 
+  init_pair(4,COLOR_RED,COLOR_WHITE); 
+  init_pair(5,COLOR_MAGENTA,COLOR_WHITE); 
+  init_pair(6,COLOR_WHITE,COLOR_BLACK); 
+  
+  /*     COLOR_BLACK   0 */
+  /*     COLOR_RED     1 */
+  /*     COLOR_GREEN   2 */
+  /*     COLOR_YELLOW  3 */
+  /*     COLOR_BLUE    4 */
+  /*     COLOR_MAGENTA 5 */
+  /*     COLOR_CYAN    6 */
+  /*     COLOR_WHITE   7 */
+
+  // Board Window    
+  uno_w = UNO_W;
+  uno_h = UNO_H;
+  uno=newwin(uno_h,uno_w,0,0);
+  wbkgd(uno,COLOR_PAIR(UNO_COLOR));
+  //box(uno, 0 , 0);
+
+  wmove(uno,DP-1,RF);waddch(uno,ACS_ULCORNER); 
+  wmove(uno,DP-1,RF+60);waddch(uno,ACS_URCORNER); 
+  wmove(uno,AP+1,RF);waddch(uno,ACS_LLCORNER); 
+  wmove(uno,AP+1,RF+60);waddch(uno,ACS_LRCORNER); 
+  for(i=1;i<60;i++)
+    {
+      wmove(uno,DP-1,RF+i);
+      waddch(uno,ACS_HLINE);
+      wmove(uno,AP+1,RF+i);
+      waddch(uno,ACS_HLINE);
+    }
+  for(i=DP;i<AP+1;i++)
+    {
+      wmove(uno,i,RF);
+      waddch(uno,ACS_VLINE);
+      wmove(uno,i,RF+60);
+      waddch(uno,ACS_VLINE);
+    }
+
+  // Pin positions on the board
+  for(i=0;i<14;i++)digPinPos[13-i] = RF+4+4*i;
+  for(i=0;i<6;i++) anaPinPos[i] = RF+26+5*i;
+
+  for(i=0;i<14;i++){wmove(uno,DP+1,digPinPos[i]-2); wprintw(uno,"%3d",i);}
+  for(i=0;i<14;i++){wmove(uno,DP,digPinPos[i]); waddch(uno,ACS_BULLET);}
+
+  wmove(uno,DP+5,RF+6); wprintw(uno,"Sketch: %s",appName);  
+  unoInfo();
+
+  for(i=0;i<6;i++){wmove(uno,AP-1,anaPinPos[i]-1); wprintw(uno,"A%1d",i);}
+  for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
+
+  //wmove(uno,1,5); 
+  //wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer 0.0.5");
+  show(uno);
+
+  // Message Window
+  msg_h = s_row - uno_h;
+  msg_w = MSG_W;
+  msg=newwin(msg_h,msg_w,uno_h,0);
+  wbkgd(msg,COLOR_PAIR(MSG_COLOR));
+  show(msg);
+
+  // Help Window
+  //hlp=newwin(s_row-(AP+3)-6,61,AP+4+6,0);
+  //wbkgd(hlp,COLOR_PAIR(MSG_COLOR));
+  //wrefresh(hlp);
+
+  // Log Window
+  logSize = s_row-1;
+  log_h = s_row;
+  log_w = LOG_W;
+  slog=newwin(log_h,log_w,0,uno_w);
+  wbkgd(slog,COLOR_PAIR(LOG_COLOR));
+  show(slog); 
+
+  // Serial Window
+  serialSize = s_row-1;
+  ser_h = s_row;
+  ser_w = s_col - uno_w - log_w;
+  ser=newwin(ser_h,ser_w,0,uno_w + log_w);
+  wbkgd(ser,COLOR_PAIR(SER_COLOR));
+  show(ser);
+}
+//====================================
+void loadSketch(char sketch[])
+//====================================
+{
+  int x;
+  char syscom[120];
+
+  sprintf(syscom,"cp %s servuino/sketch.pde;",sketch);
+  x=system(syscom);
+  strcpy(confSketchFile,sketch);
+  sprintf(syscom,"cd servuino; g++ -O2 -o servuino servuino.c -lncurses;");
+  x=system(syscom);
+  readSketchInfo();
+}
+
 //====================================
 // End of file
 //====================================
