@@ -68,7 +68,6 @@ void (*interrupt1)();
 
 char  simulation[MAX_STEP][SIZE_ROW];
 int   loopPos[MAX_LOOP];
-char  fileServuino[SIZE_ROW];
 
 #include "simuino_lib.c"
 #include "decode_lib.c"
@@ -264,11 +263,13 @@ void readSimulation(char *fileName)
           else if(p=strstr(row,"SCENARIODATA"))
             {
               sscanf(p,"%s%d%d%d",temp,&scenDigital,&scenAnalog,&scenInterrupt);
-            }  
+            }
 	}
+        g_loops--;
+        fclose(in);
     }
-  fclose(in);
-  g_loops--;
+ putMsg("x2");
+  putMsg("ready reading simulation");
   return;
 }    
 
@@ -297,6 +298,10 @@ void showScenario(char *fileName)
             wprintw(msg,row);
           }
         }
+      if(i == 0)
+      {
+          wmove(msg,1,1); wprintw(msg,"No scenario data in sketch");
+      }
       show(msg);
     }
   fclose(in);
@@ -333,7 +338,7 @@ void readMsg(char *fileName)
 
 
 //====================================
-void init(char *fileName)
+void init()
 //====================================
 {
   int i;
@@ -342,14 +347,7 @@ void init(char *fileName)
   int log_h=0, log_w=0;
   int ser_h=0, ser_w=0;
 
-  currentStep = 0;
-  currentLoop = 0;
-  g_loops=0;
-  g_steps=0;
   g_value = 0;
-
-  boardInit();
-  readSketchInfo(fileName);
 
   initscr();
   clear();
@@ -388,7 +386,7 @@ void init(char *fileName)
   uno_h = UNO_H;
   uno=newwin(uno_h,uno_w,0,0);
   wbkgd(uno,COLOR_PAIR(UNO_COLOR));
-  box(uno, 0 , 0);
+  //box(uno, 0 , 0);
 
   wmove(uno,DP-1,RF);waddch(uno,ACS_ULCORNER); 
   wmove(uno,DP-1,RF+60);waddch(uno,ACS_URCORNER); 
@@ -422,8 +420,8 @@ void init(char *fileName)
   for(i=0;i<6;i++){wmove(uno,AP-1,anaPinPos[i]-1); wprintw(uno,"A%1d",i);}
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
-  wmove(uno,1,5); 
-  wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer 0.0.4");
+  //wmove(uno,1,5); 
+  //wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer 0.0.5");
   show(uno);
 
   // Message Window
@@ -454,16 +452,31 @@ void init(char *fileName)
   wbkgd(ser,COLOR_PAIR(SER_COLOR));
   show(ser);
 
-  readSimulation(fileName);
+  // readSimulation(fileName);
 
-  unoInfo();
+  //unoInfo();
 }
+//====================================
+void loadSketch(char sketch[])
+//====================================
+{
+  int x;
+  char syscom[120];
+
+  sprintf(syscom,"cp %s servuino/sketch.pde;",sketch);
+  x=system(syscom);
+  strcpy(confSketchFile,sketch);
+  sprintf(syscom,"cd servuino; g++ -O2 -o servuino servuino.c -lncurses;");
+  x=system(syscom);
+  readSketchInfo(confSketchFile);
+}
+
 //====================================
 void openCommand()
 //====================================
 {
-  int ch;
-  char *p,str[80],fileName[80],temp[80];
+  int ch,x;
+  char *p,str[80],fileName[80],temp[80],syscom[120];
 
   strcpy(fileName,"help_command.txt");
   readMsg(fileName);
@@ -474,6 +487,7 @@ void openCommand()
     wprintw(uno,"              ");
     mvwprintw(uno,UNO_H-2,1,">>");
     show(uno);
+    wmove(uno,UNO_H-2,3);
     wgetstr(uno,str);
     if(p=strstr(str,"conf"))
       {
@@ -497,7 +511,7 @@ void openCommand()
        if(confLogLev >=0 && confLogLev < 4)
           saveConfig();
       }
-    if(p=strstr(str,"file"))
+    if(p=strstr(str,"record"))
       {
        sscanf(p,"%s %d",temp,&confLogFile);
        if(confLogFile >=0 && confLogFile < 2)
@@ -505,15 +519,55 @@ void openCommand()
       }
     if(p=strstr(str,"scen"))
       {
-          showScenario(fileServuino);
+          showScenario(confSketchFile);
       }
+    if(p=strstr(str,"sys"))
+      {
+	p = p+4;
+        wLog(p,-1,-1);
+        x=system(p);
+      }
+    if(p=strstr(str,"run"))
+      {
+        sscanf(p,"%s %d",temp,&x);
+        wLog(p,-1,-1);
+        if(x > 0 && x < MAX_STEP)
+        {
+          sprintf(syscom,"cd servuino;./servuino %d;",x);
+          x=system(syscom);
+          iDelay(1000);
+          //init(confServuinoFile);
+          initSim();
+          resetSim();
+          readSimulation(confServuinoFile);
+          readSketchInfo(confSketchFile);
+          unoInfo();
+        }
+      }
+    if(p=strstr(str,"load"))
+      {
+	putMsg("Load Sketch...");
+        loadSketch(confSketchFile);
+        putMsg("run <steps>   to generate a simulation");
+      }
+    if(p=strstr(str,"sketch"))
+      {
+        sscanf(p,"%s %s",temp,confSketchFile);
+        saveConfig();
+      }
+    if(p=strstr(str,"serv")) // Servuino data file
+      {
+        sscanf(p,"%s %s",temp,confServuinoFile);
+        saveConfig();
+        //init(confServuinoFile);
+      }
+
 
   }
   wmove(uno,UNO_H-2,1);
-  wprintw(uno,"                ");	
+  wprintw(uno,"                                                  ");	
   show(uno);
-  strcpy(fileName,"help.txt");
-  readMsg(fileName);
+  putMsg("Run mode");
 }
 
 //====================================
@@ -524,18 +578,13 @@ int main(int argc, char *argv[])
   char tempName[80];
 
   strcpy(tempName,"help.txt");
-
-  if (argc != 2)
-    {
-      printf("Usage: simuino <servuino data file> \n");
-      exit(0);
-    }
-
-  strcpy(fileServuino,argv[1]);
-
-  init(fileServuino);
-
+  init();
+  initSim();
+  resetSim();
   readConfig();
+  readSimulation(confServuinoFile);
+  readSketchInfo(confSketchFile);
+  unoInfo();
 
   if(confLogFile == YES)resetFile("log.txt");
   readMsg(tempName);
@@ -558,7 +607,8 @@ int main(int argc, char *argv[])
 	}
       if (ch=='a')
 	{
-          init(fileServuino);
+           resetSim();
+           init();
 	}
       if (ch=='r')
 	{

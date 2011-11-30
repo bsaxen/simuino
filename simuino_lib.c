@@ -52,6 +52,8 @@ int   conn;
 int   confDelay   = 100;
 int   confLogLev  =   1;
 int   confLogFile =   0;
+char  confSketchFile[200];
+char  confServuinoFile[200];
 
 WINDOW *uno,*ser,*slog,*msg;
 static struct termios orig, nnew;
@@ -95,8 +97,40 @@ void show(WINDOW *win)
 //====================================
 {
   box(win,0,0);
+  if(win == uno) 
+  {
+    wmove(win,0,2);
+    wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.0.5");
+  }
+  if(win == ser)
+  {
+    wmove(win,0,2);
+    wprintw(win,"Serial Interface");
+  }
+  if(win == slog)
+  {
+    wmove(win,0,2);
+    wprintw(win,"Log");
+  }
+  if(win == msg)
+  {
+    wmove(win,0,2);
+    wprintw(win,"Messages");
+  }
+
   wrefresh(win);
   iDelay(confDelay);
+}
+
+//====================================
+void putMsg(const char *message)
+//====================================
+{
+  wclear(msg);
+  wmove(msg,1,1);
+  wprintw(msg,message);
+  show(msg);
+  return;
 }
 
 //====================================
@@ -106,7 +140,8 @@ void showError(const char *m, int value)
   char err_msg[300];
   strcpy(err_msg,"ERROR ");
   strcat(err_msg,m);
-  wLog(err_msg,value,-1);
+  putMsg(err_msg);
+  //wLog(err_msg,value,-1);
   error = 1;
 }
 //====================================
@@ -123,13 +158,15 @@ void saveConfig()
     }
   else
     {
+      putMsg("Configuration saved");
       lt = time(NULL);
       fprintf(out,"# Simuino Configuration %s",ctime(&lt));
       fprintf(out,"DELAY      %d\n",confDelay);
       fprintf(out,"LOG_LEVEL  %d\n",confLogLev);
       fprintf(out,"LOG_FILE   %d\n",confLogFile);
+      fprintf(out,"SKETCH     %s\n",confSketchFile);
+      fprintf(out,"SERVUINO   %s\n",confServuinoFile);
     }
-
   fclose(out);
 }
 
@@ -228,8 +265,11 @@ void unoInfo()
 {
   wmove(uno,8,0); 
   wprintw(uno," Sketch: %s",appName);
-  wmove(uno,9,0);
-  wprintw(uno," Scenario: Dig=%d Ana=%d Interrupt=%d",scenDigital,scenAnalog,scenInterrupt);
+  if(scenDigital>0 || scenAnalog>0 || scenInterrupt>0)
+  {
+     wmove(uno,9,0);
+     wprintw(uno," Scenario: Dig=%d Ana=%d Interrupt=%d",scenDigital,scenAnalog,scenInterrupt);
+  }
   wmove(uno,10,0);
   wprintw(uno," Steps = %d(%d) Loops = %d(%d)",currentStep,g_steps,currentLoop,g_loops);
 
@@ -416,28 +456,18 @@ void readSketchInfo(char *fileName)
 }
 
 //====================================
-void boardInit()
+void initSim()
 //====================================
 {
-  int i,j;
+  int i;
 
-  currentLoop = 0;
-
-  for(i=0;i<MAX_LOG;i++)
-    {
-       strcpy(logBuffer[i]," ");
-    }
   for(i=0;i<MAX_STEP;i++)
     {
-      strcpy(simulation[i]," ");
+      strcpy(simulation[i],"");
     }
   for(i=0;i<MAX_LOOP;i++)
     {
       loopPos[i] = 0;
-    }
-  for(i=0;i<MAX_SERIAL;i++)
-    {
-      strcpy(serialBuffer[i],"");
     }
   for(i=0;i<MAX_PIN_DIGITAL;i++)
     {
@@ -457,8 +487,26 @@ void boardInit()
     {
       strcpy(textAnalogRead[i],"void");
     }
-}
 
+}
+//====================================
+void resetSim()
+//====================================
+{
+  int i;
+
+  currentStep = 0;
+  currentLoop = 0;
+
+  for(i=0;i<MAX_LOG;i++)
+    {
+       strcpy(logBuffer[i],"");
+    }
+  for(i=0;i<MAX_SERIAL;i++)
+    {
+      strcpy(serialBuffer[i],"");
+    }
+}
 //====================================
 void unimplemented(const char *f)
 //====================================
@@ -501,6 +549,14 @@ void readConfig()
 		{
 		  sscanf(p,"%s%d",temp,&confLogFile);
 		}
+              if(p=strstr(row,"SKETCH"))
+                {
+                  sscanf(p,"%s%s",temp,confSketchFile);
+                }
+              if(p=strstr(row,"SERVUINO"))
+                {
+                  sscanf(p,"%s%s",temp,confServuinoFile);
+                }
 	    }
 	 
 	}
