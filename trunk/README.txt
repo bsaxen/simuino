@@ -2,7 +2,7 @@
 SIMUINO is a Arduino Simulator. 
 Code: c++
 Platform: Linux (Ubuntu)
-Version: 0.0.4
+Version: 0.0.5
 
 Developed by Benny Saxen, ADCAJO
 ==================================================
@@ -29,12 +29,24 @@ Quick starter guide:
 3. Go to directory simuino. Compile: g++ -O2 -o simuino simuino.c -lncurses
    You need to have installed packages for ncurses-dev.
 
-4. Run script:   sh runSimuino  <your sketch.pde>  <simulation length in steps>
+4. Run Simuino:  ./simuino
    Note - expand the size of your terminal !
 
-   Example:   sh runSimuino  stepper_motor.pde  700
+5. If this is the first time you start Simuino. Type 'c' to enter admin-mode.
+   Enter 'conf'  - the configuration is shown in the message window.
+   Enter 'sketch <path + your sketch file name>'. This will be saved in the config. 
 
-   Command h will show available commands
+6. Enter 'load' . The sketch will be part of the Servuino build.
+
+7. Enter 'run <steps>'  This will create a log-file (servuino/data.su).
+
+8. Enter 'ex' to leave admin-mode.
+
+9. Type 'h' if you need to see avalable commands in run-mode
+
+10. Start evaluate the simulation by stepping
+
+Repeat step 6 - 10 if you make any changes in your sketch( i.e. logic, scenario,customized log-text)
 
 --------------------------------------------------
 2. Commands
