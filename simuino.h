@@ -1,3 +1,4 @@
+void runMode();
 void runStep(int dir);
 void openCommand();
 void iDelay(int ms);

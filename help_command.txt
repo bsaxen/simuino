@@ -1,10 +1,13 @@
 [Admin Mode]
-ex               exit command mode
+exit             exit Simuino
 help             show this information
-load             load configured sketch file
-run   <steps>    generate simulation of length <steps>
+load   <steps>   load configured sketch file and
+                 create s acenario of length <steps>
+                 If no <steps>, default = 1000 steps
+run              enter Run Mode
 scen             show scenario data
 conf             display configuration
+loop             show loop information
 
 sketch <file>    set sketch source file
 serv   <file>    set Servuino data file
