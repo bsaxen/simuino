@@ -23,46 +23,19 @@ Quick starter guide:
 4. Run Simuino:  ./simuino
    Note - expand the size of your terminal !
 
-5. If this is the first time you start Simuino. Type 'c' to enter admin-mode.
+5. If this is the first time you start Simuino.
    Enter 'conf'  - the configuration is shown in the message window.
    Enter 'sketch <path + your sketch file name>'. This will be saved in the config. 
 
 6. Enter 'load 300' . This will create simulation of 300 steps. Max steps is 2000
 
-8. Enter 'ex' to leave admin-mode.
+7. Type 'run' to enter Run Mode. Press 's' to step. Press 'q' to exit Run Mode and enter Admin mode.
 
-9. Type 'h' if you need to see avalable commands in run-mode
-
-10. Start evaluate the simulation by stepping
-
-Repeat step 6 - 10 if you make any changes in your sketch( i.e. logic, scenario,customized log-text)
+8. Enter 'ex' to exit Simuino.
 
 --------------------------------------------------
 2. Commands
 --------------------------------------------------
-Commands in Run Mode:
- s  step<br>
- r  run a loop<br>
- g  run complete simulation<br>
- a  re-run simulation<br>
- q  quit anytime, except during execution of a command<br>
- c  enter admin mode<br>
- h  show this information<br>
-
-Commands in Admin Mode:<br>
-ex               exit command mode<br>
-help             show this information<br>
-load             load configured sketch file<br>
-run   "steps"    generate simulation of length "steps"<br>
-scen             show scenario data<br>
-conf             display configuration<br>
-clear            delete local sketch file and simulation file<br>
-
-sketch "file"    set sketch source file, saved in config<br>
-serv   "file"    set Servuino data file, saved in config<br>
-delay  "x"       set delay to x (ms), saved in config<br>
-log    "x"       set log level to x (0,1,2,3), saved in config<br>
-record "x"       record log to file: log.txt (1/0), saved in config<br>
 
 --------------------------------------------------
 3. Display
