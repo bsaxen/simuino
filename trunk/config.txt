@@ -1,6 +1,6 @@
-# Simuino Configuration Wed Nov 30 21:41:06 2011
+# Simuino Configuration Thu Dec  1 11:46:26 2011
 DELAY      30
 LOG_LEVEL  3
 LOG_FILE   0
-SKETCH     ../adcajo/stepper_calibration.c
+SKETCH     ../adcajo/heater_control.c
 SERVUINO   servuino/data.su

@@ -38,7 +38,7 @@
 
 #define SIZE_ROW 120
 
-#define UNO_H  19
+#define UNO_H  16
 #define UNO_W  61
 #define UNO_COLOR 6
 
@@ -55,8 +55,8 @@
 #define SER_COLOR 4
 
 #define DP 5
-#define AP 15
-#define RF 0
+#define AP 11
+#define RF 1
 #define ER 1
 #define SR 20
 
@@ -66,12 +66,16 @@
 #define YES    1
 #define NO     2
 
+#define RUN    1
+#define ADMIN  2
+
 // Configuration
 int currentStep = 0;
 int currentLoop = 0;
 int g_loops=0,g_steps=0;
 
 int g_value = 0;
+int s_mode = ADMIN;
 
 void (*interrupt0)();
 void (*interrupt1)();
@@ -192,7 +196,7 @@ void runStep(int dir)
 	}
       else if (p=strstr(event,"Serial:print(char)"))
 	{
-	  sscanf(event,"%d %s %s",&step,temp,temp2);
+	  //sscanf(event,"%d %s %s",&step,temp,temp2);
 	  getString(event,temp3);
 	  Serial.print(temp3);
 	}
@@ -203,7 +207,7 @@ void runStep(int dir)
 	}
       else if (p=strstr(event,"Serial:println(char)"))
 	{
-	  sscanf(event,"%d %s %s",&step,temp,temp2);
+	  //sscanf(event,"%d %s %s",&step,temp,temp2);
 	  getString(event,temp3);
 	  Serial.println(temp3);
 	}
@@ -244,6 +248,8 @@ void openCommand()
   int ch,nsteps=1000,x;
   char *p,str[80],fileName[80],temp[80],syscom[120];
 
+  s_mode = ADMIN;
+
   strcpy(fileName,"help_command.txt");
   readMsg(fileName);
 
@@ -255,6 +261,13 @@ void openCommand()
     show(uno);
     wmove(uno,UNO_H-2,3);
     wgetstr(uno,str);
+
+    if(p=strstr(str,"run"))
+      {
+        runMode();
+        strcpy(fileName,"help_command.txt");
+        readMsg(fileName);
+      }
     if(p=strstr(str,"conf"))
       {
 	strcpy(fileName,"config.txt");
@@ -288,7 +301,11 @@ void openCommand()
        if(confLogFile >=0 && confLogFile < 2)
           saveConfig();
       }
-    if(p=strstr(str,"scen"))
+    if(p=strstr(str,"loop")) //status
+      {
+          showLoops();
+      }
+    if(p=strstr(str,"scen")) // scenario
       {
           showScenario(confSketchFile);
       }
@@ -317,8 +334,8 @@ void openCommand()
           resetSim();
           readSimulation(confServuinoFile);
           readSketchInfo();
-          unoInfo();
 	  init();
+          unoInfo();
 	  strcpy(fileName,"servuino/data.error");
 	  readMsg(fileName);
 	}
@@ -343,30 +360,29 @@ void openCommand()
 
 
   }
-  wmove(uno,UNO_H-2,1);
-  wprintw(uno,"                                                  ");	
-  show(uno);
-  putMsg("Run mode");
+  //wmove(uno,UNO_H-2,1);
+  //wprintw(uno,"                                                  ");	
+  //show(uno);
+  //putMsg("Run mode");
 }
 
 //====================================
-int main(int argc, char *argv[])
+void runMode()
 //====================================
 {
   int ch;
   char tempName[80];
-
   strcpy(tempName,"help.txt");
-  init();
-  initSim();
-  resetSim();
-  readConfig();
-  readSimulation(confServuinoFile);
-  readSketchInfo();
-  unoInfo();
 
-  if(confLogFile == YES)resetFile("log.txt");
+  s_mode = RUN;
+
   readMsg(tempName);
+
+  wmove(uno,UNO_H-2,1);
+  wprintw(uno,"                                                  ");
+  mvwprintw(uno,UNO_H-2,1,"**");
+  show(uno);
+  wmove(uno,UNO_H-2,3);
 
   while((ch!='q')&&(ch!='x'))  
     {
@@ -388,6 +404,9 @@ int main(int argc, char *argv[])
 	{
            resetSim();
            init();
+           unoInfo();
+           mvwprintw(uno,UNO_H-2,1,"**");
+           show(uno);
 	}
       if (ch=='r')
 	{
@@ -426,6 +445,25 @@ int main(int argc, char *argv[])
 	  // Todo save to config.txt
 	}
     }
+}
+//====================================
+int main(int argc, char *argv[])
+//====================================
+{
+  int ch;
+ 
+  init();
+  initSim();
+  resetSim();
+  readConfig();
+  readSimulation(confServuinoFile);
+  readSketchInfo();
+  unoInfo();
+
+  if(confLogFile == YES)resetFile("log.txt");
+  //readMsg(tempName);
+
+  openCommand();
   
   //tcsetattr(0,TCSANOW, &orig);
   delwin(uno);

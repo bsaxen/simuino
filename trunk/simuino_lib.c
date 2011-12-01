@@ -41,7 +41,7 @@ void show(WINDOW *win)
   if(win == uno) 
   {
     wmove(win,0,2);
-    wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.0.5");
+    wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.0.6");
   }
   if(win == ser)
   {
@@ -192,9 +192,11 @@ void wLog(const char *p, int value1, int value2)
   if(confLogFile==YES)logFile(temp);
 
   wclear(slog);
+  wmove(slog,1,1);
+  wprintw(slog,">%s",simulation[currentStep+1]);
   for(i=0;i<logSize;i++)
     {
-      wmove(slog,i+1,1);
+      wmove(slog,i+2,1);
       wprintw(slog,"%s",logBuffer[i]);
     } 
   show(slog);
@@ -205,25 +207,31 @@ void wLog(const char *p, int value1, int value2)
 void unoInfo()
 //====================================
 {
-  wmove(uno,8,0); 
-  wprintw(uno," Sketch: %s",appName);
-  if(scenDigital>0 || scenAnalog>0 || scenInterrupt>0)
-  {
-     wmove(uno,9,0);
-     wprintw(uno," Scenario: Dig=%d Ana=%d Interrupt=%d",scenDigital,scenAnalog,scenInterrupt);
-  }
-  wmove(uno,10,0);
-  wprintw(uno," Steps = %d(%d) Loops = %d(%d)",currentStep,g_steps,currentLoop,g_loops);
+  int next;
 
-  if(loopPos[currentLoop+1] > 0)
-    wprintw(uno," Next loop at step %d",loopPos[currentLoop+1]);
-  else
-    wprintw(uno,"                        ");
-
-  wmove(uno,11,0);
-  wprintw(uno," Next: %s",simulation[currentStep+1]);
-
+  wmove(uno,8,3); 
+  wprintw(uno,"Sketch: %s",appName);
+  wmove(uno,10,3);
+  next =  loopPos[currentLoop+1];
+  if(currentStep == loopPos[currentLoop+1]) next = loopPos[currentLoop+2];
+  wprintw(uno,"Step: %d->%d (%d)",currentStep,next,g_steps);
+  wmove(uno,11,3);
+  wprintw(uno,"Scenario: %d %d %d",scenDigital,scenAnalog,scenInterrupt);
   show(uno);
+}
+
+//====================================
+void showLoops()
+//====================================
+{
+  int i;
+  wclear(msg);
+  for(i=0;i<g_loops;i++)
+  {
+    wmove(msg,1+i,2);
+    wprintw(msg," Loop: %4d starts at step:%4d",i,loopPos[i]+1);
+  }
+  show(msg);
 }
 
 //====================================
@@ -263,9 +271,11 @@ void wLogChar(const char *p, const char *value1, int value2)
   strcpy(logBuffer[0],temp);
 
   wclear(slog);
+  wmove(slog,1,1);
+  wprintw(slog,">%s",simulation[currentStep+1]);
   for(i=0;i<logSize;i++)
     {
-      wmove(slog,i+1,1);
+      wmove(slog,i+2,1);
       wprintw(slog,"%s",logBuffer[i]);
     } 
   show(slog);
@@ -331,7 +341,7 @@ void getString(char *in, char *out)
   p = strstr(in,"'");
   p++;
   q = strstr(p,"'");
-  strcpy(q,"\0");
+  strcpy(q,"\n");
   strcpy(out,p);
   //wLog(out,-1,-1);
   return;
@@ -599,7 +609,6 @@ void readSimulation(char *fileName)
         g_loops--;
         fclose(in);
     }
- putMsg("x2");
   putMsg("ready reading simulation");
   return;
 }    
@@ -720,10 +729,10 @@ void init()
   //box(uno, 0 , 0);
 
   wmove(uno,DP-1,RF);waddch(uno,ACS_ULCORNER); 
-  wmove(uno,DP-1,RF+60);waddch(uno,ACS_URCORNER); 
+  wmove(uno,DP-1,RF+UNO_W-3);waddch(uno,ACS_URCORNER); 
   wmove(uno,AP+1,RF);waddch(uno,ACS_LLCORNER); 
-  wmove(uno,AP+1,RF+60);waddch(uno,ACS_LRCORNER); 
-  for(i=1;i<60;i++)
+  wmove(uno,AP+1,RF+UNO_W-3);waddch(uno,ACS_LRCORNER); 
+  for(i=1;i<UNO_W-3;i++)
     {
       wmove(uno,DP-1,RF+i);
       waddch(uno,ACS_HLINE);
@@ -734,25 +743,20 @@ void init()
     {
       wmove(uno,i,RF);
       waddch(uno,ACS_VLINE);
-      wmove(uno,i,RF+60);
+      wmove(uno,i,RF+UNO_W-3);
       waddch(uno,ACS_VLINE);
     }
 
   // Pin positions on the board
   for(i=0;i<14;i++)digPinPos[13-i] = RF+4+4*i;
-  for(i=0;i<6;i++) anaPinPos[i] = RF+26+5*i;
+  for(i=0;i<6;i++) anaPinPos[i] = RF+31+5*i;
 
   for(i=0;i<14;i++){wmove(uno,DP+1,digPinPos[i]-2); wprintw(uno,"%3d",i);}
   for(i=0;i<14;i++){wmove(uno,DP,digPinPos[i]); waddch(uno,ACS_BULLET);}
 
-  wmove(uno,DP+5,RF+6); wprintw(uno,"Sketch: %s",appName);  
-  unoInfo();
-
   for(i=0;i<6;i++){wmove(uno,AP-1,anaPinPos[i]-1); wprintw(uno,"A%1d",i);}
   for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
 
-  //wmove(uno,1,5); 
-  //wprintw(uno,"SIMUINO - Arduino UNO Pin Analyzer 0.0.5");
   show(uno);
 
   // Message Window
@@ -761,11 +765,6 @@ void init()
   msg=newwin(msg_h,msg_w,uno_h,0);
   wbkgd(msg,COLOR_PAIR(MSG_COLOR));
   show(msg);
-
-  // Help Window
-  //hlp=newwin(s_row-(AP+3)-6,61,AP+4+6,0);
-  //wbkgd(hlp,COLOR_PAIR(MSG_COLOR));
-  //wrefresh(hlp);
 
   // Log Window
   logSize = s_row-1;
