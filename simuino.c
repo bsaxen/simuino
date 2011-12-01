@@ -388,10 +388,6 @@ void runMode()
     {
       ch = getchar();
 
-      if (ch=='c')
-        {
-          openCommand();
-        }
       if (ch=='h')
 	{
 	  readMsg(tempName);
@@ -415,10 +411,6 @@ void runMode()
       if (ch=='s') 
 	{
 	  runStep(FORWARD);
-	}
-      if (ch=='b') 
-	{
-	  runStep(BACKWARD); 
 	}
       if (ch=='l') 
 	{

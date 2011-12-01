@@ -2,7 +2,7 @@
 SIMUINO is a Arduino Simulator. 
 Code: c++
 Platform: Linux (Ubuntu)
-Version: 0.0.5
+Version: 0.0.6
 
 Developed by Benny Saxen, ADCAJO
 ==================================================
@@ -30,41 +30,47 @@ Quick starter guide:
    You need to have installed packages for ncurses-dev.
 
 4. Run Simuino:  ./simuino
-   Note - expand the size of your terminal !
+   Note - expand the size of your terminal first. Why not maximize it.
+   Simuino will start in Admin Mode.
 
-5. If this is the first time you start Simuino. Type 'c' to enter admin-mode.
+5. If this is the first time you start Simuino.
    Enter 'conf'  - the configuration is shown in the message window.
-   Enter 'sketch <path + your sketch file name>'. This will be saved in the config. 
+   Enter 'sketch <path + your sketch file name>'. This will be saved in the config.
+   Simuino will use this information when loading the sketch. 
 
 6. Enter 'load 300' . This will create simulation of 300 steps. Max steps is 2000
 
-8. Enter 'ex' to leave admin-mode.
+7. Type 'run' to enter Run Mode. In the message window is a list of avaiable commands.
+   Press 's' to step or 'r' to complete a loop. Press 'a' to reset and start from step 1. 
 
-9. Type 'h' if you need to see avalable commands in run-mode
+8. Press 'q' to leave Run Mode.
 
-10. Start evaluate the simulation by stepping
+9. Enter 'exit' if you want to exit Simuino
 
-Repeat step 6 - 10 if you make any changes in your sketch( i.e. logic, scenario,customized log-text)
+In parallell, you can edit your sketch in a editor. Type 'load 123' for loading the sketch and creat
+a simulation of 123 steps. In your sketch, you are able to add/update the scenario data (i.e. digital
+pin reads, Analog pin reads and Interrupts. The possibility to customize log-text, is also done in the 
+sketch.
 
 --------------------------------------------------
 2. Commands
 --------------------------------------------------
 Commands in Run Mode:
  s  step
- r  run a loop
+ r  run/complete a loop
  g  run complete simulation
  a  re-run simulation
- q  quit anytime, except during execution of a command
- c  enter admin mode
+ q  enter Admin Mode, not during stepping
  h  show this information
 
 Commands in Admin Mode:
-ex               exit command mode
+ex               exit Simuino
 help             show this information
-load             load configured sketch file
-run   <steps>    generate simulation of length <steps>
+load  <steps>    load configured sketch file
+run              enter Run Mode
 scen             show scenario data
 conf             display configuration
+loop             show loop information
 clear            delete local sketch file and simulation file
 
 sketch <file>    set sketch source file, saved in config
