@@ -349,11 +349,11 @@ void openCommand()
           sprintf(syscom,"cd servuino;./servuino %d;",nsteps);
           x=system(syscom);
           iDelay(1000);
+	  init();
           initSim();
           resetSim();
           readSimulation(confServuinoFile);
           readSketchInfo();
-	  init();
           unoInfo();
 	  strcpy(fileName,"servuino/data.error");
 	  readMsg(fileName);
