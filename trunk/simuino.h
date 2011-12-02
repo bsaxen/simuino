@@ -1,3 +1,4 @@
+void debug(char *msg);
 void runMode();
 void runStep(int dir);
 void openCommand();

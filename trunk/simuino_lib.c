@@ -2,6 +2,7 @@
 //  Developed by Benny Saxen, ADCAJO
 //================================================
 
+
 //====================================
 int __nsleep(const struct timespec *req, struct timespec *rem)  
 //====================================
@@ -41,7 +42,7 @@ void show(WINDOW *win)
   if(win == uno) 
   {
     wmove(win,0,2);
-    wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.0.6");
+    wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.0.7");
   }
   if(win == ser)
   {
@@ -81,7 +82,6 @@ void showError(const char *m, int value)
   char err_msg[300];
   strcpy(err_msg,"ERROR ");
   strcat(err_msg,m);
-  //putMsg(err_msg);
   wLog(err_msg,value,-1);
   error = 1;
 }
@@ -159,9 +159,9 @@ void wLog(const char *p, int value1, int value2)
   int i;
   char temp[100],temp2[100];
 
-  sprintf(temp," ");
+  strcpy(temp," ");
 
-  if(value2 > -2)
+  if(value2 > -2) // add index
     {
 	  sprintf(temp," %d,%d ",currentLoop,currentStep);
     }
@@ -186,20 +186,16 @@ void wLog(const char *p, int value1, int value2)
       error = 0;
     }
 
-  for(i=logSize;i>0;i--)strcpy(logBuffer[i],logBuffer[i-1]);
-  strcpy(logBuffer[0],temp);
-
   if(confLogFile==YES)logFile(temp);
 
-  wclear(slog);
+
+  wmove(slog,1,1);
+  wprintw(slog,"%s",logBlankRow);
+  wscrl(slog,-1);
   wmove(slog,1,1);
   wprintw(slog,">%s",simulation[currentStep+1]);
-  for(i=0;i<logSize;i++)
-    {
-      wmove(slog,i+2,1);
-      wprintw(slog,"%s",logBuffer[i]);
-    } 
-  show(slog);
+  wmove(slog,2,1);
+  wprintw(slog,"%s",temp);
 }
 
 
@@ -214,9 +210,9 @@ void unoInfo()
   wmove(uno,10,3);
   next =  loopPos[currentLoop+1];
   if(currentStep == loopPos[currentLoop+1]) next = loopPos[currentLoop+2];
-  wprintw(uno,"Step: %d->%d (%d)",currentStep,next,g_steps);
+  wprintw(uno,"Step: %4d->%4d (%4d)",currentStep,next,g_steps);
   wmove(uno,11,3);
-  wprintw(uno,"Scenario: %d %d %d",scenDigital,scenAnalog,scenInterrupt);
+  wprintw(uno,"Scenario: %2d %2d %2d",scenDigital,scenAnalog,scenInterrupt);
   show(uno);
 }
 
@@ -242,7 +238,7 @@ void wLogChar(const char *p, const char *value1, int value2)
   char temp[100],temp2[100];
 
   strcpy(temp," ");
-  if(value2 > -2)
+  if(value2 > -2)  //add index 
     {
 	sprintf(temp," %d,%d ",currentLoop,currentStep);
     }  
@@ -267,18 +263,14 @@ void wLogChar(const char *p, const char *value1, int value2)
       error = 0;
     }
 
-  for(i=logSize;i>0;i--)strcpy(logBuffer[i],logBuffer[i-1]);
-  strcpy(logBuffer[0],temp);
 
-  wclear(slog);
+  wmove(slog,1,1);
+  wprintw(slog,"%s",logBlankRow);
+  wscrl(slog,-1);
   wmove(slog,1,1);
   wprintw(slog,">%s",simulation[currentStep+1]);
-  for(i=0;i<logSize;i++)
-    {
-      wmove(slog,i+2,1);
-      wprintw(slog,"%s",logBuffer[i]);
-    } 
-  show(slog);
+  wmove(slog,2,1);
+  wprintw(slog,"%s",temp);
 }
 
 
@@ -286,26 +278,31 @@ void wLogChar(const char *p, const char *value1, int value2)
 void showSerial(const char *m, int newLine)
 //====================================
 {
-  int i;
+  int i,slen=0;
 
   if(serialMode == ON)
     {
-      if(rememberNewLine == 1)
+      if(newLine == 1)
 	{
-	  for(i=1;i<serialSize;i++)strcpy(serialBuffer[i],serialBuffer[i+1]);
-	  strcpy(serialBuffer[serialSize],m);
+	  slen = strlen(prevSerial);
+
+	  wmove(ser,2,1+slen);
+	  wprintw(ser,"%s",m);
+
+	  wscrl(ser,-1);
+
+	  wmove(ser,1,1);
+	  wprintw(ser,"%s",serBlankRow);
+
+	  strcpy(prevSerial,"");
 	}
       else
-	strcat(serialBuffer[serialSize],m);
-      
-      wclear(ser);
-      for(i=1;i<=serialSize;i++)
 	{
-	  wmove(ser,i-1,1);
-	  wprintw(ser,"%s",serialBuffer[i]);
-	} 
+	  strcat(prevSerial,m);
+	  wmove(ser,2,1);
+	  wprintw(ser,"%s",prevSerial);
+	}
       show(ser);
-      rememberNewLine = newLine;
     }
   else
     {
@@ -341,7 +338,7 @@ void getString(char *in, char *out)
   p = strstr(in,"'");
   p++;
   q = strstr(p,"'");
-  strcpy(q,"\n");
+  strcpy(q,"\0");
   strcpy(out,p);
   //wLog(out,-1,-1);
   return;
@@ -456,6 +453,7 @@ void resetSim()
 
   currentStep = 0;
   currentLoop = 0;
+  rememberNewLine = 0;
 
   for(i=0;i<MAX_LOG;i++)
     {
@@ -682,10 +680,6 @@ void init()
 //====================================
 {
   int i;
-  int uno_h=0, uno_w=0;
-  int msg_h=0, msg_w=0;
-  int log_h=0, log_w=0;
-  int ser_h=0, ser_w=0;
 
   g_value = 0;
 
@@ -771,6 +765,7 @@ void init()
   log_h = s_row;
   log_w = LOG_W;
   slog=newwin(log_h,log_w,0,uno_w);
+  scrollok(slog,true);
   wbkgd(slog,COLOR_PAIR(LOG_COLOR));
   show(slog); 
 
@@ -779,6 +774,7 @@ void init()
   ser_h = s_row;
   ser_w = s_col - uno_w - log_w;
   ser=newwin(ser_h,ser_w,0,uno_w + log_w);
+  scrollok(ser,true);
   wbkgd(ser,COLOR_PAIR(SER_COLOR));
   show(ser);
 }
@@ -787,13 +783,16 @@ void loadSketch(char sketch[])
 //====================================
 {
   int x;
-  char syscom[120];
+  char syscom[120], fileName[80];
 
   sprintf(syscom,"cp %s servuino/sketch.pde;",sketch);
   x=system(syscom);
   strcpy(confSketchFile,sketch);
-  sprintf(syscom,"cd servuino; g++ -O2 -o servuino servuino.c -lncurses;");
+  sprintf(syscom,"cd servuino; g++ -O2 -o servuino servuino.c > g++.result 2>&1");
   x=system(syscom);
+  strcpy(fileName,"servuino/g++.result");
+  readMsg(fileName);
+  iDelay(3000);
   readSketchInfo();
 }
 

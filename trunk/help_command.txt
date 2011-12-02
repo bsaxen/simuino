@@ -8,6 +8,8 @@ run              enter Run Mode
 scen             show scenario data
 conf             display configuration
 loop             show loop information
+error            show Servuino errors
+g++              show compilation errors
 
 sketch <file>    set sketch source file
 serv   <file>    set Servuino data file
