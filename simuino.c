@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <ncurses.h>
 #include <sys/stat.h>
+#include <form.h>
 
 #define LOW    0
 #define HIGH   1
@@ -97,13 +98,21 @@ int   digitalMode[MAX_PIN_DIGITAL];
 int   paceMaker = 0;
 int   baud = 0;
 int   error = 0;
+
+// Log
 int   logging = YES;
 char  logBuffer[MAX_LOG][100];
 int   logSize = 1;
+char  logBlankRow[500];
+
+// Serial Interface
 int   serialSize = 1;
 int   serialMode = OFF;
 char  serialBuffer[100][100];
-int   rememberNewLine;
+int   rememberNewLine = 0;
+char  prevSerial[SIZE_ROW];
+char  serBlankRow[500];
+
 char  textPinModeIn[MAX_PIN_DIGITAL][80];
 char  textPinModeOut[MAX_PIN_DIGITAL][80];
 char  textDigitalWriteLow[MAX_PIN_DIGITAL][80];
@@ -121,6 +130,11 @@ int   confLogLev  =   1;
 int   confLogFile =   0;
 char  confSketchFile[200];
 char  confServuinoFile[200];
+
+int uno_h=0, uno_w=0;
+int msg_h=0, msg_w=0;
+int log_h=0, log_w=0;
+int ser_h=0, ser_w=0;
 
 WINDOW *uno,*ser,*slog,*msg;
 static struct termios orig, nnew;
@@ -278,6 +292,11 @@ void openCommand()
 	strcpy(fileName,"servuino/data.error");
         readMsg(fileName);
       }
+    if(p=strstr(str,"g++"))
+      {
+	strcpy(fileName,"servuino/g++.result");
+        readMsg(fileName);
+      }
     if(p=strstr(str,"help"))
       {
         strcpy(fileName,"help_command.txt");
@@ -396,6 +415,10 @@ void runMode()
 	{
 	  runAll();
 	}
+      if (ch=='l')
+	{
+	  showLoops();
+	}
       if (ch=='a')
 	{
            resetSim();
@@ -442,8 +465,9 @@ void runMode()
 int main(int argc, char *argv[])
 //====================================
 {
-  int ch;
- 
+  int ch,i;
+
+
   init();
   initSim();
   resetSim();
@@ -453,7 +477,10 @@ int main(int argc, char *argv[])
   unoInfo();
 
   if(confLogFile == YES)resetFile("log.txt");
-  //readMsg(tempName);
+
+  for(i=0;i<log_w;i++)logBlankRow[i] = ' ';
+  for(i=0;i<ser_w;i++)serBlankRow[i] = ' ';
+
 
   openCommand();
   
@@ -463,6 +490,7 @@ int main(int argc, char *argv[])
   delwin(slog);
   delwin(msg);
   endwin();
+
 }
 //====================================
 // End of file

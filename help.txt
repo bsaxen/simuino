@@ -3,5 +3,6 @@
  r  run current loop
  g  run complete simulation
  a  re-run simulation
+ l  show loop information
  q  quit Run Mode, enter Admin Mode. Not during stepping execution.
  h  show this information

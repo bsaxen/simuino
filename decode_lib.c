@@ -15,11 +15,11 @@
 
 // Math function min and max
 #ifndef max
-	#define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
+#define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
 #endif
 
 #ifndef min
-	#define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
+#define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
 #endif
   
 char  stemp[80];
@@ -515,10 +515,7 @@ void serial::begin(int baudRate)
   digitalMode[0] = RX;
   digitalMode[1] = TX;
   serialMode = ON;
-  if(confLogLev > 2)
-    {
-      wLog("serial:begin",baud,-1);
-    }
+  wLog("serial:begin",baud,-1);
 }
 
 void serial::end() 
@@ -546,7 +543,7 @@ int serial::read() // the first byte of incoming serial data available (or -1 if
 
 int serial::peek() 
 {
-   return(-1);
+  return(-1);
 }
 
 void serial::flush() 
@@ -556,112 +553,72 @@ void serial::flush()
 
 void serial::print(int x) 
 {
-  //passTime();
   sprintf(stemp,"%d",x);
   showSerial(stemp,0);
-  if(confLogLev > 2)
-    {
-      wLog("serial:print",x,-1);
-    }
+  wLog("serial:print",x,-1);
 }
 
 void serial::print(int x,int base) 
 {
-  //passTime();
   sprintf(stemp,"%d",x);
   showSerial(stemp,0);
-  if(confLogLev > 2)
-    {
-      wLog("serial:print base",x,-1);
-    }
+  wLog("serial:print base",x,-1);
 }
 
 void serial::print(const char *p) 
 {
-  //passTime();
   sprintf(stemp,"%s",p);
   showSerial(stemp,0);
-  if(confLogLev > 2)
-    {
-      wLogChar("serial:print",p,-1);
-    }
+  wLogChar("serial:print",p,-1);
 }
 
 void serial::println() 
 {
-  //passTime();
   //sprintf(stemp,"%d",x);
   showSerial(stemp,1);
-  if(confLogLev > 2)
-    {
-      wLog("serial:println()",-1,-1);
-    }
+  wLog("serial:println()",-1,-1);
 }
 
 void serial::println(int x) 
 {
-  //passTime();
   sprintf(stemp,"%d",x);
   showSerial(stemp,1);
-  if(confLogLev > 2)
-    {
-      wLog("serial:println",x,-1);
-    }
+  wLog("serial:println",x,-1);
 }
 
 void serial::println(int x, int base) 
 {
-  //passTime();
   sprintf(stemp,"%d",x);
   showSerial(stemp,1);
-  if(confLogLev > 2)
-    {
-      wLog("serial:println base",x,-1);
-    }
+  wLog("serial:println base",x,-1);
 }
 
 void serial::println(const char *p) 
 {
-  //passTime();
   sprintf(stemp,"%s",p);
   showSerial(stemp,1);
-  if(confLogLev > 2)
-    {
-      wLogChar("serial:println",p,-1);
-    }
+  wLogChar("serial:println",p,-1);
 }
 
 void serial::write(int p) 
 {
-  //passTime();
   sprintf(stemp,"%d",p);
   showSerial(stemp,1);
-  if(confLogLev > 2)
-    {
-      wLog("serial:write(val)",p,-1);
-    }
+  wLog("serial:write(val)",p,-1);
 }
 
 void serial::write(char *p) 
 {
-  //passTime();
   sprintf(stemp,"%s",p);
   showSerial(stemp,1);
-  if(confLogLev > 2)
-    {
-      wLogChar("serial:write(str)",p,-1);
-    }
+  wLogChar("serial:write(str)",p,-1);
 }
 
 void serial::write(char *p, int len) 
 {
-  //passTime();
   sprintf(stemp,"%s",p);
   showSerial(stemp,1);
-  if(confLogLev > 2)
-    {
-      wLogChar("serial:write(len)",p,-1);
-    }
+  wLogChar("serial:write(len)",p,-1);
 }
 
 
@@ -753,111 +710,111 @@ void serial::write(char *p, int len)
 /* void Server::print(char x,char *base)  */
 /* { */
 /*   //BIN for binary (base 2)  */
-/*   //DEC for decimal (base 10) */
-/*   //OCT for octal (base 8) */
-/*   //HEX for hexadecimal (base 16) */
-/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
-/*   sprintf(stemp,"%c",x); */
-/*   strcat(ethernetBuffer,stemp); */
-/*   showEthernet(); */
-/*   passTime(); */
-/* } */
-/* void Server::print(int x,char *base)  */
-/* { */
-/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
-/*   sprintf(stemp,"%d",x); */
-/*   strcat(ethernetBuffer,stemp); */
-/*   showEthernet(); */
-/*   passTime(); */
-/* } */
-/* void Server::print(char *x,char *base)  */
-/* { */
-/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
-/*   sprintf(stemp,"%s",x); */
-/*   strcat(ethernetBuffer,stemp); */
-/*   showEthernet(); */
-/*   passTime(); */
-/* } */
-/* void Server::println()  */
-/* { */
-/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
-/*   sprintf(stemp,"\n"); */
-/*   strcat(ethernetBuffer,stemp); */
-/*   showEthernet(); */
-/*   passTime(); */
-/* } */
-/* void Server::println(char x)  */
-/* { */
-/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
-/*   sprintf(stemp,"%c\n",x); */
-/*   strcat(ethernetBuffer,stemp); */
-/*   showEthernet(); */
-/*   passTime(); */
-/* } */
-/* void Server::println(int x)  */
-/* { */
-/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
-/*   sprintf(stemp,"%d\n",x); */
-/*   strcat(ethernetBuffer,stemp); */
-/*   showEthernet(); */
-/*   passTime(); */
-/* } */
-/* void Server::println(char *x)  */
-/* { */
-/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
-/*   sprintf(stemp,"%s\n",x); */
-/*   strcat(ethernetBuffer,stemp); */
-/*   showEthernet(); */
-/*   passTime(); */
-/* } */
-/* void Server::println(char x,char *base)  */
-/* { */
-/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
-/*   sprintf(stemp,"%c\n",x); */
-/*   strcat(ethernetBuffer,stemp); */
-/*   showEthernet(); */
-/*   passTime(); */
-/* } */
-/* void Server::println(int x,char *base)  */
-/* { */
-/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
-/*   sprintf(stemp,"%d\n",x); */
-/*   strcat(ethernetBuffer,stemp); */
-/*   showEthernet(); */
-/*   passTime(); */
-/* } */
-/* void Server::println(char *x,char *base)  */
-/* { */
-/*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
-/*   sprintf(stemp,"%s\n",x); */
-/*   strcat(ethernetBuffer,stemp); */
-/*   showEthernet(); */
-/*   passTime(); */
-/* } */
+ /*   //DEC for decimal (base 10) */
+  /*   //OCT for octal (base 8) */
+   /*   //HEX for hexadecimal (base 16) */
+    /*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
+    /*   sprintf(stemp,"%c",x); */
+    /*   strcat(ethernetBuffer,stemp); */
+    /*   showEthernet(); */
+    /*   passTime(); */
+    /* } */
+    /* void Server::print(int x,char *base)  */
+    /* { */
+    /*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
+    /*   sprintf(stemp,"%d",x); */
+    /*   strcat(ethernetBuffer,stemp); */
+    /*   showEthernet(); */
+    /*   passTime(); */
+    /* } */
+    /* void Server::print(char *x,char *base)  */
+    /* { */
+    /*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
+    /*   sprintf(stemp,"%s",x); */
+    /*   strcat(ethernetBuffer,stemp); */
+    /*   showEthernet(); */
+    /*   passTime(); */
+    /* } */
+    /* void Server::println()  */
+    /* { */
+    /*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
+    /*   sprintf(stemp,"\n"); */
+    /*   strcat(ethernetBuffer,stemp); */
+    /*   showEthernet(); */
+    /*   passTime(); */
+    /* } */
+    /* void Server::println(char x)  */
+    /* { */
+    /*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
+    /*   sprintf(stemp,"%c\n",x); */
+    /*   strcat(ethernetBuffer,stemp); */
+    /*   showEthernet(); */
+    /*   passTime(); */
+    /* } */
+    /* void Server::println(int x)  */
+    /* { */
+    /*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
+    /*   sprintf(stemp,"%d\n",x); */
+    /*   strcat(ethernetBuffer,stemp); */
+    /*   showEthernet(); */
+    /*   passTime(); */
+    /* } */
+    /* void Server::println(char *x)  */
+    /* { */
+    /*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
+    /*   sprintf(stemp,"%s\n",x); */
+    /*   strcat(ethernetBuffer,stemp); */
+    /*   showEthernet(); */
+    /*   passTime(); */
+    /* } */
+    /* void Server::println(char x,char *base)  */
+    /* { */
+    /*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
+    /*   sprintf(stemp,"%c\n",x); */
+    /*   strcat(ethernetBuffer,stemp); */
+    /*   showEthernet(); */
+    /*   passTime(); */
+    /* } */
+    /* void Server::println(int x,char *base)  */
+    /* { */
+    /*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
+    /*   sprintf(stemp,"%d\n",x); */
+    /*   strcat(ethernetBuffer,stemp); */
+    /*   showEthernet(); */
+    /*   passTime(); */
+    /* } */
+    /* void Server::println(char *x,char *base)  */
+    /* { */
+    /*   if(confLogLev > 0)wLog("Server.print",-1,-1); */
+    /*   sprintf(stemp,"%s\n",x); */
+    /*   strcat(ethernetBuffer,stemp); */
+    /*   showEthernet(); */
+    /*   passTime(); */
+    /* } */
 
-/* class Client { */
-/*  public: */
-/*   void begin(int baudRate); */
-/* connected() */
-/* connect() */
-/* write() */
-/* print() */
-/* println() */
-/* available() */
-/* read() */
-/* flush() */
-/* stop() */
-/* }; */
+    /* class Client { */
+    /*  public: */
+    /*   void begin(int baudRate); */
+    /* connected() */
+    /* connect() */
+    /* write() */
+    /* print() */
+    /* println() */
+    /* available() */
+    /* read() */
+    /* flush() */
+    /* stop() */
+    /* }; */
 
-/* void serial::print(int x)  */
-/* { */
-/*   if(confLogLev > 0)wLog("serial print",x,-1); */
-/*   sprintf(stemp,"%d",x); */
-/*   strcat(serialBuffer,stemp); */
-/*   showSerial(); */
-/*   passTime(); */
-/* } */
+    /* void serial::print(int x)  */
+    /* { */
+    /*   if(confLogLev > 0)wLog("serial print",x,-1); */
+    /*   sprintf(stemp,"%d",x); */
+    /*   strcat(serialBuffer,stemp); */
+    /*   showSerial(); */
+    /*   passTime(); */
+    /* } */
 
-//====================================
-// End of file
-//====================================
+    //====================================
+    // End of file
+    //====================================
