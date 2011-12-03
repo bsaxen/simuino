@@ -1,3 +1,6 @@
+void wLog0(const char *p);
+void wLog1(const char *p, int value1);
+void wLog2(const char *p, int value1, int value2);
 void debug(char *msg);
 void runMode();
 void runStep(int dir);

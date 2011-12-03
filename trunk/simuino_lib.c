@@ -42,7 +42,7 @@ void show(WINDOW *win)
   if(win == uno) 
   {
     wmove(win,0,2);
-    wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.0.7");
+    wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.0.8");
   }
   if(win == ser)
   {
@@ -157,9 +157,10 @@ void wLog(const char *p, int value1, int value2)
 //====================================
 {
   int i;
-  char temp[100],temp2[100];
+  char temp[100],temp1[100];
 
-  strcpy(temp," ");
+  strcpy(temp,"aaaa");
+  strcpy(temp1,"bbbb");
 
   if(value2 > -2) // add index
     {
@@ -170,14 +171,14 @@ void wLog(const char *p, int value1, int value2)
 
   if(value1 > -1)
     {
-      sprintf(temp2," %d",value1);
-      strcat(temp,temp2);
+      sprintf(temp1," %d",value1);
+      strcat(temp,temp1);
     }
   
   if(value2 > -1)
     {
-      sprintf(temp2," %d",value2);
-      strcat(temp,temp2);
+      sprintf(temp1," %d",value2);
+      strcat(temp,temp1);
     }
 
   if(error == 1)
@@ -188,6 +189,98 @@ void wLog(const char *p, int value1, int value2)
 
   if(confLogFile==YES)logFile(temp);
 
+
+  wmove(slog,1,1);
+  wprintw(slog,"%s",logBlankRow);
+  wscrl(slog,-1);
+  wmove(slog,1,1);
+  wprintw(slog,">%s",simulation[currentStep+1]);
+  wmove(slog,2,1);
+  wprintw(slog,"%s",temp);
+}
+
+//====================================
+void wLog0(const char *p)
+//====================================
+{
+  int i;
+  char temp[100];
+
+  strcpy(temp,"");
+  sprintf(temp," %d,%d ",currentLoop,currentStep);
+  strcat(temp,p);
+
+  if(error == 1)
+    {
+      temp[0]='*';
+      error = 0;
+    }
+
+  if(confLogFile==YES)logFile(temp);
+
+  wmove(slog,1,1);
+  wprintw(slog,"%s",logBlankRow);
+  wscrl(slog,-1);
+  wmove(slog,1,1);
+  wprintw(slog,">%s",simulation[currentStep+1]);
+  wmove(slog,2,1);
+  wprintw(slog,"%s",temp);
+}
+
+//====================================
+void wLog1(const char *p, int value1)
+//====================================
+{
+  int i;
+  char temp[100], temp1[100];
+
+  strcpy(temp,"");
+  strcpy(temp1,"");
+  sprintf(temp," %d,%d ",currentLoop,currentStep);
+  strcat(temp,p);
+  sprintf(temp1," %d",value1);
+  strcat(temp,temp1);
+
+  if(error == 1)
+    {
+      temp[0]='*';
+      error = 0;
+    }
+
+  if(confLogFile==YES)logFile(temp);
+
+  wmove(slog,1,1);
+  wprintw(slog,"%s",logBlankRow);
+  wscrl(slog,-1);
+  wmove(slog,1,1);
+  wprintw(slog,">%s",simulation[currentStep+1]);
+  wmove(slog,2,1);
+  wprintw(slog,"%s",temp);
+}
+
+//====================================
+void wLog2(const char *p, int value1, int value2)
+//====================================
+{
+  int i;
+  char temp[100], temp1[100];
+
+  strcpy(temp,"");
+  strcpy(temp1,"");
+  sprintf(temp," %d,%d ",currentLoop,currentStep);
+  strcat(temp,p);
+  sprintf(temp1," %d",value1);
+  strcat(temp,temp1);
+  sprintf(temp1," %d",value2);
+  strcat(temp,temp1);
+
+  if(error == 1)
+    {
+      temp[0]='*';
+      error = 0;
+    }
+
+  if(confLogFile==YES)logFile(temp);
 
   wmove(slog,1,1);
   wprintw(slog,"%s",logBlankRow);
@@ -435,8 +528,6 @@ void initSim()
       strcpy(textDigitalWriteHigh[i],"void");
 
       strcpy(textAnalogWrite[i],"void");
-      strcpy(textAnalogRead[i],"void");
-
       strcpy(textDigitalRead[i],"void");
     }
   for(i=0;i<MAX_PIN_ANALOG;i++)
@@ -453,16 +544,7 @@ void resetSim()
 
   currentStep = 0;
   currentLoop = 0;
-  rememberNewLine = 0;
 
-  for(i=0;i<MAX_LOG;i++)
-    {
-       strcpy(logBuffer[i],"");
-    }
-  for(i=0;i<MAX_SERIAL;i++)
-    {
-      strcpy(serialBuffer[i],"");
-    }
 }
 //====================================
 void unimplemented(const char *f)
@@ -567,11 +649,15 @@ void readSimulation(char *fileName)
 //====================================
 {
   FILE *in;
-  char row[SIZE_ROW],*p,temp[40];
+  char row[SIZE_ROW],*p,temp[40],junk[3];
   int step=0,loop=0;
 
-  g_steps = 0;
-  g_loops = 0;
+  g_steps       = 0;
+  g_loops       = 0;
+  scenAnalog    = 0;
+  scenDigital   = 0;
+  scenInterrupt = 0;
+
   in = fopen(fileName,"r");
   if(in == NULL)
     {
@@ -582,15 +668,19 @@ void readSimulation(char *fileName)
       while (fgets(row,SIZE_ROW,in)!=NULL)
 	{
 
-	  if(row[0] != '#')
+	  if(row[0] == '+')
 	    {
+	      p = strstr(row,"+ ");
+              p = p+2;
 	      g_steps++;
-	      sscanf(row,"%d",&step);
+	      sscanf(row,"%s%d",junk,&step);
 	      if(step == g_steps)
-		strcpy(simulation[step],row);
+		strcpy(simulation[step],p);
 	      else
 		{
-		  showError("Simulation step out of order",step);
+		  showError(row,step);
+		  showError(row,g_steps);
+		  //showError("Simulation step out of order",step);
 		}
 	    }
 	  else if(p=strstr(row,"LOOP"))
@@ -761,7 +851,6 @@ void init()
   show(msg);
 
   // Log Window
-  logSize = s_row-1;
   log_h = s_row;
   log_w = LOG_W;
   slog=newwin(log_h,log_w,0,uno_w);
@@ -770,7 +859,6 @@ void init()
   show(slog); 
 
   // Serial Window
-  serialSize = s_row-1;
   ser_h = s_row;
   ser_w = s_col - uno_w - log_w;
   ser=newwin(ser_h,ser_w,0,uno_w + log_w);

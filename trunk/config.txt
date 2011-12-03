@@ -1,6 +1,6 @@
-# Simuino Configuration Thu Dec  1 11:46:26 2011
+# Simuino Configuration Sat Dec  3 10:21:06 2011
 DELAY      30
 LOG_LEVEL  3
 LOG_FILE   0
-SKETCH     ../adcajo/heater_control.c
+SKETCH     ../adcajo/s1.c
 SERVUINO   servuino/data.su
