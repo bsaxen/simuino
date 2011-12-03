@@ -64,9 +64,9 @@ void digitalWrite(int pin,int value)
 	  if(confLogLev > 0)
 	    { 
 	      if(strstr(temp,"void"))
-		wLog("digitalWrite HIGH",pin,-1);
+		wLog1("digitalWrite HIGH",pin);
 	      else
-		wLog(temp,pin,-1);
+		wLog1(temp,pin);
 	    }
 	}
       if(value==LOW)
@@ -76,9 +76,9 @@ void digitalWrite(int pin,int value)
 	  if(confLogLev > 0)
 	    {
 	      if(strstr(temp,"void"))
-		wLog("digitalWrite LOW",pin,-1);
+		wLog1("digitalWrite LOW",pin);
 	      else
-		wLog(temp,pin,-1);
+		wLog1(temp,pin);
 	    }
 	}
       wmove(uno,DP+2,digPinPos[pin]);
@@ -115,9 +115,9 @@ int digitalRead(int pin)
       if(confLogLev > 0)
 	{
 	  if(strstr(temp,"void"))
-	    wLog("digitalRead",pin,value);
+	    wLog2("digitalRead",pin,value);
 	  else
-	    wLog(temp,pin,value);
+	    wLog2(temp,pin,value);
 	}
 
 
@@ -169,9 +169,9 @@ int analogRead(int pin)  // Values 0 to 1023
   if(confLogLev > 0)
     {
       if(strstr(temp,"void"))
-	wLog("analogRead",pin,value);
+	wLog2("analogRead",pin,value);
       else
-	wLog(temp,pin,value);
+	wLog2(temp,pin,value);
     }
 
 
@@ -192,13 +192,9 @@ void analogWrite(int pin,int value)
 {
   char temp[120];
 
-  //passTime();
-
   if(digitalMode[pin] != OUTPUT)
     {
       showError("Pin is not in OUPUT mode: ",pin);
-      wLog("analogWrite",pin,value);
-
       return;
     }
 
@@ -211,8 +207,6 @@ void analogWrite(int pin,int value)
 	  showError(temp,-1);
 	  value = 0;
 	}
-      
-      //s_digitalPin[nloop][pin] = value;
 
       wmove(uno,DP,digPinPos[pin]-2);
       wprintw(uno,"%3d",value);
@@ -224,9 +218,9 @@ void analogWrite(int pin,int value)
       if(confLogLev > 0)
 	{
 	  if(strstr(temp,"void"))
-	    wLog("analogWrite",pin,value);
+	    wLog2("analogWrite",pin,value);
 	  else
-	    wLog(temp,pin,value);
+	    wLog2(temp,pin,value);
 	}
 
       wmove(uno,DP+2,digPinPos[pin]);
@@ -236,8 +230,6 @@ void analogWrite(int pin,int value)
   else
     {
       showError("Pin is not of PWM type",pin);
-      wLog("analogWrite",pin,value);
-
     }
   return;
 }

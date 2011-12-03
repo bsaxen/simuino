@@ -243,10 +243,15 @@ void runStep(int dir)
 	  getString(event,temp3);
 	  Serial.println(temp3);
 	}
-      else if (p=strstr(event,"delay"))
+      else if (p=strstr(event,"delay()"))
 	{
 	  sscanf(event,"%d %s %d",&step,temp,&x);
 	  delay(x);
+	}
+      else if (p=strstr(event,"delayMicroseconds"))
+	{
+	  sscanf(event,"%d %s %d",&step,temp,&x);
+	  delayMicroseconds(x);
 	}
       else if (p=strstr(event,"attachInterrupt"))
 	{
@@ -297,8 +302,8 @@ void openCommand()
 //====================================
 {
   struct stat st;
-  int ch,nsteps=1000,x;
-  char *p,str[80],fileName[80],temp[80],syscom[120];
+  int ch,nsteps=1000,x,i;
+  char *p,str[120],sstr[20],fileName[120],temp[120],syscom[120];
 
   s_mode = ADMIN;
 
@@ -314,78 +319,83 @@ void openCommand()
     wmove(uno,UNO_H-2,3);
     wgetstr(uno,str);
 
-    if(p=strstr(str,"run"))
+    for(i=0;i<6;i++)sstr[i]=str[i];
+    sstr[i]='\0';
+
+    p = str;
+
+    if(strstr(sstr,"run"))
       {
         runMode();
         strcpy(fileName,"help_command.txt");
         readMsg(fileName);
       }
-    if(p=strstr(str,"conf"))
+    else if(strstr(sstr,"conf"))
       {
 	strcpy(fileName,"config.txt");
         readMsg(fileName);
       }
-    if(p=strstr(str,"err"))
+    else if(strstr(sstr,"err"))
       {
 	strcpy(fileName,"servuino/data.error");
         readMsg(fileName);
       }
-    if(p=strstr(str,"g++"))
+    else if(strstr(sstr,"g++"))
       {
 	strcpy(fileName,"servuino/g++.result");
         readMsg(fileName);
       }
-    if(p=strstr(str,"help"))
+    else if(strstr(sstr,"help"))
       {
         strcpy(fileName,"help_command.txt");
         readMsg(fileName);
       }
-    if(p=strstr(str,"delay"))
+    else if(strstr(sstr,"delay"))
       {
        sscanf(p,"%s %d",temp,&confDelay);
        if(confDelay >=0 && confDelay < 1000)
           saveConfig();
       }
-    if(p=strstr(str,"log"))
+    else if(strstr(sstr,"log"))
       {
        sscanf(p,"%s %d",temp,&confLogLev);
        if(confLogLev >=0 && confLogLev < 4)
           saveConfig();
       }
-    if(p=strstr(str,"record"))
+    else if(p=strstr(sstr,"record"))
       {
        sscanf(p,"%s %d",temp,&confLogFile);
        if(confLogFile >=0 && confLogFile < 2)
           saveConfig();
       }
-    if(p=strstr(str,"loop")) //status
+    else if(strstr(sstr,"loop")) //status
       {
           showLoops();
       }
-    if(p=strstr(str,"sim")) //status
+    else if(strstr(sstr,"sim")) //status
       {
           readSimulation(confServuinoFile);
       }
-    if(p=strstr(str,"scen")) // scenario
+    else if(strstr(sstr,"scen")) // scenario
       {
           showScenario(confSketchFile);
       }
-    if(p=strstr(str,"sys"))
+    else if(strstr(sstr,"sys"))
       {
 	p = p+4;
         wLog(p,-1,-1);
         x=system(p);
       }
-    if(p=strstr(str,"clear"))
+    else if(strstr(sstr,"clear"))
       {
 	sprintf(syscom,"rm servuino/sketch.pde;rm servuino/data.su;");
         x=system(syscom);
       }
-    if(p=strstr(str,"load"))
+    else if(strstr(sstr,"load"))
       {
-	putMsg("Load Sketch...");
+	putMsg(1,"Load Sketch...");
         loadSketch(confSketchFile);
-        sscanf(p,"%s %d",temp,&nsteps);
+        sscanf(str,"%s %d",temp,&nsteps);
         if(nsteps > 0 && nsteps < MAX_STEP)
         {
           sprintf(syscom,"cd servuino;./servuino %d;",nsteps);
@@ -397,34 +407,38 @@ void openCommand()
           readSimulation(confServuinoFile);
           readSketchInfo();
           unoInfo();
-	  strcpy(fileName,"servuino/data.error");
-	  readMsg(fileName);
+	  //strcpy(fileName,"servuino/data.error");
+	  //readMsg(fileName);
+	  putMsg(msg_h-2,"Loading ready!");
 	}
       }
-    if(p=strstr(str,"sketch"))
+    else if(strstr(sstr,"sketch"))
       {
-        sscanf(p,"%s %s",temp,confSketchFile);
-
+        sscanf(str,"%s %s",temp,confSketchFile);
 	if(stat(confSketchFile,&st) == 0)
 	  {
 	    saveConfig();
+	    strcpy(fileName,"config.txt");
+	    readMsg(fileName);
 	  }
         else
-	  putMsg("Sketch not found !");
-
+	  {
+	    sprintf(temp,"Sketch not found: %s",confSketchFile);
+	    putMsg(msg_h-2,temp);
+	  }
       }
-    if(p=strstr(str,"serv")) // Servuino data file
+    else if(strstr(sstr,"serv")) // Servuino data file
       {
-        sscanf(p,"%s %s",temp,confServuinoFile);
+        sscanf(str,"%s %s",temp,confServuinoFile);
         saveConfig();
+	strcpy(fileName,"config.txt");
+        readMsg(fileName);
       }
-
-
+    else 
+      {
+	putMsg(msg_h-2,"Unknown command");
+      }
   }
-  //wmove(uno,UNO_H-2,1);
-  //wprintw(uno,"                                                  ");	
-  //show(uno);
-  //putMsg("Run mode");
 }
 
 //====================================

@@ -7,7 +7,7 @@ void runStep(int dir);
 void openCommand();
 void iDelay(int ms);
 void show(WINDOW *win);
-void putMsg(const char *message);
+void putMsg(int line,const char *message);
 void showError(const char *m, int value);
 void saveConfig();
 void resetFile(const char *filename);
