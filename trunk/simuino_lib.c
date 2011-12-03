@@ -65,11 +65,11 @@ void show(WINDOW *win)
 }
 
 //====================================
-void putMsg(const char *message)
+void putMsg(int line,const char *message)
 //====================================
 {
   wclear(msg);
-  wmove(msg,1,1);
+  wmove(msg,line,1);
   wprintw(msg,message);
   show(msg);
   return;
@@ -99,7 +99,7 @@ void saveConfig()
     }
   else
     {
-      putMsg("Configuration saved");
+      putMsg(msg_h-2,"Configuration saved");
       lt = time(NULL);
       fprintf(out,"# Simuino Configuration %s",ctime(&lt));
       fprintf(out,"DELAY      %d\n",confDelay);
@@ -197,6 +197,7 @@ void wLog(const char *p, int value1, int value2)
   wprintw(slog,">%s",simulation[currentStep+1]);
   wmove(slog,2,1);
   wprintw(slog,"%s",temp);
+  show(slog);
 }
 
 //====================================
@@ -225,6 +226,7 @@ void wLog0(const char *p)
   wprintw(slog,">%s",simulation[currentStep+1]);
   wmove(slog,2,1);
   wprintw(slog,"%s",temp);
+  show(slog);
 }
 
 //====================================
@@ -256,6 +258,7 @@ void wLog1(const char *p, int value1)
   wprintw(slog,">%s",simulation[currentStep+1]);
   wmove(slog,2,1);
   wprintw(slog,"%s",temp);
+  show(slog);
 }
 
 //====================================
@@ -289,6 +292,7 @@ void wLog2(const char *p, int value1, int value2)
   wprintw(slog,">%s",simulation[currentStep+1]);
   wmove(slog,2,1);
   wprintw(slog,"%s",temp);
+  show(slog);
 }
 
 
@@ -697,7 +701,7 @@ void readSimulation(char *fileName)
         g_loops--;
         fclose(in);
     }
-  putMsg("ready reading simulation");
+  putMsg(msg_h-2,"ready reading simulation");
   return;
 }    
 
