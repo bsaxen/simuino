@@ -2,29 +2,6 @@
 //  Developed by Benny Saxen, ADCAJO
 //================================================
 
-#define A0 0
-#define A1 1
-#define A2 2
-#define A3 3
-#define A4 4
-#define A5 5
-
-#define byte int
-
-
-
-// Math function min and max
-#ifndef max
-#define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
-#endif
-
-#ifndef min
-#define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
-#endif
-  
-char  stemp[80];
-
-//typedef std::string String;
 
 //=====================================
 // Functions
@@ -35,7 +12,7 @@ char  stemp[80];
 
 void pinMode(int pin,int mode)
 {
-  char temp[80];
+  char temp[120];
 
   //passTime();
   if(mode == INPUT || mode == OUTPUT)
@@ -50,9 +27,9 @@ void pinMode(int pin,int mode)
 	  strcpy(temp,textPinModeIn[pin]);
 	  wprintw(uno,"In");
 	  if(strstr(temp,"void"))
-	    wLog("pinMode IN",pin,-1);
+	    wLog1("pinMode IN",pin);
 	  else
-	    wLog(temp,pin,-1);
+	    wLog1(temp,pin);
 	}
 
       if(mode==OUTPUT)
@@ -60,26 +37,24 @@ void pinMode(int pin,int mode)
 	  strcpy(temp,textPinModeOut[pin]);
 	  wprintw(uno,"Out");
 	  if(strstr(temp,"void"))
-	    wLog("pinMode OUT",pin,-1);
+	    wLog1("pinMode OUT",pin);
 	  else
-	    wLog(temp,pin,-1);
+	    wLog1(temp,pin);
 	}      
       show(uno);
     }
   else
     {
       showError("Unknown Pin Mode",mode);
-      wLog("pinMode ",pin,-1);
     }
 }
 
 void digitalWrite(int pin,int value)
 {
-  char temp[80];
+  char temp[120];
   //passTime();
   if(digitalMode[pin] == OUTPUT)
     {
-      //s_digitalPin[nloop][pin] = value;
 
       wmove(uno,DP,digPinPos[pin]);
       if(value==HIGH)
@@ -124,7 +99,7 @@ void digitalWrite(int pin,int value)
 
 int digitalRead(int pin)
 {
-  char temp[80];
+  char temp[120];
   int value;
 
   //passTime();
@@ -173,7 +148,7 @@ int analogRead(int pin)  // Values 0 to 1023
 {
 
   int value;
-  char temp[80];
+  char temp[120];
 
   value = g_value;
 
@@ -215,7 +190,7 @@ int analogRead(int pin)  // Values 0 to 1023
 void analogWrite(int pin,int value) 
 // Values 0 to 255   PWM: only pin 3,5,6,9,10,11
 {
-  char temp[80];
+  char temp[120];
 
   //passTime();
 
@@ -291,12 +266,12 @@ void shiftOut(int dataPin, int clockPin, int bitOrder, int value)
 
 unsigned long pulseIn(int pin, int value)
 {
-  unimplemented("pulseIn()");
+  unimplemented("pulseIn(int,int)");
 }
 
 unsigned long pulseIn(int pin, int value, unsigned long timeout)
 {
-  unimplemented("pulseIn()");
+  unimplemented("pulseIn(int,int,unsigned long)");
 }
 
 //------ Time ------------------------------
@@ -316,7 +291,7 @@ unsigned long micros()
 void delay(int ms)
 {
   //passTime(); 
-  if(confLogLev > 1)wLog("delay",ms,-1);
+  wLog("delay",ms,-1);
   //msleep(ms);
 
 }
@@ -324,7 +299,7 @@ void delay(int ms)
 void delayMicroseconds(int us)
 {
   //passTime();
-  if(confLogLev > 1)wLog("delayMicroseconds",us,-1);
+  wLog("delayMicroseconds",us,-1);
   //msleep(us);
 
 }
@@ -435,6 +410,11 @@ unsigned char bit(unsigned char x)
 
 //------ External Interrupts ---------------
 
+
+void interrupt(char *m,int intrpt_no)
+{
+  wLog(m,intrpt_no,-1);
+}
 
 void attachInterrupt(int interrupt,void(*func)(),int mode)
 {

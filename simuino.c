@@ -13,6 +13,14 @@
 #include <sys/stat.h>
 #include <form.h>
 
+#define A0 0
+#define A1 1
+#define A2 2
+#define A3 3
+#define A4 4
+#define A5 5
+
+
 #define LOW    0
 #define HIGH   1
 #define INPUT  1
@@ -70,6 +78,11 @@
 #define RUN    1
 #define ADMIN  2
 
+#define FREE   0
+#define RX     3
+#define TX     4
+
+
 // Configuration
 int currentStep = 0;
 int currentLoop = 0;
@@ -84,14 +97,11 @@ void (*interrupt1)();
 char  simulation[MAX_STEP][SIZE_ROW];
 int   loopPos[MAX_LOOP];
 
-#define FREE   0
-#define RX     3
-#define TX     4
 
 int   s_row,s_col;
 int   digPinPos[MAX_PIN_DIGITAL];
 int   anaPinPos[MAX_PIN_ANALOG];
-char  appName[80];
+char  appName[120];
 
 int   interruptMode[2];
 int   digitalMode[MAX_PIN_DIGITAL];
@@ -100,26 +110,22 @@ int   baud = 0;
 int   error = 0;
 
 // Log
-int   logging = YES;
-char  logBuffer[MAX_LOG][100];
-int   logSize = 1;
+//int   logging = YES;
 char  logBlankRow[500];
 
 // Serial Interface
-int   serialSize = 1;
+//int   serialSize = 1;
 int   serialMode = OFF;
-char  serialBuffer[100][100];
-int   rememberNewLine = 0;
 char  prevSerial[SIZE_ROW];
 char  serBlankRow[500];
 
-char  textPinModeIn[MAX_PIN_DIGITAL][80];
-char  textPinModeOut[MAX_PIN_DIGITAL][80];
-char  textDigitalWriteLow[MAX_PIN_DIGITAL][80];
-char  textDigitalWriteHigh[MAX_PIN_DIGITAL][80];
-char  textAnalogWrite[MAX_PIN_DIGITAL][80];
-char  textAnalogRead[MAX_PIN_ANALOG][80];
-char  textDigitalRead[MAX_PIN_DIGITAL][80];
+char  textPinModeIn[MAX_PIN_DIGITAL][SIZE_ROW];
+char  textPinModeOut[MAX_PIN_DIGITAL][SIZE_ROW];
+char  textDigitalWriteLow[MAX_PIN_DIGITAL][SIZE_ROW];
+char  textDigitalWriteHigh[MAX_PIN_DIGITAL][SIZE_ROW];
+char  textAnalogWrite[MAX_PIN_DIGITAL][SIZE_ROW];
+char  textAnalogRead[MAX_PIN_ANALOG][SIZE_ROW];
+char  textDigitalRead[MAX_PIN_DIGITAL][SIZE_ROW];
 int   scenAnalog    = 0;
 int   scenDigital   = 0;
 int   scenInterrupt = 0;
@@ -138,6 +144,20 @@ int ser_h=0, ser_w=0;
 
 WINDOW *uno,*ser,*slog,*msg;
 static struct termios orig, nnew;
+
+
+#define byte int
+
+// Math function min and max
+#ifndef max
+#define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
+#endif
+
+#ifndef min
+#define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
+#endif
+  
+char  stemp[80];
 
 #include "simuino.h"
 #include "simuino_lib.c"
@@ -210,7 +230,6 @@ void runStep(int dir)
 	}
       else if (p=strstr(event,"Serial:print(char)"))
 	{
-	  //sscanf(event,"%d %s %s",&step,temp,temp2);
 	  getString(event,temp3);
 	  Serial.print(temp3);
 	}
@@ -221,7 +240,6 @@ void runStep(int dir)
 	}
       else if (p=strstr(event,"Serial:println(char)"))
 	{
-	  //sscanf(event,"%d %s %s",&step,temp,temp2);
 	  getString(event,temp3);
 	  Serial.println(temp3);
 	}
@@ -239,6 +257,26 @@ void runStep(int dir)
 	{
 	  sscanf(event,"%d %s %d",&step,temp,&x);
 	  detachInterrupt(x);
+	}
+      else if (p=strstr(event,"interruptRISING"))
+	{
+	  sscanf(event,"%d %s %d",&step,temp,&x);
+	  interrupt(temp,x);
+	}
+      else if (p=strstr(event,"interruptFALLING"))
+	{
+	  sscanf(event,"%d %s %d",&step,temp,&x);
+	  interrupt(temp,x);
+	}
+      else if (p=strstr(event,"interruptCHANGE"))
+	{
+	  sscanf(event,"%d %s %d",&step,temp,&x);
+	  interrupt(temp,x);
+	}
+      else if (p=strstr(event,"interruptLOW"))
+	{
+	  sscanf(event,"%d %s %d",&step,temp,&x);
+	  interrupt(temp,x);
 	}
       else
 	unimplemented(temp);
@@ -323,6 +361,10 @@ void openCommand()
     if(p=strstr(str,"loop")) //status
       {
           showLoops();
+      }
+    if(p=strstr(str,"sim")) //status
+      {
+          readSimulation(confServuinoFile);
       }
     if(p=strstr(str,"scen")) // scenario
       {
@@ -475,6 +517,7 @@ int main(int argc, char *argv[])
   readSimulation(confServuinoFile);
   readSketchInfo();
   unoInfo();
+  show(slog);
 
   if(confLogFile == YES)resetFile("log.txt");
 
