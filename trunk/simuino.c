@@ -493,15 +493,15 @@ void runMode()
 	{
 	  readMsg(tempName);
 	}
-      if (ch=='g')
+      else if (ch=='g')
 	{
 	  runAll();
 	}
-      if (ch=='l')
+      else if (ch=='l')
 	{
 	  showLoops();
 	}
-      if (ch=='w')
+      else if (ch=='w')
 	{
 	  confWinMode++;
 	  if(confWinMode > 3)confWinMode = 0;
@@ -509,46 +509,48 @@ void runMode()
 	  mvwprintw(uno,UNO_H-2,1,"R>");
 	  unoInfo();
 	}
-      if (ch=='a')
+      else if (ch=='a')
 	{
 	  resetSim();
 	  init(confWinMode);
 	  unoInfo();
-	  mvwprintw(uno,UNO_H-2,1,"**");
+	  mvwprintw(uno,UNO_H-2,1,"R>");
 	  show(uno);
 	}
-      if (ch=='r')
+      else if (ch=='r')
 	{
 	  runLoop();
 	}
-      if (ch=='s') 
+      else if (ch=='s') 
 	{
 	  runStep(FORWARD);
 	}
-      if (ch=='l') 
+      else if (ch=='l') 
 	{
 	  confLogLev++;
 	  if(confLogLev > 3)confLogLev = 0;
 	  // Todo save to config.txt
 	}
-      if (ch=='+') 
+      else if (ch=='+') 
 	{
 	  confDelay = confDelay + 10;
 	  // Todo save to config.txt
 	}
-      if (ch=='-') 
+      else if (ch=='-') 
 	{
 	  confDelay = confDelay - 10;
 	  if(confDelay < 0)confDelay = 0;
           if(confDelay > 1000)confDelay = 1000;
 	  // Todo save to config.txt
 	}
-      if (ch=='f') 
+      else if (ch=='f') 
 	{
 	  confLogFile++;
 	  if(confLogFile > 1)confLogFile = 0;
 	  // Todo save to config.txt
 	}
+      else
+        putMsg(msg_h-2,"Unknown command");
     }
 }
 //====================================
