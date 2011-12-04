@@ -102,9 +102,23 @@ void saveConfig()
       putMsg(msg_h-2,"Configuration saved");
       lt = time(NULL);
       fprintf(out,"# Simuino Configuration %s",ctime(&lt));
-      fprintf(out,"WIN_LAYOUT %d\n",confWinMode);
-      fprintf(out,"DELAY      %d\n",confDelay);
-      fprintf(out,"LOG_LEVEL  %d\n",confLogLev);
+
+      if(confSteps > MAX_STEP)confSteps = MAX_STEP; 
+      fprintf(out,"SIM_LENGTH %d\n",confSteps);
+
+      if(confWinMode >=0 && confWinMode < 4)
+	fprintf(out,"WIN_LAYOUT %d\n",confWinMode);
+      else
+	confWinMode = 0;
+      if(confDelay >=0 && confDelay < 1000)
+	fprintf(out,"DELAY      %d\n",confDelay);
+      else
+	confDelay = 50;
+      if(confLogLev >=0 && confLogLev < 4)
+	fprintf(out,"LOG_LEVEL  %d\n",confLogLev);
+      else
+	confLogLev = 3;
+
       fprintf(out,"LOG_FILE   %d\n",confLogFile);
       fprintf(out,"SKETCH     %s\n",confSketchFile);
       fprintf(out,"SERVUINO   %s\n",confServuinoFile);
@@ -635,6 +649,10 @@ void readConfig()
 	{
 	  if(row[0] != '#')
 	    {
+	      if(p=strstr(row,"SIM_LENGTH"))
+		{
+		  sscanf(p,"%s%d",temp,&confSteps);
+		}
 	      if(p=strstr(row,"WIN_LAYOUT"))
 		{
 		  sscanf(p,"%s%d",temp,&confWinMode);
@@ -716,10 +734,17 @@ void runLoop()
 }    
 
 //====================================
-void runAll()
+void runLoops(int loop)
 //====================================
 {
-  while(currentStep < g_steps)
+  return;
+}    
+
+//====================================
+void runAll(int stop)
+//====================================
+{
+  while(currentStep < stop)
     runStep(FORWARD);
   return;
 }    

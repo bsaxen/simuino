@@ -1,7 +1,8 @@
-# Simuino Configuration Sun Dec  4 10:50:15 2011
-WIN_LAYOUT 2
-DELAY      20
+# Simuino Configuration Sun Dec  4 23:04:02 2011
+SIM_LENGTH 400
+WIN_LAYOUT 0
+DELAY      10
 LOG_LEVEL  2
 LOG_FILE   0
-SKETCH     ../adcajo/b1.c
+SKETCH     helloWorld.c
 SERVUINO   servuino/data.su
