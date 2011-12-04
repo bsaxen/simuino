@@ -42,7 +42,7 @@ void show(WINDOW *win)
   if(win == uno) 
   {
     wmove(win,0,2);
-    wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.0.9");
+    wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.0");
   }
   if(win == ser)
   {
@@ -969,9 +969,6 @@ void init(int mode)
       scrollok(ser,true);
       wbkgd(ser,COLOR_PAIR(SER_COLOR));
       show(ser);
-
-      for(i=0;i<log_w;i++)logBlankRow[i] = ' ';
-      for(i=0;i<ser_w;i++)serBlankRow[i] = ' ';
     }
 
   if(mode == 1) // 50 on 50
@@ -1032,8 +1029,8 @@ void init(int mode)
       show(ser);
     }
 
-  for(i=0;i<log_w;i++)logBlankRow[i] = ' ';
-  for(i=0;i<ser_w;i++)serBlankRow[i] = ' ';
+  for(i=0;i<log_w;i++)logBlankRow[i] = ' ';logBlankRow[i]='\0';
+  for(i=0;i<ser_w;i++)serBlankRow[i] = ' ';serBlankRow[i]='\0';
 }
 //====================================
 void loadSketch(char sketch[])
