@@ -1,8 +1,18 @@
 [Run Mode]
  s  one step
+
  r  run current loop
+
  g  run complete simulation
+
  a  re-run simulation
+
+ w  toggles window layout mode.
+    Note - Erases any window content.
+
  l  show loop information
- q  quit Run Mode, enter Admin Mode. Not during stepping execution.
+
+ q  quit Run Mode, enter Admin Mode. 
+    Not during stepping.
+
  h  show this information

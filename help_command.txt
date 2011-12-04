@@ -5,12 +5,16 @@ load   <steps>   load configured sketch file and
                  create s acenario of length <steps>
                  If no <steps>, default = 1000 steps
 run              enter Run Mode
+save             save current configuration
 scen             show scenario data
 conf             display configuration
 loop             show loop information
 error            show Servuino errors
 g++              show compilation errors
 
+Edit configuration with commands below:
+---------------------------------------
+win    <x>       set Window layout mode (0,1,2,3)
 sketch <file>    set sketch source file
 serv   <file>    set Servuino data file
 delay  <x>       set delay to x (ms)
