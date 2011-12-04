@@ -42,7 +42,7 @@ void show(WINDOW *win)
   if(win == uno) 
   {
     wmove(win,0,2);
-    wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.0.8");
+    wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.0.9");
   }
   if(win == ser)
   {
@@ -102,6 +102,7 @@ void saveConfig()
       putMsg(msg_h-2,"Configuration saved");
       lt = time(NULL);
       fprintf(out,"# Simuino Configuration %s",ctime(&lt));
+      fprintf(out,"WIN_LAYOUT %d\n",confWinMode);
       fprintf(out,"DELAY      %d\n",confDelay);
       fprintf(out,"LOG_LEVEL  %d\n",confLogLev);
       fprintf(out,"LOG_FILE   %d\n",confLogFile);
@@ -159,8 +160,8 @@ void wLog(const char *p, int value1, int value2)
   int i;
   char temp[100],temp1[100];
 
-  strcpy(temp,"aaaa");
-  strcpy(temp1,"bbbb");
+  strcpy(temp,"");
+  strcpy(temp1,"");
 
   if(value2 > -2) // add index
     {
@@ -189,6 +190,58 @@ void wLog(const char *p, int value1, int value2)
 
   if(confLogFile==YES)logFile(temp);
 
+
+  wmove(slog,1,1);
+  wprintw(slog,"%s",logBlankRow);
+  wscrl(slog,-1);
+  wmove(slog,1,1);
+  wprintw(slog,">%s",simulation[currentStep+1]);
+  wmove(slog,2,1);
+  wprintw(slog,"%s",temp);
+  show(slog);
+}
+
+//====================================
+void mLog0(const char *p)
+//====================================
+{
+  int i;
+  char temp[100];
+
+  //p = strstr(p," ");
+  strcpy(temp,p);
+  if(confLogFile==YES)logFile(temp);
+
+  wmove(slog,1,1);
+  wprintw(slog,"%s",logBlankRow);
+  wscrl(slog,-1);
+  wmove(slog,1,1);
+  wprintw(slog,">%s",simulation[currentStep+1]);
+  wmove(slog,2,1);
+  wprintw(slog,"%s",temp);
+  show(slog);
+}
+
+//====================================
+void mLog1(const char *p, int value1)
+//====================================
+{
+  int i;
+  char temp[100], temp1[100];
+
+  strcpy(temp,"");
+  strcpy(temp1,"");
+  strcat(temp,p);
+  sprintf(temp1," %d",value1);
+  strcat(temp,temp1);
+
+  if(error == 1)
+    {
+      temp[0]='*';
+      error = 0;
+    }
+
+  if(confLogFile==YES)logFile(temp);
 
   wmove(slog,1,1);
   wprintw(slog,"%s",logBlankRow);
@@ -307,7 +360,7 @@ void unoInfo()
   wmove(uno,10,3);
   next =  loopPos[currentLoop+1];
   if(currentStep == loopPos[currentLoop+1]) next = loopPos[currentLoop+2];
-  wprintw(uno,"Step: %4d->%4d (%4d)",currentStep,next,g_steps);
+  wprintw(uno,"Step: %4d->%4d (%d,%4d)",currentStep,next,g_loops,g_steps);
   wmove(uno,11,3);
   wprintw(uno,"Scenario: %2d %2d %2d",scenDigital,scenAnalog,scenInterrupt);
   show(uno);
@@ -517,6 +570,8 @@ void initSim()
   for(i=0;i<MAX_STEP;i++)
     {
       strcpy(simulation[i],"");
+      strcpy(simComment[i],"");
+      stepComment[i] = 0;
     }
   for(i=0;i<MAX_LOOP;i++)
     {
@@ -580,6 +635,10 @@ void readConfig()
 	{
 	  if(row[0] != '#')
 	    {
+	      if(p=strstr(row,"WIN_LAYOUT"))
+		{
+		  sscanf(p,"%s%d",temp,&confWinMode);
+		}
 	      if(p=strstr(row,"LOG_LEVEL"))
 		{
 		  sscanf(p,"%s%d",temp,&confLogLev);
@@ -617,8 +676,25 @@ int readEvent(char *ev, int step)
   return(step);
 }    
 
-
-
+//====================================
+int readComment(int step)
+//====================================
+{
+  int i;
+  
+  if(step > 0 && step < MAX_STEP)
+    {
+      for(i=1;i<=stepComment[0];i++)
+	{
+	  if(stepComment[i] == step)
+	    mLog0(simComment[i]);
+	}
+    } 
+  else
+    return(0);
+ 
+ return(step);   
+}
 //====================================
 void runLoop()
 //====================================
@@ -653,11 +729,12 @@ void readSimulation(char *fileName)
 //====================================
 {
   FILE *in;
-  char row[SIZE_ROW],*p,temp[40],junk[3];
+  char row[SIZE_ROW],*p,temp[SIZE_ROW],junk[5];
   int step=0,loop=0;
 
   g_steps       = 0;
   g_loops       = 0;
+  g_comments    = 0;
   scenAnalog    = 0;
   scenDigital   = 0;
   scenInterrupt = 0;
@@ -685,6 +762,19 @@ void readSimulation(char *fileName)
 		  showError(row,step);
 		  showError(row,g_steps);
 		  //showError("Simulation step out of order",step);
+		}
+	    }
+	  if(row[0] == '=')
+	    {
+	      g_comments++;
+	      p = strstr(row,"= ");
+              p = p+2;
+	      sscanf(row,"%s%d",junk,&step);
+              stepComment[0] = g_comments;
+              if(step == g_steps)
+		{
+		  stepComment[g_comments] = step;
+		  strcat(simComment[g_comments],p);
 		}
 	    }
 	  else if(p=strstr(row,"LOOP"))
@@ -770,13 +860,21 @@ void readMsg(char *fileName)
 
 
 //====================================
-void init()
+void init(int mode)
 //====================================
 {
   int i;
 
   g_value = 0;
 
+  // Down
+  endwin();
+  delwin(uno);
+  delwin(ser);
+  delwin(slog);
+  delwin(msg);
+
+  // Up
   initscr();
   clear();
   //noecho();
@@ -854,21 +952,88 @@ void init()
   wbkgd(msg,COLOR_PAIR(MSG_COLOR));
   show(msg);
 
-  // Log Window
-  log_h = s_row;
-  log_w = LOG_W;
-  slog=newwin(log_h,log_w,0,uno_w);
-  scrollok(slog,true);
-  wbkgd(slog,COLOR_PAIR(LOG_COLOR));
-  show(slog); 
+  if(mode == 0) // side by side
+    {
+      // Log Window
+      log_h = s_row;
+      log_w = LOG_W;
+      slog=newwin(log_h,log_w,0,uno_w);
+      scrollok(slog,true);
+      wbkgd(slog,COLOR_PAIR(LOG_COLOR));
+      show(slog); 
+      
+      // Serial Window   
+      ser_h = s_row;
+      ser_w = s_col - uno_w - log_w;
+      ser=newwin(ser_h,ser_w,0,uno_w + log_w);
+      scrollok(ser,true);
+      wbkgd(ser,COLOR_PAIR(SER_COLOR));
+      show(ser);
 
-  // Serial Window
-  ser_h = s_row;
-  ser_w = s_col - uno_w - log_w;
-  ser=newwin(ser_h,ser_w,0,uno_w + log_w);
-  scrollok(ser,true);
-  wbkgd(ser,COLOR_PAIR(SER_COLOR));
-  show(ser);
+      for(i=0;i<log_w;i++)logBlankRow[i] = ' ';
+      for(i=0;i<ser_w;i++)serBlankRow[i] = ' ';
+    }
+
+  if(mode == 1) // 50 on 50
+    {
+      // Log Window
+      log_h = s_row/2;
+      log_w = s_col-uno_w;
+      slog=newwin(log_h,log_w,0,uno_w);
+      scrollok(slog,true);
+      wbkgd(slog,COLOR_PAIR(LOG_COLOR));
+      show(slog); 
+      
+      // Serial Window      
+      ser_h = s_row/2+1;
+      ser_w = s_col-uno_w;
+      ser=newwin(ser_h,ser_w,s_row/2,uno_w);
+      scrollok(ser,true);
+      wbkgd(ser,COLOR_PAIR(SER_COLOR));
+      show(ser);
+
+    }
+
+  if(mode == 2) // 90 on 10
+    {
+      // Log Window
+      log_h = s_row-10;
+      log_w = s_col-uno_w;
+      slog=newwin(log_h,log_w,0,uno_w);
+      scrollok(slog,true);
+      wbkgd(slog,COLOR_PAIR(LOG_COLOR));
+      show(slog); 
+
+      // Serial Window      
+      ser_h = 10;
+      ser_w = s_col-uno_w;
+      ser=newwin(ser_h,ser_w,log_h,uno_w);
+      scrollok(ser,true);
+      wbkgd(ser,COLOR_PAIR(SER_COLOR));
+      show(ser);
+    }
+
+  if(mode == 3) // 10 on 90
+    {      
+      // Log Window
+      log_h = 10;
+      log_w = s_col-uno_w;
+      slog=newwin(log_h,log_w,0,uno_w);
+      scrollok(slog,true);
+      wbkgd(slog,COLOR_PAIR(LOG_COLOR));
+      show(slog); 
+
+      // Serial Window      
+      ser_h = s_row-10;
+      ser_w = s_col-uno_w;
+      ser=newwin(ser_h,ser_w,log_h,uno_w);
+      scrollok(ser,true);
+      wbkgd(ser,COLOR_PAIR(SER_COLOR));
+      show(ser);
+    }
+
+  for(i=0;i<log_w;i++)logBlankRow[i] = ' ';
+  for(i=0;i<ser_w;i++)serBlankRow[i] = ' ';
 }
 //====================================
 void loadSketch(char sketch[])

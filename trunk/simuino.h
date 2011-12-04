@@ -1,4 +1,8 @@
+int readEvent(char *ev, int step);
+int readComment(int step);
+void mLog0(const char *p);
 void wLog0(const char *p);
+void mLog1(const char *p, int value1);
 void wLog1(const char *p, int value1);
 void wLog2(const char *p, int value1, int value2);
 void debug(char *msg);
