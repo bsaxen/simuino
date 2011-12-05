@@ -86,22 +86,29 @@ void showError(const char *m, int value)
   error = 1;
 }
 //====================================
-void saveConfig()
+void addConfList(char *cf)
+//====================================
+{
+  return;
+}
+//====================================
+void saveConfig(char *cf)
 //====================================
 {
   FILE *out;
   time_t lt;
 
-  out = fopen("config.txt","w");
+  out = fopen(cf,"w");
   if(out == NULL)
     {
-      showError("No config.txt ",-1);
+      showError("No config file ",-1);
     }
   else
     {
       putMsg(msg_h-2,"Configuration saved");
       lt = time(NULL);
       fprintf(out,"# Simuino Configuration %s",ctime(&lt));
+      fprintf(out,"# %s\n",cf);
 
       if(confSteps > MAX_STEP)confSteps = MAX_STEP; 
       fprintf(out,"SIM_LENGTH %d\n",confSteps);
@@ -371,6 +378,12 @@ void unoInfo()
 
   wmove(uno,8,3); 
   wprintw(uno,"Sketch: %s",appName);
+
+  if(g_warning == YES)
+    wprintw(uno,"  MISMATCH? - load!");
+  else
+    wprintw(uno,"                   ");
+
   wmove(uno,10,3);
   next =  loopPos[currentLoop+1];
   if(currentStep == loopPos[currentLoop+1]) next = loopPos[currentLoop+2];
@@ -631,17 +644,17 @@ void unimplemented(const char *f)
 
 
 //====================================
-void readConfig()
+void readConfig(char *cf)
 //====================================
 {
   FILE *in;
   char row[80],*p,temp[40];
   int x;
 
-  in = fopen("config.txt","r");
+  in = fopen(cf,"r");
   if(in == NULL)
     {
-      showError("No config.txt",-1);
+      showError("No config file",-1);
     }
   else
     {
