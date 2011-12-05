@@ -92,6 +92,12 @@ void addConfList(char *cf)
   return;
 }
 //====================================
+void delConfList(char *cf)
+//====================================
+{ 
+  return;
+}
+//====================================
 void saveConfig(char *cf)
 //====================================
 {
@@ -113,7 +119,7 @@ void saveConfig(char *cf)
       if(confSteps > MAX_STEP)confSteps = MAX_STEP; 
       fprintf(out,"SIM_LENGTH %d\n",confSteps);
 
-      if(confWinMode >=0 && confWinMode < 4)
+      if(confWinMode >=0 && confWinMode <= WIN_MODES)
 	fprintf(out,"WIN_LAYOUT %d\n",confWinMode);
       else
 	confWinMode = 0;
@@ -380,7 +386,7 @@ void unoInfo()
   wprintw(uno,"Sketch: %s",appName);
 
   if(g_warning == YES)
-    wprintw(uno,"  MISMATCH? - load!");
+    wprintw(uno,"  ***MISMATCH? - load!***");
   else
     wprintw(uno,"                   ");
 
@@ -747,9 +753,14 @@ void runLoop()
 }    
 
 //====================================
-void runLoops(int loop)
+void runLoops(int targetLoop)
 //====================================
 {
+  if(targetLoop > g_loops)targetLoop = g_loops;
+  while(currentLoop < targetLoop)
+    {
+	runStep(FORWARD);
+    }
   return;
 }    
 
@@ -903,6 +914,11 @@ void init(int mode)
 {
   int i;
 
+  uno_w = UNO_W;
+  uno_h = UNO_H;
+  uno_x = 0;
+  uno_y = 0;
+
   g_value = 0;
 
   // Down
@@ -946,9 +962,7 @@ void init(int mode)
   /*     COLOR_WHITE   7 */
 
   // Board Window    
-  uno_w = UNO_W;
-  uno_h = UNO_H;
-  uno=newwin(uno_h,uno_w,0,0);
+  uno=newwin(uno_h,uno_w,uno_x,uno_y);
   wbkgd(uno,COLOR_PAIR(UNO_COLOR));
   //box(uno, 0 , 0);
 
@@ -983,89 +997,110 @@ void init(int mode)
 
   show(uno);
 
-  // Message Window
-  msg_h = s_row - uno_h;
-  msg_w = MSG_W;
-  msg=newwin(msg_h,msg_w,uno_h,0);
-  wbkgd(msg,COLOR_PAIR(MSG_COLOR));
-  show(msg);
-
   if(mode == 0) // side by side
     {
-      // Log Window
+      msg_h = s_row - uno_h;
+      msg_w = MSG_W;
+      msg_x = uno_h;
+      msg_y = 0;
+
       log_h = s_row;
       log_w = LOG_W;
-      slog=newwin(log_h,log_w,0,uno_w);
-      scrollok(slog,true);
-      wbkgd(slog,COLOR_PAIR(LOG_COLOR));
-      show(slog); 
+      log_x = 0;
+      log_y = uno_w;   
       
-      // Serial Window   
       ser_h = s_row;
       ser_w = s_col - uno_w - log_w;
-      ser=newwin(ser_h,ser_w,0,uno_w + log_w);
-      scrollok(ser,true);
-      wbkgd(ser,COLOR_PAIR(SER_COLOR));
-      show(ser);
+      ser_x = 0;
+      ser_y = uno_w+log_w;
     }
 
   if(mode == 1) // 50 on 50
     {
-      // Log Window
+      msg_h = s_row - uno_h;
+      msg_w = MSG_W;
+      msg_x = uno_h;
+      msg_y = 0;
+
       log_h = s_row/2;
       log_w = s_col-uno_w;
-      slog=newwin(log_h,log_w,0,uno_w);
-      scrollok(slog,true);
-      wbkgd(slog,COLOR_PAIR(LOG_COLOR));
-      show(slog); 
-      
-      // Serial Window      
+      log_x = 0;
+      log_y = uno_w;   
+
       ser_h = s_row/2+1;
       ser_w = s_col-uno_w;
-      ser=newwin(ser_h,ser_w,s_row/2,uno_w);
-      scrollok(ser,true);
-      wbkgd(ser,COLOR_PAIR(SER_COLOR));
-      show(ser);
-
+      ser_x = s_row/2;
+      ser_y = uno_w;
     }
 
   if(mode == 2) // 90 on 10
     {
-      // Log Window
+      msg_h = s_row - uno_h;
+      msg_w = MSG_W;
+      msg_x = uno_h;
+      msg_y = 0;
+
       log_h = s_row-10;
       log_w = s_col-uno_w;
-      slog=newwin(log_h,log_w,0,uno_w);
-      scrollok(slog,true);
-      wbkgd(slog,COLOR_PAIR(LOG_COLOR));
-      show(slog); 
+      log_x = 0;
+      log_y = uno_w;   
 
-      // Serial Window      
       ser_h = 10;
       ser_w = s_col-uno_w;
-      ser=newwin(ser_h,ser_w,log_h,uno_w);
-      scrollok(ser,true);
-      wbkgd(ser,COLOR_PAIR(SER_COLOR));
-      show(ser);
+      ser_x = log_h;
+      ser_y = uno_w;
     }
 
   if(mode == 3) // 10 on 90
     {      
-      // Log Window
+      msg_h = s_row - uno_h;
+      msg_w = MSG_W;
+      msg_x = uno_h;
+      msg_y = 0;
+      
       log_h = 10;
       log_w = s_col-uno_w;
-      slog=newwin(log_h,log_w,0,uno_w);
+      log_x = 0;
+      log_y = uno_w;   
+
+      ser_h = s_row-10;
+      ser_w = s_col-uno_w;
+      ser_x = log_h;
+      ser_y = uno_w;
+    }
+
+  if(mode == 4) // big message to the right
+    {      
+      msg_h = s_row;
+      msg_w = s_col - uno_w;
+      msg_x = 0;
+      msg_y = uno_w;
+      
+      log_h = s_row-uno_h-10;
+      log_w = MSG_W;
+      log_x = uno_h;
+      log_y = 0;   
+
+      ser_h = s_row-uno_h-log_h;
+      ser_w = MSG_W;
+      ser_x = log_h+uno_h;
+      ser_y = 0;
+    }
+
+      msg=newwin(msg_h,msg_w,msg_x,msg_y);
+      scrollok(msg,true);
+      wbkgd(msg,COLOR_PAIR(MSG_COLOR));
+      show(msg);
+
+      slog=newwin(log_h,log_w,log_x,log_y);
       scrollok(slog,true);
       wbkgd(slog,COLOR_PAIR(LOG_COLOR));
       show(slog); 
 
-      // Serial Window      
-      ser_h = s_row-10;
-      ser_w = s_col-uno_w;
-      ser=newwin(ser_h,ser_w,log_h,uno_w);
+      ser=newwin(ser_h,ser_w,ser_x,ser_y);
       scrollok(ser,true);
       wbkgd(ser,COLOR_PAIR(SER_COLOR));
       show(ser);
-    }
 
   for(i=0;i<log_w;i++)logBlankRow[i] = ' ';logBlankRow[i]='\0';
   for(i=0;i<ser_w;i++)serBlankRow[i] = ' ';serBlankRow[i]='\0';
