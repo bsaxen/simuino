@@ -83,15 +83,19 @@
 #define TX     4
 
 
-// Configuration
-int currentStep = 0;
-int currentLoop = 0;
-int g_loops=0;
-int g_steps=0;
-int g_comments = 0;
+// Current data
+int  currentStep = 0;
+int  currentLoop = 0;
+char currentConf[SIZE_ROW];
+
+// Limits
+int  g_loops = 0;
+int  g_steps = 0;
+int  g_comments = 0;
 
 int g_value = 0;
 int s_mode = ADMIN;
+int g_warning = NO;
 
 
 void (*interrupt0)();
@@ -312,6 +316,30 @@ int tokCommand(char res[40][40],char *inp)
 }
 
 //====================================
+void loadCurrentProj()
+//====================================
+{
+  int x;
+  char syscom[120];
+
+  g_warning = NO;
+  putMsg(1,"Loading Proj...");
+  loadSketch(confSketchFile);
+  if(confSteps < 0) confSteps = 100;
+  if(confSteps > MAX_STEP) confSteps = MAX_STEP-1;
+  sprintf(syscom,"cd servuino;./servuino %d;",confSteps);
+  x=system(syscom);
+  iDelay(500);
+  init(confWinMode);
+  initSim();
+  resetSim();
+  readSimulation(confServuinoFile);
+  readSketchInfo();
+  unoInfo();
+  putMsg(msg_h-2,"Loading ready!");
+}
+
+//====================================
 void openCommand()
 //====================================
 {
@@ -332,6 +360,7 @@ void openCommand()
       mvwprintw(uno,UNO_H-2,1,"A>");
       show(uno);
       wmove(uno,UNO_H-2,3);
+      strcpy(command[0],"");
       wgetstr(uno,str);
 
       n = tokCommand(command,str);
@@ -348,13 +377,21 @@ void openCommand()
 	  strcpy(fileName,"help_command.txt");
 	  readMsg(fileName);
 	}
+      else if(strstr(sstr,"res")) // reset simulation
+	{
+	  resetSim();
+	  init(confWinMode);
+	  unoInfo();
+	  strcpy(fileName,"help_command.txt");
+	  readMsg(fileName);
+	}
       else if(strstr(sstr,"info"))
 	{
 	  if(n == 2)
 	    {
 	      if(strstr(command[1],"conf"))
 		{
-		  strcpy(fileName,"config.txt");
+		  strcpy(fileName,"default.conf");
 		  readMsg(fileName);
 		}
 	      else if(strstr(command[1],"err"))
@@ -388,6 +425,18 @@ void openCommand()
 	    }
 	}
 
+      else if(strstr(sstr,"proj"))
+	{
+	  if(n == 2)
+	    {
+	      strcpy(currentConf,command[1]);
+	      strcat(currentConf,".conf");
+	      readConfig(currentConf);
+              g_warning = YES;
+	      unoInfo();
+	    }
+	    readMsg(currentConf);
+	}
       else if(strstr(sstr,"conf"))
 	{
 	  if(n == 3)
@@ -407,6 +456,9 @@ void openCommand()
 	      else if(strstr(command[1],"win"))
 		{
 		  confWinMode = atoi(command[2]);
+		  if(confWinMode > 3)confWinMode = 0;
+		  init(confWinMode);
+		  unoInfo();
 		}
 	      else if(strstr(command[1],"sketch"))
 		{
@@ -425,18 +477,22 @@ void openCommand()
 		{
 		  strcpy(confServuinoFile,command[2]);
 		}
-	      saveConfig();
-	      strcpy(fileName,"config.txt");
-	      readMsg(fileName); 
+	      saveConfig(currentConf);
 	    }
+	  readMsg(currentConf); 
 	}
       
       
       else if(strstr(sstr,"sav")) //save config
 	{
-	  saveConfig();
-	  strcpy(fileName,"config.txt");
-	  readMsg(fileName);
+	  if(n == 2)
+	    {
+	      strcpy(currentConf,command[1]);
+	      strcat(currentConf,".conf");
+	    }
+	  saveConfig(currentConf);
+          addConfList(currentConf);
+	  readMsg(currentConf);
 	}
       else if(strstr(sstr,"record"))
 	{
@@ -444,9 +500,8 @@ void openCommand()
 	  //sscanf(p,"%s %d",temp,&confLogFile);
 	  if(confLogFile >=0 && confLogFile < 2)
 	    {
-	      saveConfig();
-	      strcpy(fileName,"config.txt");
-	      readMsg(fileName);
+	      saveConfig(currentConf);
+	      readMsg(currentConf);
 	    }
 	}
       else if(strstr(sstr,"loop")) //status
@@ -471,30 +526,29 @@ void openCommand()
 	}
       else if(strstr(sstr,"load"))
 	{
-          if(n == 2)strcpy(confSketchFile,command[1]);
-
-          if(n == 3)
+          if(n == 2)
 	    {
 	      strcpy(confSketchFile,command[1]);
 	      confSteps = atoi(command[2]);
 	    }
+
+	  loadCurrentProj();
 	 
-	  putMsg(1,"Load Sketch...");
-	  loadSketch(confSketchFile);
-	  //sscanf(str,"%s %d",temp,&nsteps);
-	  if(confSteps > 0 && confSteps < MAX_STEP)
-	    {
-	      sprintf(syscom,"cd servuino;./servuino %d;",confSteps);
-	      x=system(syscom);
-	      iDelay(500);
-	      init(confWinMode);
-	      initSim();
-	      resetSim();
-	      readSimulation(confServuinoFile);
-	      readSketchInfo();
-	      unoInfo();
-	      putMsg(msg_h-2,"Loading ready!");
-	    }
+/* 	  putMsg(1,"Load Sketch..."); */
+/* 	  loadSketch(confSketchFile); */
+/* 	  if(confSteps > 0 && confSteps < MAX_STEP) */
+/* 	    { */
+/* 	      sprintf(syscom,"cd servuino;./servuino %d;",confSteps); */
+/* 	      x=system(syscom); */
+/* 	      iDelay(500); */
+/* 	      init(confWinMode); */
+/* 	      initSim(); */
+/* 	      resetSim(); */
+/* 	      readSimulation(confServuinoFile); */
+/* 	      readSketchInfo(); */
+/* 	      unoInfo(); */
+/* 	      putMsg(msg_h-2,"Loading ready!"); */
+/* 	    } */
 	}
       else 
 	{
@@ -574,25 +628,25 @@ void runMode(int stop)
 	{
 	  confLogLev++;
 	  if(confLogLev > 3)confLogLev = 0;
-	  // Todo save to config.txt
+	  // Todo save to conf
 	}
       else if (ch=='+') 
 	{
 	  confDelay = confDelay + 10;
-	  // Todo save to config.txt
+	  // Todo save to conf
 	}
       else if (ch=='-') 
 	{
 	  confDelay = confDelay - 10;
 	  if(confDelay < 0)confDelay = 0;
           if(confDelay > 1000)confDelay = 1000;
-	  // Todo save to config.txt
+	  // Todo save to conf
 	}
       else if (ch=='f') 
 	{
 	  confLogFile++;
 	  if(confLogFile > 1)confLogFile = 0;
-	  // Todo save to config.txt
+	  // Todo save to conf
 	}
       else
         putMsg(msg_h-2,"Unknown command");
@@ -604,7 +658,15 @@ int main(int argc, char *argv[])
 {
   int ch,i;
 
-  readConfig();
+  if(argc == 2)
+    {
+      strcpy(currentConf,argv[1]);
+      strcat(currentConf,".conf");
+    }
+  else
+    strcpy(currentConf,"default.conf");
+
+  readConfig(currentConf);
   init(confWinMode);
   initSim();
   resetSim();

@@ -1,28 +1,36 @@
 [Admin Mode]
 
-exit             exit Simuino
+exit             Exit Simuino
 
-load <a> <b>     load sketch file <a> and
-                 create s acenario of length <b>
-                 If no length, default is 1000 steps
+proj <name>      Read configuration file  		 
+                 Enter "load" to load project
+
+load <steps>     Load current proj and
+                 create scenario of length <steps>
+                 if no parameters, values are as configured
+
+list             List available projects
 
 run <steps>      Step until step=<steps>
                  If no steps given - enter Run Mode
 
-save             save current configuration
+reset            Reset simulation. Current step = 0
 
-info  <area>     show info about <area>
-    - scen       show scenario data
-    - conf       display configuration
-    - loop       show loop information
-    - error      show Servuino errors
-    - g++        show compilation errors
-    - help       show command information
+save  <name>     Save current configuration to <name>
+                 If no <name>, saved to default configuration
+
+info  <area>     Show info about <area>
+    - scen       Show scenario data
+    - conf       Display configuration
+    - loop       Show loop information
+    - error      Show Servuino errors
+    - g++        Show compilation errors
+    - help       Show command information
 
 conf <par> <val> Edit configuration with commands below:
-    - win        set Window layout mode to <val> (0,1,2,3)
-    - sketch     set sketch source file
-    - serv       set Servuino data file
-    - delay      set delay to <val> (ms)
-    - log        set log level to <val> (0,1,2,3)
-    - record     record log to log.txt (1/0)
+    - win        Set Window layout mode to <val> (0,1,2,3)
+    - sketch     Set sketch source file
+    - serv       Set Servuino data file
+    - delay      Set delay to <val> (ms)
+    - log        Set log level to <val> (0,1,2,3)
+    - record     Record log to log.txt (1/0)
