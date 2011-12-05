@@ -1,5 +1,3 @@
-[Admin Mode]
-
 exit             Exit Simuino
 
 proj <name>      Read configuration file  		 
@@ -14,10 +12,14 @@ list             List available projects
 run <steps>      Step until step=<steps>
                  If no steps given - enter Run Mode
 
+loop <loop>      Step until loop <loop>
+
 reset            Reset simulation. Current step = 0
 
 save  <name>     Save current configuration to <name>
                  If no <name>, saved to default configuration
+del   <name>     Delete configuration. If no paramater,
+                 current configuration.
 
 info  <area>     Show info about <area>
     - scen       Show scenario data
@@ -28,7 +30,7 @@ info  <area>     Show info about <area>
     - help       Show command information
 
 conf <par> <val> Edit configuration with commands below:
-    - win        Set Window layout mode to <val> (0,1,2,3)
+    - win        Set Window layout mode to <val> (0,1,2,3,4)
     - sketch     Set sketch source file
     - serv       Set Servuino data file
     - delay      Set delay to <val> (ms)

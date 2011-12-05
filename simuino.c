@@ -63,6 +63,8 @@
 #define SER_W  30
 #define SER_COLOR 4
 
+#define WIN_MODES 4
+
 #define DP 5
 #define AP 11
 #define RF 1
@@ -95,7 +97,7 @@ int  g_comments = 0;
 
 int g_value = 0;
 int s_mode = ADMIN;
-int g_warning = NO;
+int g_warning = YES;
 
 
 void (*interrupt0)();
@@ -140,6 +142,7 @@ int   scenDigital   = 0;
 int   scenInterrupt = 0;
 
 // Configuration default values
+char  listConf[80];
 int   confSteps   = 1000;
 int   confWinMode =    2;
 int   confDelay   =  100;
@@ -148,10 +151,12 @@ int   confLogFile =    0;
 char  confSketchFile[200];
 char  confServuinoFile[200];
 
-int uno_h=0, uno_w=0;
-int msg_h=0, msg_w=0;
-int log_h=0, log_w=0;
-int ser_h=0, ser_w=0;
+char  workSketchFile[80];
+
+int uno_h=0, uno_w=0, uno_x=0, uno_y=0;
+int msg_h=0, msg_w=0, msg_x=0, msg_y=0;
+int log_h=0, log_w=0, log_x=0, log_y=0;
+int ser_h=0, ser_w=0, ser_x=0, ser_y=0;
 
 WINDOW *uno,*ser,*slog,*msg;
 static struct termios orig, nnew;
@@ -385,6 +390,11 @@ void openCommand()
 	  strcpy(fileName,"help_command.txt");
 	  readMsg(fileName);
 	}
+      else if(strstr(sstr,"help")) //
+	{
+	  strcpy(fileName,"help_command.txt");
+	  readMsg(fileName);
+	}
       else if(strstr(sstr,"info"))
 	{
 	  if(n == 2)
@@ -437,6 +447,26 @@ void openCommand()
 	    }
 	    readMsg(currentConf);
 	}
+      else if(strstr(sstr,"list"))
+	{
+	  readMsg(listConf);	
+	}
+      else if(strstr(sstr,"sketch"))
+	{
+	  if(n == 2)
+	    {
+	      if(strstr(command[1],"conf"))
+		{
+		  readMsg(confSketchFile);
+		}
+	      else if(strstr(command[1],"work"))
+		{
+		  readMsg(workSketchFile);
+		}
+	    }
+	  else
+	    readMsg(workSketchFile);	
+	}
       else if(strstr(sstr,"conf"))
 	{
 	  if(n == 3)
@@ -456,7 +486,7 @@ void openCommand()
 	      else if(strstr(command[1],"win"))
 		{
 		  confWinMode = atoi(command[2]);
-		  if(confWinMode > 3)confWinMode = 0;
+		  if(confWinMode > WIN_MODES)confWinMode = 0;
 		  init(confWinMode);
 		  unoInfo();
 		}
@@ -489,10 +519,27 @@ void openCommand()
 	    {
 	      strcpy(currentConf,command[1]);
 	      strcat(currentConf,".conf");
+              
 	    }
 	  saveConfig(currentConf);
-          addConfList(currentConf);
 	  readMsg(currentConf);
+	  sprintf(syscom,"ls *.conf > conf_list.txt;");
+	  x=system(syscom);
+	}
+      else if(strstr(sstr,"del")) //delete config
+	{
+	  if(n == 2)
+	    {
+	      strcpy(currentConf,command[1]);
+	      strcat(currentConf,".conf");
+              
+	    }
+	  sprintf(syscom,"rm %s;",currentConf);
+	  x=system(syscom);
+	  sprintf(syscom,"ls *.conf > conf_list.txt;");
+	  x=system(syscom);
+	  readMsg(listConf);
+          strcpy(currentConf,"default.conf");	
 	}
       else if(strstr(sstr,"record"))
 	{
@@ -533,22 +580,6 @@ void openCommand()
 	    }
 
 	  loadCurrentProj();
-	 
-/* 	  putMsg(1,"Load Sketch..."); */
-/* 	  loadSketch(confSketchFile); */
-/* 	  if(confSteps > 0 && confSteps < MAX_STEP) */
-/* 	    { */
-/* 	      sprintf(syscom,"cd servuino;./servuino %d;",confSteps); */
-/* 	      x=system(syscom); */
-/* 	      iDelay(500); */
-/* 	      init(confWinMode); */
-/* 	      initSim(); */
-/* 	      resetSim(); */
-/* 	      readSimulation(confServuinoFile); */
-/* 	      readSketchInfo(); */
-/* 	      unoInfo(); */
-/* 	      putMsg(msg_h-2,"Loading ready!"); */
-/* 	    } */
 	}
       else 
 	{
@@ -603,7 +634,7 @@ void runMode(int stop)
       else if (ch=='w')
 	{
 	  confWinMode++;
-	  if(confWinMode > 3)confWinMode = 0;
+	  if(confWinMode > WIN_MODES)confWinMode = 0;
           init(confWinMode);
 	  mvwprintw(uno,UNO_H-2,1,"R>");
 	  unoInfo();
@@ -665,6 +696,9 @@ int main(int argc, char *argv[])
     }
   else
     strcpy(currentConf,"default.conf");
+
+  strcpy(listConf,"conf_list.txt");
+  strcpy(workSketchFile,"servuino/sketch.pde");
 
   readConfig(currentConf);
   init(confWinMode);
