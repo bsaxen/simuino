@@ -349,22 +349,21 @@ void openCommand()
 //====================================
 {
   struct stat st;
-  int ch,nsteps=1000,x,i,n,stop=0,loop;
+  int ch,nsteps=1000,x,i,n,stop=0,loop,projNo = 0;
   char *p,str[120],sstr[20],fileName[120],temp[120],syscom[120];
   char command[40][40];
 
   s_mode = ADMIN;
 
-  strcpy(fileName,"help_command.txt");
-  readMsg(fileName);
+  readMsg(listConf);
 
   while(strstr(str,"ex") == NULL)
     {
       wmove(uno,UNO_H-2,1);
       wprintw(uno,"                                                  ");
-      mvwprintw(uno,UNO_H-2,1,"A>");
+      mvwprintw(uno,UNO_H-2,1,"A%1d>",confWinMode);
       show(uno);
-      wmove(uno,UNO_H-2,3);
+      wmove(uno,UNO_H-2,4);
       strcpy(command[0],"");
       wgetstr(uno,str);
 
@@ -374,21 +373,20 @@ void openCommand()
 
       p = str;
 
+      projNo = atoi(sstr);
+
       if(strstr(sstr,"run"))
 	{
 	  stop = 0;
           if(n == 2)stop = atoi(command[1]);
 	  runMode(stop);
-	  strcpy(fileName,"help_command.txt");
-	  readMsg(fileName);
 	}
       else if(strstr(sstr,"res")) // reset simulation
 	{
 	  resetSim();
 	  init(confWinMode);
 	  unoInfo();
-	  strcpy(fileName,"help_command.txt");
-	  readMsg(fileName);
+	  readMsg(currentConf);
 	}
       else if(strstr(sstr,"help")) //
 	{
@@ -534,12 +532,15 @@ void openCommand()
 	      strcat(currentConf,".conf");
               
 	    }
-	  sprintf(syscom,"rm %s;",currentConf);
-	  x=system(syscom);
-	  sprintf(syscom,"ls *.conf > conf_list.txt;");
-	  x=system(syscom);
-	  readMsg(listConf);
-          strcpy(currentConf,"default.conf");	
+          if(strstr(currentConf,"default") == NULL)
+          {
+	    sprintf(syscom,"rm %s;",currentConf);
+	    x=system(syscom);
+	    sprintf(syscom,"ls *.conf > conf_list.txt;");
+	    x=system(syscom);
+	    readMsg(listConf);
+            strcpy(currentConf,"default.conf");
+          }	
 	}
       else if(strstr(sstr,"record"))
 	{
@@ -551,6 +552,16 @@ void openCommand()
 	      readMsg(currentConf);
 	    }
 	}
+      else if(strstr(sstr,"win")) //windows layout
+        {
+          if(n == 2)
+          {
+              confWinMode = atoi(command[1]);
+              if(confWinMode > WIN_MODES)confWinMode = 0;
+              init(confWinMode);
+              unoInfo();
+          }
+        }
       else if(strstr(sstr,"loop")) //status
 	{
           if(n == 2)loop = atoi(command[1]);
@@ -575,12 +586,20 @@ void openCommand()
 	{
           if(n == 2)
 	    {
-	      strcpy(confSketchFile,command[1]);
-	      confSteps = atoi(command[2]);
+//	      strcpy(confSketchFile,command[1]);
+	      confSteps = atoi(command[1]);
 	    }
 
 	  loadCurrentProj();
 	}
+      else if(projNo > 0 && projNo < 10)
+        {
+           selectProj(projNo,currentConf);
+           readConfig(currentConf);
+           g_warning = YES;
+           unoInfo();
+           readMsg(currentConf);   
+        }
       else 
 	{
 	  putMsg(msg_h-2,"Unknown command");
@@ -611,9 +630,9 @@ void runMode(int stop)
 
   wmove(uno,UNO_H-2,1);
   wprintw(uno,"                                                  ");
-  mvwprintw(uno,UNO_H-2,1,"R>");
+  mvwprintw(uno,UNO_H-2,1,"R%1d>",confWinMode);
   show(uno);
-  wmove(uno,UNO_H-2,3);
+  wmove(uno,UNO_H-2,4);
 
   while((ch!='q')&&(ch!='x'))  
     {
@@ -636,7 +655,7 @@ void runMode(int stop)
 	  confWinMode++;
 	  if(confWinMode > WIN_MODES)confWinMode = 0;
           init(confWinMode);
-	  mvwprintw(uno,UNO_H-2,1,"R>");
+	  mvwprintw(uno,UNO_H-2,1,"R%1d>",confWinMode);
 	  unoInfo();
 	}
       else if (ch=='a')
@@ -644,7 +663,7 @@ void runMode(int stop)
 	  resetSim();
 	  init(confWinMode);
 	  unoInfo();
-	  mvwprintw(uno,UNO_H-2,1,"R>");
+	  mvwprintw(uno,UNO_H-2,1,"R%1d>",confWinMode);
 	  show(uno);
 	}
       else if (ch=='r')
@@ -687,7 +706,8 @@ void runMode(int stop)
 int main(int argc, char *argv[])
 //====================================
 {
-  int ch,i;
+  char syscom[120];
+  int ch,i,x;
 
   if(argc == 2)
     {
@@ -699,6 +719,9 @@ int main(int argc, char *argv[])
 
   strcpy(listConf,"conf_list.txt");
   strcpy(workSketchFile,"servuino/sketch.pde");
+
+  sprintf(syscom,"ls *.conf > conf_list.txt;");
+  x=system(syscom);
 
   readConfig(currentConf);
   init(confWinMode);
