@@ -14,6 +14,8 @@ void pinMode(int pin,int mode)
 {
   char temp[120];
 
+  currentPin = pin;
+
   //passTime();
   if(mode == INPUT || mode == OUTPUT)
     {
@@ -53,6 +55,7 @@ void digitalWrite(int pin,int value)
 {
   char temp[120];
   //passTime();
+  currentPin = pin;
   if(digitalMode[pin] == OUTPUT)
     {
 
@@ -103,6 +106,7 @@ int digitalRead(int pin)
   int value;
 
   //passTime();
+  currentPin = pin;
   if(digitalMode[pin] == INPUT)
     {
       value = g_value;
@@ -151,7 +155,7 @@ int analogRead(int pin)  // Values 0 to 1023
   char temp[120];
 
   value = g_value;
-
+  currentPin = pin;
   if(value > 1023 || value < 0)
     {
       sprintf(temp,"%d Analog pin=%d value out of range = %d",currentStep,pin,value);
@@ -191,7 +195,7 @@ void analogWrite(int pin,int value)
 // Values 0 to 255   PWM: only pin 3,5,6,9,10,11
 {
   char temp[120];
-
+  currentPin = pin;
   if(digitalMode[pin] != OUTPUT)
     {
       showError("Pin is not in OUPUT mode: ",pin);
@@ -237,16 +241,19 @@ void analogWrite(int pin,int value)
 //------ Advanced I/O ----------------------
 void tone(int pin, unsigned int freq)
 {
+  currentPin = pin;
   unimplemented("tone()");
 }
 
 void tone(int pin, unsigned int freq, unsigned long duration)
 {
+  currentPin = pin;
   unimplemented("tone()");
 }
 
 void noTone(int pin)
 {
+  currentPin = pin;
   unimplemented("noTone()");
 }
 
@@ -258,11 +265,13 @@ void shiftOut(int dataPin, int clockPin, int bitOrder, int value)
 
 unsigned long pulseIn(int pin, int value)
 {
+  currentPin = pin;
   unimplemented("pulseIn(int,int)");
 }
 
 unsigned long pulseIn(int pin, int value, unsigned long timeout)
 {
+  currentPin = pin;
   unimplemented("pulseIn(int,int,unsigned long)");
 }
 

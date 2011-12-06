@@ -3,16 +3,18 @@
 
  r  run current loop
 
+ t  step to next analogRead/digitalRead
+
  g  run complete simulation
 
  a  re-run simulation
 
  w  toggles window layout mode.
-    Note - Erases any window content.
 
  l  show loop information
 
+ z  toggles silent mode - no logging
+
  q  quit Run Mode, enter Admin Mode. 
-    Not during stepping.
 
  h  show this information
