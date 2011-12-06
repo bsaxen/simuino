@@ -1,13 +1,16 @@
 exit             Exit Simuino
 
-proj <name>      Read configuration file  		 
-                 Enter "load" to load project
+proj <name>      Read project configauration  		 
+                 Do enter "load" to load project
 
-load <steps>     Load current proj and
+load <steps>     Load current project and
                  create scenario of length <steps>
-                 if no parameters, values are as configured
+                 if no parameters, <steps> are as configured
 
-list             List available projects
+list             List available projects. 
+                 Selected is marked with '>'
+
+<1 - n>          Select project according to number in list
 
 run <steps>      Step until step=<steps>
                  If no steps given - enter Run Mode
@@ -16,10 +19,12 @@ loop <loop>      Step until loop <loop>
 
 reset            Reset simulation. Current step = 0
 
-save  <name>     Save current configuration to <name>
-                 If no <name>, saved to default configuration
-del   <name>     Delete configuration. If no paramater,
-                 current configuration.
+save  <name>     Save current project as <name>
+                 If no <name>, saved to current project
+
+del   <name>     Delete project. If no parameter,
+                 current project will be deleted.
+                 Default project cannot be deleted.
 
 info  <area>     Show info about <area>
     - scen       Show scenario data
@@ -29,7 +34,7 @@ info  <area>     Show info about <area>
     - g++        Show compilation errors
     - help       Show command information
 
-conf <par> <val> Edit configuration with commands below:
+conf <par> <val> Edit project configuration with commands below:
     - win        Set Window layout mode to <val> (0,1,2,3,4)
     - sketch     Set sketch source file
     - serv       Set Servuino data file
