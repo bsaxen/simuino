@@ -535,8 +535,6 @@ void readSketchInfo()
   char row[80],res[40],*p,*q,value[5];
   int pin;
 
-  //wLog("inside",1,2);
-
   in = fopen("servuino/sketch.pde","r");
   if(in == NULL)
     {
@@ -632,11 +630,8 @@ void initSim()
 void resetSim()
 //====================================
 {
-  int i;
-
   currentStep = 0;
   currentLoop = 0;
-
 }
 //====================================
 void unimplemented(const char *f)
@@ -840,7 +835,7 @@ void readSimulation(char *fileName)
         g_loops--;
         fclose(in);
     }
-  putMsg(msg_h-2,"ready reading simulation");
+//  putMsg(msg_h-2,"ready reading simulation");
   return;
 }    
 
@@ -880,12 +875,42 @@ void showScenario(char *fileName)
 }
 
 //====================================
+void selectProj(int projNo,char *projName)
+//====================================
+{
+  FILE *in;
+  char row[SIZE_ROW],temp[SIZE_ROW],*p;
+  int i=0;
+
+  strcpy(projName,"default.conf");
+
+  in = fopen(listConf,"r");
+  if(in == NULL)
+    {
+      showError("Unable to open list conf file",-1);
+    }
+  else
+    {
+      while (fgets(row,SIZE_ROW,in)!=NULL)
+        {
+             i++;
+             if(i==projNo) 
+             {
+              sscanf(row,"%s",projName);
+             }
+        }
+    }
+  fclose(in);
+  return;
+}
+
+//====================================
 void readMsg(char *fileName)
 //====================================
 {
   FILE *in;
-  char row[SIZE_ROW];
-  int i=0;
+  char row[SIZE_ROW],temp[SIZE_ROW],*p;
+  int i=0,ch;
 
   wclear(msg);
   in = fopen(fileName,"r");
@@ -895,11 +920,36 @@ void readMsg(char *fileName)
     }
   else
     {
-      while (fgets(row,SIZE_ROW,in)!=NULL && i < s_row-1)
+      while (fgets(row,SIZE_ROW,in)!=NULL && ch != 'x')
 	{
           i++;
-	  wmove(msg,i,1);
-	  wprintw(msg,row);
+          // If Conf List File
+          if(strstr(fileName,listConf) != NULL)
+          {
+	     strcpy(temp,row);
+             //strcpy(row,"");
+             if(p = strstr(temp,".conf")) strcpy(p,"\0");
+             if(strstr(row,currentConf))
+                 sprintf(row,"> %d %s",i,temp);
+             else
+                 sprintf(row,"  %d %s",i,temp);
+          }
+          if(i < msg_h-2)
+          {
+	    wmove(msg,i,1);
+	    wprintw(msg,row);
+          }
+          else
+          {
+            wmove(msg,msg_h-2,1);
+            wprintw(msg,"press any key for next page >>");
+            show(msg);
+            ch = getchar();
+            wscrl(msg,msg_h-2);
+            i = 1;
+            wmove(msg,i,1);
+            wprintw(msg,row);  
+          }
 	}
       show(msg);
     }
@@ -1119,7 +1169,7 @@ void loadSketch(char sketch[])
   x=system(syscom);
   strcpy(fileName,"servuino/g++.result");
   readMsg(fileName);
-  iDelay(3000);
+  //iDelay(3000);
   readSketchInfo();
 }
 
