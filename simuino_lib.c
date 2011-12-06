@@ -42,7 +42,7 @@ void show(WINDOW *win)
   if(win == uno) 
   {
     wmove(win,0,2);
-    wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.0");
+    wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.1");
   }
   if(win == ser)
   {
@@ -224,7 +224,7 @@ void wLog(const char *p, int value1, int value2)
   wmove(slog,1,1);
   wprintw(slog,">%s",simulation[currentStep+1]);
   wmove(slog,2,1);
-  wprintw(slog,"%s",temp);
+  if(g_silent == 0)wprintw(slog,"%s",temp);
   show(slog);
 }
 
@@ -245,7 +245,7 @@ void mLog0(const char *p)
   wmove(slog,1,1);
   wprintw(slog,">%s",simulation[currentStep+1]);
   wmove(slog,2,1);
-  wprintw(slog,"%s",temp);
+  if(g_silent == 0)wprintw(slog,"%s",temp);
   show(slog);
 }
 
@@ -276,7 +276,7 @@ void mLog1(const char *p, int value1)
   wmove(slog,1,1);
   wprintw(slog,">%s",simulation[currentStep+1]);
   wmove(slog,2,1);
-  wprintw(slog,"%s",temp);
+  if(g_silent == 0)wprintw(slog,"%s",temp);
   show(slog);
 }
 
@@ -305,7 +305,7 @@ void wLog0(const char *p)
   wmove(slog,1,1);
   wprintw(slog,">%s",simulation[currentStep+1]);
   wmove(slog,2,1);
-  wprintw(slog,"%s",temp);
+  if(g_silent == 0)wprintw(slog,"%s",temp);
   show(slog);
 }
 
@@ -337,7 +337,7 @@ void wLog1(const char *p, int value1)
   wmove(slog,1,1);
   wprintw(slog,">%s",simulation[currentStep+1]);
   wmove(slog,2,1);
-  wprintw(slog,"%s",temp);
+  if(g_silent == 0)wprintw(slog,"%s",temp);
   show(slog);
 }
 
@@ -371,7 +371,7 @@ void wLog2(const char *p, int value1, int value2)
   wmove(slog,1,1);
   wprintw(slog,">%s",simulation[currentStep+1]);
   wmove(slog,2,1);
-  wprintw(slog,"%s",temp);
+  if(g_silent == 0)wprintw(slog,"%s",temp);
   show(slog);
 }
 
@@ -407,8 +407,11 @@ void showLoops()
   wclear(msg);
   for(i=0;i<g_loops;i++)
   {
-    wmove(msg,1+i,2);
-    wprintw(msg," Loop: %4d starts at step:%4d",i,loopPos[i]+1);
+    if(i < msg_h-1)
+      {
+	wmove(msg,1+i,2);
+	wprintw(msg," Loop: %4d starts at step:%4d",i,loopPos[i]+1);
+      }
   }
   show(msg);
 }
@@ -453,7 +456,7 @@ void wLogChar(const char *p, const char *value1, int value2)
   wmove(slog,1,1);
   wprintw(slog,">%s",simulation[currentStep+1]);
   wmove(slog,2,1);
-  wprintw(slog,"%s",temp);
+  if(g_silent == 0)wprintw(slog,"%s",temp);
 }
 
 
@@ -767,6 +770,22 @@ void runAll(int stop)
     runStep(FORWARD);
   return;
 }    
+
+//====================================
+void runNextRead()
+//====================================
+{
+  char event[80];
+  int x;
+
+  while (!strstr(event,"digitalRead") && !strstr(event,"analogRead") && currentStep < g_steps)
+    {
+      runStep(FORWARD);
+      x = readEvent(event, currentStep+1);
+    }
+  return;
+}    
+
 
 //====================================
 void readSimulation(char *fileName)

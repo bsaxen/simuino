@@ -20,6 +20,8 @@
 #define A4 4
 #define A5 5
 
+#define ANA 1
+#define DIG 2
 
 #define LOW    0
 #define HIGH   1
@@ -38,8 +40,8 @@
 #define CHANGE  1
 #define RISING  2
 #define FALLING 3
-#define MAX_SERIAL 100
-#define MAX_LOG  200
+//#define MAX_SERIAL 100
+//#define MAX_LOG  200
 #define MAX_STEP 2000
 #define MAX_LOOP 2000
 #define MAX_PIN_ANALOG 6
@@ -89,16 +91,18 @@
 int  currentStep = 0;
 int  currentLoop = 0;
 char currentConf[SIZE_ROW];
+int  currentPin  = 0;
 
 // Limits
-int  g_loops = 0;
-int  g_steps = 0;
+int  g_loops    = 0;
+int  g_steps    = 0;
 int  g_comments = 0;
 
-int g_value = 0;
-int s_mode = ADMIN;
-int g_warning = YES;
-
+int g_value      = 0;
+int s_mode       = ADMIN;
+int g_warning    = YES;
+int g_silent     = 0;
+int g_scenSource = 0;
 
 void (*interrupt0)();
 void (*interrupt1)();
@@ -332,9 +336,8 @@ void loadCurrentProj()
   loadSketch(confSketchFile);
   if(confSteps < 0) confSteps = 100;
   if(confSteps > MAX_STEP) confSteps = MAX_STEP-1;
-  sprintf(syscom,"cd servuino;./servuino %d;",confSteps);
+  sprintf(syscom,"cd servuino;./servuino %d %d;",confSteps,g_scenSource);
   x=system(syscom);
-  iDelay(500);
   init(confWinMode);
   initSim();
   resetSim();
@@ -354,6 +357,7 @@ void openCommand()
   char command[40][40];
 
   s_mode = ADMIN;
+  g_silent = 0;
 
   readMsg(listConf);
 
@@ -361,7 +365,8 @@ void openCommand()
     {
       wmove(uno,UNO_H-2,1);
       wprintw(uno,"                                                  ");
-      mvwprintw(uno,UNO_H-2,1,"A%1d>",confWinMode);
+      if(g_silent==0)mvwprintw(uno,UNO_H-2,1,"A%1d>",confWinMode);
+      if(g_silent==1)mvwprintw(uno,UNO_H-2,1,"A%1d<",confWinMode);
       show(uno);
       wmove(uno,UNO_H-2,4);
       strcpy(command[0],"");
@@ -375,7 +380,12 @@ void openCommand()
 
       projNo = atoi(sstr);
 
-      if(strstr(sstr,"run"))
+      if(strstr(sstr,"sil"))//silent mode
+	{
+	  g_silent++;;
+          if(g_silent > 1)g_silent = 0;
+	}
+      else if(strstr(sstr,"run"))
 	{
 	  stop = 0;
           if(n == 2)stop = atoi(command[1]);
@@ -579,7 +589,7 @@ void openCommand()
 	}
       else if(strstr(sstr,"clear"))
 	{
-	  sprintf(syscom,"rm servuino/sketch.pde;rm servuino/data.su;");
+	  sprintf(syscom,"rm servuino/sketch.pde;rm servuino/data.su;rm servuino/data.scen;");
 	  x=system(syscom);
 	}
       else if(strstr(sstr,"load"))
@@ -611,8 +621,8 @@ void openCommand()
 void runMode(int stop)
 //====================================
 {
-  int ch;
-  char tempName[80];
+  int ch,x;
+  char tempName[80],syscom[120],temp[80];
   strcpy(tempName,"help.txt");
 
   s_mode = RUN;
@@ -630,7 +640,8 @@ void runMode(int stop)
 
   wmove(uno,UNO_H-2,1);
   wprintw(uno,"                                                  ");
-  mvwprintw(uno,UNO_H-2,1,"R%1d>",confWinMode);
+  if(g_silent==0)mvwprintw(uno,UNO_H-2,1,"R%1d>",confWinMode);
+  if(g_silent==1)mvwprintw(uno,UNO_H-2,1,"R%1d<",confWinMode);
   show(uno);
   wmove(uno,UNO_H-2,4);
 
@@ -641,6 +652,14 @@ void runMode(int stop)
       if (ch=='h')
 	{
 	  readMsg(tempName);
+	}
+      else if(ch=='z')//silent mode
+	{
+	  g_silent++;;
+          if(g_silent > 1)g_silent = 0;
+	  if(g_silent==0)mvwprintw(uno,UNO_H-2,1,"R%1d>",confWinMode);
+	  if(g_silent==1)mvwprintw(uno,UNO_H-2,1,"R%1d<",confWinMode);
+	  show(uno);
 	}
       else if (ch=='g')
 	{
@@ -670,9 +689,28 @@ void runMode(int stop)
 	{
 	  runLoop();
 	}
+      else if (ch=='t')
+	{
+	  runNextRead();
+	}
       else if (ch=='s') 
 	{
 	  runStep(FORWARD);
+	}
+      else if (ch=='v') 
+	{
+	  wgetstr(uno,temp);
+	  x = atoi(temp);          
+	  //setNextRead(currentStep+1,currentPin,x);
+	  g_scenSource = 1;
+	  // steps, source, pintype, pinno, pinvalue, pinstep
+	  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d;",confSteps,g_scenSource,ANA,5,x,currentStep+1);
+	  x=system(syscom);
+	  init(confWinMode);
+	  initSim();
+	  resetSim();
+	  readSimulation(confServuinoFile);
+	  unoInfo();
 	}
       else if (ch=='l') 
 	{
