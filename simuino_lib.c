@@ -1,7 +1,18 @@
-//================================================
-//  Developed by Benny Saxen, ADCAJO
-//================================================
+/*  Simuino is a Arduino Simulator based on Servuino Engine
+    Copyright (C) 2011  Benny Saxen
 
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 //====================================
 int __nsleep(const struct timespec *req, struct timespec *rem)  
@@ -35,6 +46,24 @@ void iDelay(int ms)
 }
 
 //====================================
+void analyzeEvent(char *event)
+//====================================
+{
+int step,pin,value;
+char str[80];
+{
+  if(strstr(event,"analogRead") || strstr(event,"digitalRead"))
+  {
+    sscanf(event,"%d %s %d %d",&step,str,&pin,&value);
+    g_pinNo = pin;
+    g_pinValue = value;
+    if(strstr(event,"analog"))  g_pinType = ANA;
+    if(strstr(event,"digital")) g_pinType = DIG;
+    if(currentStep+1 != step) putMsg(5,"Step No Mismatch in analyzeEvent");
+  }  
+}
+}
+//====================================
 void show(WINDOW *win)
 //====================================
 {
@@ -59,7 +88,8 @@ void show(WINDOW *win)
     wmove(win,0,2);
     wprintw(win,"Messages");
   }
-
+  
+  wmove(uno,UNO_H-2,4);
   wrefresh(win);
   iDelay(confDelay);
 }
@@ -962,7 +992,8 @@ void readMsg(char *fileName)
           {
             wmove(msg,msg_h-2,1);
             wprintw(msg,"press any key for next page >>");
-            show(msg);
+     //       wmove(msg,msg_h-2,1);
+            wrefresh(msg);
             ch = getchar();
             wscrl(msg,msg_h-2);
             i = 1;
