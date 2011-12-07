@@ -1,6 +1,6 @@
 /*  Simuino is a Arduino Simulator based on Servuino Engine 
     Copyright (C) 2011  Benny Saxen
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -12,7 +12,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+    along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -98,8 +99,8 @@
 #define TX     4
 
 
-// Current data
-int  currentStep = 0;
+					// Current data
+    int  currentStep = 0;
 int  currentLoop = 0;
 char currentConf[SIZE_ROW];
 int  currentPin  = 0;
@@ -407,7 +408,7 @@ void openCommand()
 	  stop = 0;
           if(n == 2)stop = atoi(command[1]);
 	  runMode(stop);
-          if(stop==0)putMsg(4,"Back in Run Mode!");
+          if(stop==0)putMsg(2,"Back in Run Mode!");
 	}
       else if(strstr(sstr,"res")) // reset simulation
 	{
@@ -471,7 +472,7 @@ void openCommand()
               g_warning = YES;
 	      unoInfo();
 	    }
-	    readMsg(currentConf);
+	  readMsg(currentConf);
 	}
       else if(strstr(sstr,"list"))
 	{
@@ -561,19 +562,18 @@ void openCommand()
               
 	    }
           if(strstr(currentConf,"default") == NULL)
-          {
-	    sprintf(syscom,"rm %s;",currentConf);
-	    x=system(syscom);
-	    sprintf(syscom,"ls *.conf > conf_list.txt;");
-	    x=system(syscom);
-	    readMsg(listConf);
-            strcpy(currentConf,"default.conf");
-          }	
+	    {
+	      sprintf(syscom,"rm %s;",currentConf);
+	      x=system(syscom);
+	      sprintf(syscom,"ls *.conf > conf_list.txt;");
+	      x=system(syscom);
+	      readMsg(listConf);
+	      strcpy(currentConf,"default.conf");
+	    }	
 	}
       else if(strstr(sstr,"record"))
 	{
           if(n == 2)confLogFile = atoi(command[1]);
-	  //sscanf(p,"%s %d",temp,&confLogFile);
 	  if(confLogFile >=0 && confLogFile < 2)
 	    {
 	      saveConfig(currentConf);
@@ -583,12 +583,12 @@ void openCommand()
       else if(strstr(sstr,"win")) //windows layout
         {
           if(n == 2)
-          {
+	    {
               confWinMode = atoi(command[1]);
               if(confWinMode > WIN_MODES)confWinMode = 0;
               init(confWinMode);
               unoInfo();
-          }
+	    }
         }
       else if(strstr(sstr,"loop")) //status
 	{
@@ -614,7 +614,6 @@ void openCommand()
 	{
           if(n == 2)
 	    {
-//	      strcpy(confSketchFile,command[1]);
 	      confSteps = atoi(command[1]);
 	    }
           g_scenSource = 0;
@@ -622,11 +621,11 @@ void openCommand()
 	}
       else if(projNo > 0 && projNo < 10)
         {
-           selectProj(projNo,currentConf);
-           readConfig(currentConf);
-           g_warning = YES;
-           unoInfo();
-           readMsg(currentConf);   
+	  selectProj(projNo,currentConf);
+	  readConfig(currentConf);
+	  g_warning = YES;
+	  unoInfo();
+	  readMsg(currentConf);   
         }
       else 
 	{
@@ -639,7 +638,7 @@ void openCommand()
 void runMode(int stop)
 //====================================
 {
-  int ch,x,step;
+  int ch,x,step,tmp,res=0,a=0,b=0;
   char tempName[80],syscom[120],temp[80];
   strcpy(tempName,"help.txt");
 
@@ -654,8 +653,7 @@ void runMode(int stop)
       return;
     }
 
-  //readMsg(tempName);
-  putMsg(4,"Run Mode. Press h for help.");
+  putMsg(3,"Run Mode. Press h for help.");
 
   while(1)  
     {
@@ -664,7 +662,6 @@ void runMode(int stop)
       if(g_silent==0)mvwprintw(uno,UNO_H-2,1,"R%1d>",confWinMode);
       if(g_silent==1)mvwprintw(uno,UNO_H-2,1,"R%1d<",confWinMode);
       show(uno);
-      //wmove(uno,UNO_H-2,4);
 
       ch = getchar();
 
@@ -723,26 +720,30 @@ void runMode(int stop)
       else if (ch=='v') 
 	{
           step = currentStep + 1;
-          putMsg(4," Enter value to be read");
-	  analyzeEvent(simulation[step]);
-	  wgetstr(uno,temp);
-	  x = atoi(temp);          
-	  g_scenSource = 1;
-	  // steps, source, pintype, pinno, pinvalue, pinstep
-	  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1);
-	  putMsg(5,syscom);
-          x=system(syscom);
-	  init(confWinMode);
-	  initSim();
-	  resetSim();
-          readSketchInfo();
-	  readSimulation(confServuinoFile);
-          g_warning = NO;
-          x = confDelay;
-          confDelay = 0;
-          runMode(step);
-          confDelay = x;
-	  unoInfo();
+          putMsg(2," Enter value to be read");
+	  res = analyzeEvent(simulation[step]);
+          if(res > 0)
+	    {
+	      wgetstr(uno,temp);
+	      x = atoi(temp); 
+              if(res == ANA){a = 0;b = 1023;}
+	      if(res == DIG){a = 0;b = 1;}
+	      if(x >= a && x <= b)
+		{         
+	      g_scenSource = 1;
+	      // steps, source, pintype, pinno, pinvalue, pinstep
+	      sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1);
+	      tmp=system(syscom);
+	      initSim();
+	      readSketchInfo();
+	      readSimulation(confServuinoFile);
+	      runStep(FORWARD);
+		}
+	      else
+		putMsg(2,"Value out of range");
+	    }
+	  else
+	    putMsg(2,"Next step is not a Read event");
 	}
       else if (ch=='l') 
 	{
@@ -812,7 +813,6 @@ int main(int argc, char *argv[])
 
   openCommand();
   
-  //tcsetattr(0,TCSANOW, &orig);
   delwin(uno);
   delwin(ser);
   delwin(slog);

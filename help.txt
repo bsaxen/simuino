@@ -10,6 +10,7 @@
  a  re-run simulation
 
  v  set value in next analogRead/digitalRead
+    Current step must be one step before Read. 
 
  w  toggles window layout mode.
 

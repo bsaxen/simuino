@@ -10,7 +10,7 @@ load <steps>     Load current project and
 list             List available projects. 
                  Selected is marked with '>'
 
-<1 - n>          Select project according to number in list
+<n>              Select project according to number in list
 
 run <steps>      Step until step=<steps>
                  If no steps given - enter Run Mode

@@ -12,7 +12,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+    along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+*/
 
 //=====================================
 // Functions
@@ -27,7 +28,6 @@ void pinMode(int pin,int mode)
 
   currentPin = pin;
 
-  //passTime();
   if(mode == INPUT || mode == OUTPUT)
     {
       digitalMode[pin] = mode;
@@ -65,7 +65,7 @@ void pinMode(int pin,int mode)
 void digitalWrite(int pin,int value)
 {
   char temp[120];
-  //passTime();
+
   currentPin = pin;
   if(digitalMode[pin] == OUTPUT)
     {
@@ -116,7 +116,6 @@ int digitalRead(int pin)
   char temp[120];
   int value;
 
-  //passTime();
   currentPin = pin;
   if(digitalMode[pin] == INPUT)
     {
@@ -302,18 +301,12 @@ unsigned long micros()
 
 void delay(int ms)
 {
-  //passTime(); 
   wLog("delay",ms,-1);
-  //msleep(ms);
-
 }
 
 void delayMicroseconds(int us)
 {
-  //passTime();
   wLog("delayMicroseconds",us,-1);
-  //msleep(us);
-
 }
 
 
