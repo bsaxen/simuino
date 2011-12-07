@@ -1,6 +1,19 @@
-//================================================
-//  Developed by Benny Saxen, ADCAJO
-//================================================
+/*  Simuino is a Arduino Simulator based on Servuino Engine 
+    Copyright (C) 2011  Benny Saxen
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,8 +53,6 @@
 #define CHANGE  1
 #define RISING  2
 #define FALLING 3
-//#define MAX_SERIAL 100
-//#define MAX_LOG  200
 #define MAX_STEP 2000
 #define MAX_LOOP 2000
 #define MAX_PIN_ANALOG 6
@@ -103,6 +114,9 @@ int s_mode       = ADMIN;
 int g_warning    = YES;
 int g_silent     = 0;
 int g_scenSource = 0;
+int g_pinType    = 0;
+int g_pinNo      = 0;
+int g_pinValue   = 0;
 
 void (*interrupt0)();
 void (*interrupt1)();
@@ -125,11 +139,9 @@ int   baud = 0;
 int   error = 0;
 
 // Log
-//int   logging = YES;
 char  logBlankRow[500];
 
 // Serial Interface
-//int   serialSize = 1;
 int   serialMode = OFF;
 char  prevSerial[SIZE_ROW];
 char  serBlankRow[500];
@@ -166,6 +178,7 @@ WINDOW *uno,*ser,*slog,*msg;
 static struct termios orig, nnew;
  
 char  stemp[80];
+char  gplFile[80];
 
 #include "simuino.h"
 #include "simuino_lib.c"
@@ -359,7 +372,7 @@ void openCommand()
   s_mode = ADMIN;
   g_silent = 0;
 
-  readMsg(listConf);
+  readMsg(gplFile);
 
   while(strstr(str,"ex") == NULL)
     {
@@ -385,11 +398,16 @@ void openCommand()
 	  g_silent++;;
           if(g_silent > 1)g_silent = 0;
 	}
+      else if(strstr(sstr,"gpl"))
+        {
+          readMsg(gplFile);
+        }
       else if(strstr(sstr,"run"))
 	{
 	  stop = 0;
           if(n == 2)stop = atoi(command[1]);
 	  runMode(stop);
+          if(stop==0)putMsg(4,"Back in Run Mode!");
 	}
       else if(strstr(sstr,"res")) // reset simulation
 	{
@@ -599,7 +617,7 @@ void openCommand()
 //	      strcpy(confSketchFile,command[1]);
 	      confSteps = atoi(command[1]);
 	    }
-
+          g_scenSource = 0;
 	  loadCurrentProj();
 	}
       else if(projNo > 0 && projNo < 10)
@@ -612,7 +630,7 @@ void openCommand()
         }
       else 
 	{
-	  putMsg(msg_h-2,"Unknown command");
+	  putMsg(msg_h-2,"Unknown A command");
 	}
     }
 }
@@ -621,7 +639,7 @@ void openCommand()
 void runMode(int stop)
 //====================================
 {
-  int ch,x;
+  int ch,x,step;
   char tempName[80],syscom[120],temp[80];
   strcpy(tempName,"help.txt");
 
@@ -636,23 +654,28 @@ void runMode(int stop)
       return;
     }
 
-  readMsg(tempName);
+  //readMsg(tempName);
+  putMsg(4,"Run Mode. Press h for help.");
 
-  wmove(uno,UNO_H-2,1);
-  wprintw(uno,"                                                  ");
-  if(g_silent==0)mvwprintw(uno,UNO_H-2,1,"R%1d>",confWinMode);
-  if(g_silent==1)mvwprintw(uno,UNO_H-2,1,"R%1d<",confWinMode);
-  show(uno);
-  wmove(uno,UNO_H-2,4);
-
-  while((ch!='q')&&(ch!='x'))  
+  while(1)  
     {
+      wmove(uno,UNO_H-2,1);
+      wprintw(uno,"                                                  ");
+      if(g_silent==0)mvwprintw(uno,UNO_H-2,1,"R%1d>",confWinMode);
+      if(g_silent==1)mvwprintw(uno,UNO_H-2,1,"R%1d<",confWinMode);
+      show(uno);
+      //wmove(uno,UNO_H-2,4);
+
       ch = getchar();
 
-      if (ch=='h')
+      if (ch=='q' || ch=='x')
 	{
-	  readMsg(tempName);
+	  return;
 	}
+      if (ch=='h')
+        {
+          readMsg(tempName);
+        }
       else if(ch=='z')//silent mode
 	{
 	  g_silent++;;
@@ -699,17 +722,26 @@ void runMode(int stop)
 	}
       else if (ch=='v') 
 	{
+          step = currentStep + 1;
+          putMsg(4," Enter value to be read");
+	  analyzeEvent(simulation[step]);
 	  wgetstr(uno,temp);
 	  x = atoi(temp);          
-	  //setNextRead(currentStep+1,currentPin,x);
 	  g_scenSource = 1;
 	  // steps, source, pintype, pinno, pinvalue, pinstep
-	  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d;",confSteps,g_scenSource,ANA,5,x,currentStep+1);
-	  x=system(syscom);
+	  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1);
+	  putMsg(5,syscom);
+          x=system(syscom);
 	  init(confWinMode);
 	  initSim();
 	  resetSim();
+          readSketchInfo();
 	  readSimulation(confServuinoFile);
+          g_warning = NO;
+          x = confDelay;
+          confDelay = 0;
+          runMode(step);
+          confDelay = x;
 	  unoInfo();
 	}
       else if (ch=='l') 
@@ -737,8 +769,9 @@ void runMode(int stop)
 	  // Todo save to conf
 	}
       else
-        putMsg(msg_h-2,"Unknown command");
+        putMsg(msg_h-2,"Unknown R command");
     }
+  return;
 }
 //====================================
 int main(int argc, char *argv[])
@@ -746,6 +779,8 @@ int main(int argc, char *argv[])
 {
   char syscom[120];
   int ch,i,x;
+
+  strcpy(gplFile,"gpl.txt");
 
   if(argc == 2)
     {
@@ -772,6 +807,8 @@ int main(int argc, char *argv[])
   show(slog);
 
   if(confLogFile == YES)resetFile("log.txt");
+
+  readMsg(gplFile);
 
   openCommand();
   
