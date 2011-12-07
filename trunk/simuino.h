@@ -12,8 +12,9 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
-void analyzeEvent(char *Event);
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+int analyzeEvent(char *Event);
 int readEvent(char *ev, int step);
 int readComment(int step);
 void mLog0(const char *p);

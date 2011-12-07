@@ -12,7 +12,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+    along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+*/
 
 //====================================
 int __nsleep(const struct timespec *req, struct timespec *rem)  
@@ -46,22 +47,24 @@ void iDelay(int ms)
 }
 
 //====================================
-void analyzeEvent(char *event)
+int analyzeEvent(char *event)
 //====================================
 {
-int step,pin,value;
-char str[80];
-{
-  if(strstr(event,"analogRead") || strstr(event,"digitalRead"))
+  int step,pin,value;
+  char str[80];
   {
-    sscanf(event,"%d %s %d %d",&step,str,&pin,&value);
-    g_pinNo = pin;
-    g_pinValue = value;
-    if(strstr(event,"analog"))  g_pinType = ANA;
-    if(strstr(event,"digital")) g_pinType = DIG;
-    if(currentStep+1 != step) putMsg(5,"Step No Mismatch in analyzeEvent");
-  }  
-}
+    if(strstr(event,"analogRead") || strstr(event,"digitalRead"))
+      {
+	sscanf(event,"%d %s %d %d",&step,str,&pin,&value);
+	g_pinNo = pin;
+	g_pinValue = value;
+	if(strstr(event,"analog"))  g_pinType = ANA;
+	if(strstr(event,"digital")) g_pinType = DIG;
+	if(currentStep+1 != step) putMsg(5,"Step No Mismatch in analyzeEvent");
+	return(g_pinType);
+      } 
+    return(0); 
+  }
 }
 //====================================
 void show(WINDOW *win)
@@ -69,25 +72,25 @@ void show(WINDOW *win)
 {
   box(win,0,0);
   if(win == uno) 
-  {
-    wmove(win,0,2);
-    wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.1");
-  }
+    {
+      wmove(win,0,2);
+      wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.1");
+    }
   if(win == ser)
-  {
-    wmove(win,0,2);
-    wprintw(win,"Serial Interface");
-  }
+    {
+      wmove(win,0,2);
+      wprintw(win,"Serial Interface");
+    }
   if(win == slog)
-  {
-    wmove(win,0,2);
-    wprintw(win,"Log");
-  }
+    {
+      wmove(win,0,2);
+      wprintw(win,"Log");
+    }
   if(win == msg)
-  {
-    wmove(win,0,2);
-    wprintw(win,"Messages");
-  }
+    {
+      wmove(win,0,2);
+      wprintw(win,"Messages");
+    }
   
   wmove(uno,UNO_H-2,4);
   wrefresh(win);
@@ -222,7 +225,7 @@ void wLog(const char *p, int value1, int value2)
 
   if(value2 > -2) // add index
     {
-	  sprintf(temp," %d,%d ",currentLoop,currentStep);
+      sprintf(temp," %d,%d ",currentLoop,currentStep);
     }
   strcat(temp,p);
  
@@ -265,7 +268,6 @@ void mLog0(const char *p)
   int i;
   char temp[100];
 
-  //p = strstr(p," ");
   strcpy(temp,p);
   if(confLogFile==YES)logFile(temp);
 
@@ -436,13 +438,13 @@ void showLoops()
   int i;
   wclear(msg);
   for(i=0;i<g_loops;i++)
-  {
-    if(i < msg_h-1)
-      {
-	wmove(msg,1+i,2);
-	wprintw(msg," Loop: %4d starts at step:%4d",i,loopPos[i]+1);
-      }
-  }
+    {
+      if(i < msg_h-1)
+	{
+	  wmove(msg,1+i,2);
+	  wprintw(msg," Loop: %4d starts at step:%4d",i,loopPos[i]+1);
+	}
+    }
   show(msg);
 }
 
@@ -456,7 +458,7 @@ void wLogChar(const char *p, const char *value1, int value2)
   strcpy(temp," ");
   if(value2 > -2)  //add index 
     {
-	sprintf(temp," %d,%d ",currentLoop,currentStep);
+      sprintf(temp," %d,%d ",currentLoop,currentStep);
     }  
   strcat(temp,p);
   
@@ -556,7 +558,6 @@ void getString(char *in, char *out)
   q = strstr(p,"'");
   strcpy(q,"\0");
   strcpy(out,p);
-  //wLog(out,-1,-1);
   return;
 }
 
@@ -643,7 +644,6 @@ void initSim()
     }
   for(i=0;i<MAX_PIN_DIGITAL;i++)
     {
-      digitalMode[i] = FREE;
       strcpy(textPinModeIn[i],"void");
       strcpy(textPinModeOut[i],"void");
 
@@ -663,8 +663,13 @@ void initSim()
 void resetSim()
 //====================================
 {
+  int i;
   currentStep = 0;
   currentLoop = 0;
+  for(i=0;i<MAX_PIN_DIGITAL;i++)
+    {
+      digitalMode[i] = FREE;
+    }
 }
 //====================================
 void unimplemented(const char *f)
@@ -758,7 +763,7 @@ int readComment(int step)
   else
     return(0);
  
- return(step);   
+  return(step);   
 }
 //====================================
 void runLoop()
@@ -787,7 +792,7 @@ void runLoops(int targetLoop)
   if(targetLoop > g_loops)targetLoop = g_loops;
   while(currentLoop < targetLoop)
     {
-	runStep(FORWARD);
+      runStep(FORWARD);
     }
   return;
 }    
@@ -854,7 +859,6 @@ void readSimulation(char *fileName)
 		{
 		  showError(row,step);
 		  showError(row,g_steps);
-		  //showError("Simulation step out of order",step);
 		}
 	    }
 	  if(row[0] == '=')
@@ -881,10 +885,9 @@ void readSimulation(char *fileName)
               sscanf(p,"%s%d%d%d",temp,&scenDigital,&scenAnalog,&scenInterrupt);
             }
 	}
-        g_loops--;
-        fclose(in);
+      g_loops--;
+      fclose(in);
     }
-//  putMsg(msg_h-2,"ready reading simulation");
   return;
 }    
 
@@ -907,16 +910,16 @@ void showScenario(char *fileName)
       while (fgets(row,SIZE_ROW,in)!=NULL && i < s_row-1)
         {
           if(strstr(row,"// SCEN"))
-          {
-            i++;
-            wmove(msg,i,1);
-            wprintw(msg,row);
-          }
+	    {
+	      i++;
+	      wmove(msg,i,1);
+	      wprintw(msg,row);
+	    }
         }
       if(i == 0)
-      {
+	{
           wmove(msg,1,1); wprintw(msg,"No scenario data in sketch");
-      }
+	}
       show(msg);
     }
   fclose(in);
@@ -942,11 +945,11 @@ void selectProj(int projNo,char *projName)
     {
       while (fgets(row,SIZE_ROW,in)!=NULL)
         {
-             i++;
-             if(i==projNo) 
-             {
+	  i++;
+	  if(i==projNo) 
+	    {
               sscanf(row,"%s",projName);
-             }
+	    }
         }
     }
   fclose(in);
@@ -974,32 +977,30 @@ void readMsg(char *fileName)
           i++;
           // If Conf List File
           if(strstr(fileName,listConf) != NULL)
-          {
-	     strcpy(temp,row);
-             //strcpy(row,"");
-             if(p = strstr(temp,".conf")) strcpy(p,"\0");
-             if(strstr(row,currentConf))
-                 sprintf(row,"> %d %s",i,temp);
-             else
-                 sprintf(row,"  %d %s",i,temp);
-          }
+	    {
+	      strcpy(temp,row);
+	      if(p = strstr(temp,".conf")) strcpy(p,"\0");
+	      if(strstr(row,currentConf))
+		sprintf(row,"> %d %s",i,temp);
+	      else
+		sprintf(row,"  %d %s",i,temp);
+	    }
           if(i < msg_h-2)
-          {
-	    wmove(msg,i,1);
-	    wprintw(msg,row);
-          }
+	    {
+	      wmove(msg,i,1);
+	      wprintw(msg,row);
+	    }
           else
-          {
-            wmove(msg,msg_h-2,1);
-            wprintw(msg,"press any key for next page >>");
-     //       wmove(msg,msg_h-2,1);
-            wrefresh(msg);
-            ch = getchar();
-            wscrl(msg,msg_h-2);
-            i = 1;
-            wmove(msg,i,1);
-            wprintw(msg,row);  
-          }
+	    {
+	      wmove(msg,msg_h-2,1);
+	      wprintw(msg,"press any key for next page >>");
+	      wrefresh(msg);
+	      ch = getchar();
+	      wscrl(msg,msg_h-2);
+	      i = 1;
+	      wmove(msg,i,1);
+	      wprintw(msg,row);  
+	    }
 	}
       show(msg);
     }
@@ -1033,15 +1034,6 @@ void init(int mode)
   clear();
   //noecho();
   cbreak();
-
-  //tcgetattr(0, &orig);
-  //nnew = orig;
-  //nnew.c_lflag &= ~ICANON;
-  //nnew.c_lflag &= ~ECHO;
-  //nnew.c_lflag &= ~ISIG;
-  //nnew.c_cc[VMIN] = 1;
-  //nnew.c_cc[VTIME] = 0;
-  //tcsetattr(0, TCSANOW, &nnew);
 
   getmaxyx(stdscr,s_row,s_col);
   start_color();
@@ -1187,20 +1179,20 @@ void init(int mode)
       ser_y = 0;
     }
 
-      msg=newwin(msg_h,msg_w,msg_x,msg_y);
-      scrollok(msg,true);
-      wbkgd(msg,COLOR_PAIR(MSG_COLOR));
-      show(msg);
+  msg=newwin(msg_h,msg_w,msg_x,msg_y);
+  scrollok(msg,true);
+  wbkgd(msg,COLOR_PAIR(MSG_COLOR));
+  show(msg);
 
-      slog=newwin(log_h,log_w,log_x,log_y);
-      scrollok(slog,true);
-      wbkgd(slog,COLOR_PAIR(LOG_COLOR));
-      show(slog); 
+  slog=newwin(log_h,log_w,log_x,log_y);
+  scrollok(slog,true);
+  wbkgd(slog,COLOR_PAIR(LOG_COLOR));
+  show(slog); 
 
-      ser=newwin(ser_h,ser_w,ser_x,ser_y);
-      scrollok(ser,true);
-      wbkgd(ser,COLOR_PAIR(SER_COLOR));
-      show(ser);
+  ser=newwin(ser_h,ser_w,ser_x,ser_y);
+  scrollok(ser,true);
+  wbkgd(ser,COLOR_PAIR(SER_COLOR));
+  show(ser);
 
   for(i=0;i<log_w;i++)logBlankRow[i] = ' ';logBlankRow[i]='\0';
   for(i=0;i<ser_w;i++)serBlankRow[i] = ' ';serBlankRow[i]='\0';
@@ -1219,7 +1211,6 @@ void loadSketch(char sketch[])
   x=system(syscom);
   strcpy(fileName,"servuino/g++.result");
   readMsg(fileName);
-  //iDelay(3000);
   readSketchInfo();
 }
 
