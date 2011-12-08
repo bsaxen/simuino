@@ -5,6 +5,12 @@
 //           step 0  1  2  3  4  5  6  7  8  9 10 11 12 13
 //          --- -------------------------------------------
 // SCENDIGPIN 0   0  0  0  0  0  0  0  0  0  0  0  0  0  0
+// SCENDIGPIN 50   0  0  1  0  0  0  0  0  0  0  0  0  0  0
+// SCENDIGPIN 100   0  0  0  0  0  0  0  0  0  0  0  0  0  0
+// SCENDIGPIN 150   0  0  1  0  0  0  0  0  0  0  0  0  0  0
+// SCENDIGPIN 200   0  0  0  0  0  0  0  0  0  0  0  0  0  0
+// SCENDIGPIN 250   0  0  1  0  0  0  0  0  0  0  0  0  0  0
+// SCENDIGPIN 300   0  0  0  0  0  0  0  0  0  0  0  0  0  0
 //
 //  analog_pins
 //            step    0   1   2   3   4   5
@@ -12,13 +18,6 @@
 // SCENANAPIN  1    0    0    0    0    0    3 
 // SCENANAPIN 20    0    0    0    0    0    1 
 // SCENANAPIN 30    0    0    0    0    0    2 
-//  interrupts
-//          step 0 1
-//         ----------
-// SCENINRPT   0 0 0
-// SCENINRPT  25 1 0
-// SCENINRPT  35 0 0
-// SCENINRPT  45 1 0
 //
 //================================================
 // Simuino log text customization
