@@ -27,6 +27,13 @@
 #include <sys/stat.h>
 #include <form.h>
 
+#define IR0  2
+#define IR1  3
+#define IR2 21
+#define IR3 20
+#define IR4 19
+#define IR5 18
+
 #define A0 0
 #define A1 1
 #define A2 2
@@ -60,7 +67,7 @@
 #define MAX_LOOP 2000
 #define MAX_PIN_ANALOG 6
 #define MAX_PIN_DIGITAL 14
-
+#define INTPINS  6
 #define SIZE_ROW 180
 
 #define UNO_H  16
@@ -174,6 +181,8 @@ char  confServuinoFile[200];
 int   confBoardType = UNO;
 
 char  workSketchFile[80];
+int   inrpt[INTPINS];
+int   attached[INTPINS];
 
 int uno_h=0, uno_w=0, uno_x=0, uno_y=0;
 int msg_h=0, msg_w=0, msg_x=0, msg_y=0;
@@ -194,10 +203,11 @@ char  gplFile[80];
 int runStep(int dir)
 //====================================
 {
-  char row[SIZE_ROW],event[SIZE_ROW],temp[SIZE_ROW],mode[5];
+  char row[SIZE_ROW],event[SIZE_ROW],temp[SIZE_ROW];
   char *p,temp2[SIZE_ROW],temp3[SIZE_ROW],comment[SIZE_ROW];
   int res1 = 0,res2 = 0,value = 0;
   int step = 0,pin,x,y;
+  char mode[12];
 
   if(dir == FORWARD)currentStep++;
   if(dir == BACKWARD)currentStep--;
@@ -285,15 +295,15 @@ int runStep(int dir)
 	}
       else if (p=strstr(event,"attachInterrupt"))
 	{
-	  sscanf(event,"%d %s %d",&step,temp,&x);
-	  attachInterrupt(x,0,0);
+	  sscanf(event,"%d %s %d %d",&step,temp,&x,&y);
+	  attachInterrupt(x,0,y);
 	}
       else if (p=strstr(event,"detachInterrupt"))
 	{
 	  sscanf(event,"%d %s %d",&step,temp,&x);
 	  detachInterrupt(x);
 	}
-      else if (p=strstr(event,"interruptRISING"))
+ /*     else if (p=strstr(event,"interruptRISING"))
 	{
 	  sscanf(event,"%d %s %d",&step,temp,&x);
 	  interrupt(temp,x);
@@ -312,7 +322,7 @@ int runStep(int dir)
 	{
 	  sscanf(event,"%d %s %d",&step,temp,&x);
 	  interrupt(temp,x);
-	}
+	} */
       else
 	unimplemented(temp);
 
@@ -644,7 +654,7 @@ void openCommand()
 void runMode(int stop)
 //====================================
 {
-  int ch,x,step,tmp,res=0,a=0,b=0;
+  int ch,x,step,tmp,res=0,a=0,b=0,ir;
   char tempName[80],syscom[120],temp[80];
   strcpy(tempName,"help.txt");
 
@@ -723,6 +733,24 @@ void runMode(int stop)
 	{
 	  runStep(FORWARD);
 	}
+      else if (ch=='i')
+        {
+          step = currentStep + 1;
+          putMsg(2," Enter interrupt and value, ex 0 1");
+          wgetstr(uno,temp);
+          sscanf(temp,"%d %d",&ir,&x);
+          g_scenSource = 1;
+          g_pinType = DIG;
+          g_pinNo = inrpt[ir];
+              // steps, source, pintype, pinno, pinvalue, pinstep
+          sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1);
+          putMsg(2,syscom);
+          tmp=system(syscom);
+          initSim();
+          readSketchInfo();
+          readSimulation(confServuinoFile);
+          runStep(FORWARD);
+        }
       else if (ch=='v') 
 	{
           step = currentStep + 1;

@@ -322,8 +322,9 @@ void attachInterrupt(int interrupt,void(*func)(),int mode)
 {
 
   interruptMode[interrupt] = mode;
+  attached[interrupt] = YES;
 
-  if(interrupt == 0)
+/*  if(interrupt == 0)
     {
       interrupt0 = func;
     }
@@ -331,12 +332,16 @@ void attachInterrupt(int interrupt,void(*func)(),int mode)
     {
       interrupt1 = func;
     }
-
-  if(interrupt != 0 && interrupt != 1)
+*/
+  if(interrupt >= 0 && interrupt <= 5)
+  { 
+    if(mode==LOW)wLog("attachInterruptLOW",interrupt,-1);
+    if(mode==RISING)wLog("attachInterruptRISING",interrupt,-1);
+    if(mode==FALLING)wLog("attachInterruptFALLING",interrupt,-1);
+    if(mode==CHANGE)wLog("attachInterruptCHANGE",interrupt,-1);
+  }
+  else
     showError("Unsupported interrupt number",interrupt);
-
-  if(confLogLev > 0)wLog("attachInterrupt",interrupt,-1);
-
 }
 
 //---------------------------------------------------
@@ -355,7 +360,7 @@ void detachInterrupt(int interrupt)
   if(interrupt != 0 && interrupt != 1)
     showError("Unsupported interrupt number",interrupt);
     
-  if(confLogLev > 0)wLog("detachInterrupt",interrupt,-1);
+  wLog("detachInterrupt",interrupt,-1);
 }
 
 //------ Interrupts ------------------------
