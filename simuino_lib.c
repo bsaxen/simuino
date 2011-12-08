@@ -74,7 +74,7 @@ void show(WINDOW *win)
   if(win == uno) 
     {
       wmove(win,0,2);
-      wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.1");
+      wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.2");
     }
   if(win == ser)
     {
@@ -437,12 +437,17 @@ void showLoops()
 {
   int i;
   wclear(msg);
+  wmove(msg,1,2);
+  wprintw(msg," Loop information:");
   for(i=0;i<g_loops;i++)
     {
       if(i < msg_h-1)
 	{
-	  wmove(msg,1+i,2);
-	  wprintw(msg," Loop: %4d starts at step:%4d",i,loopPos[i]+1);
+	  wmove(msg,2+i,2);
+          if(currentStep == loopPos[i])
+	    wprintw(msg,">%3d: %4d -> %4d",i,loopPos[i]+1,loopPos[i+1]);
+          else
+            wprintw(msg," %3d: %4d -> %4d",i,loopPos[i]+1,loopPos[i+1]);
 	}
     }
   show(msg);
@@ -729,6 +734,10 @@ void readConfig(char *cf)
                 {
                   sscanf(p,"%s%s",temp,confServuinoFile);
                 }
+              if(p=strstr(row,"BOARD_TYPE"))
+                {
+                  sscanf(p,"%s%d",temp,&confBoardType);
+                }
 	    }
 	 
 	}
@@ -789,10 +798,11 @@ void runLoop()
 void runLoops(int targetLoop)
 //====================================
 {
+  int stop;
   if(targetLoop > g_loops)targetLoop = g_loops;
-  while(currentLoop < targetLoop)
+  while(currentLoop < targetLoop && stop == 0)
     {
-      runStep(FORWARD);
+      stop = runStep(FORWARD);
     }
   return;
 }    
@@ -878,14 +888,19 @@ void readSimulation(char *fileName)
 	    {
 	      sscanf(p,"%s%d",temp,&loop);
 	      loopPos[loop] = step;
-	      g_loops++;
+	     // g_loops++;
 	    }
+          else if(p=strstr(row,"ENDOFSIM"))
+            {
+              loopPos[loop] = step;
+              strcpy(simulation[step+1],"End of Simulation");
+            }
           else if(p=strstr(row,"SCENARIODATA"))
             {
               sscanf(p,"%s%d%d%d",temp,&scenDigital,&scenAnalog,&scenInterrupt);
             }
 	}
-      g_loops--;
+      g_loops = loop;
       fclose(in);
     }
   return;
