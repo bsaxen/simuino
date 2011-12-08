@@ -24,7 +24,7 @@ void wLog1(const char *p, int value1);
 void wLog2(const char *p, int value1, int value2);
 void debug(char *msg);
 void runMode(int stop);
-void runStep(int dir);
+int  runStep(int dir);
 void openCommand();
 void iDelay(int ms);
 void show(WINDOW *win);

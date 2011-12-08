@@ -34,6 +34,8 @@
 #define A4 4
 #define A5 5
 
+#define STOP 1
+
 #define ANA 1
 #define DIG 2
 
@@ -98,9 +100,11 @@
 #define RX     3
 #define TX     4
 
+#define UNO    1
+#define MEGA   2
 
-					// Current data
-    int  currentStep = 0;
+// Current data
+int  currentStep = 0;
 int  currentLoop = 0;
 char currentConf[SIZE_ROW];
 int  currentPin  = 0;
@@ -167,6 +171,7 @@ int   confLogLev  =    1;
 int   confLogFile =    0;
 char  confSketchFile[200];
 char  confServuinoFile[200];
+int   confBoardType = UNO;
 
 char  workSketchFile[80];
 
@@ -186,7 +191,7 @@ char  gplFile[80];
 #include "decode_lib.c"
 
 //====================================
-void runStep(int dir)
+int runStep(int dir)
 //====================================
 {
   char row[SIZE_ROW],event[SIZE_ROW],temp[SIZE_ROW],mode[5];
@@ -197,11 +202,12 @@ void runStep(int dir)
   if(dir == FORWARD)currentStep++;
   if(dir == BACKWARD)currentStep--;
 
-  if(currentStep > g_steps)return; 
+  if(currentStep > g_steps)return(STOP); 
 
-  if(currentStep > loopPos[currentLoop+1] && loopPos[currentLoop+1] !=0)
+  if(currentStep > loopPos[currentLoop+1])
     {
       currentLoop++;
+      if(currentLoop > g_loops)return(STOP);
     }
 
   res1 = readEvent(event,currentStep);
@@ -319,7 +325,7 @@ void runStep(int dir)
 
   unoInfo();
 
-  return;
+  return(0);
 }    
 //====================================
 int tokCommand(char res[40][40],char *inp)
@@ -408,7 +414,7 @@ void openCommand()
 	  stop = 0;
           if(n == 2)stop = atoi(command[1]);
 	  runMode(stop);
-          if(stop==0)putMsg(2,"Back in Run Mode!");
+          if(stop==0)putMsg(2,"Back in Admin Mode!");
 	}
       else if(strstr(sstr,"res")) // reset simulation
 	{
