@@ -69,6 +69,7 @@ void digitalWrite(int pin,int value)
   currentPin = pin;
   if(digitalMode[pin] == OUTPUT)
     {
+      currentValueD[pin] = value;
 
       wmove(uno,DP,digPinPos[pin]);
       if(value==HIGH)
@@ -116,11 +117,14 @@ int digitalRead(int pin)
   char temp[120];
   int value;
 
+
   currentPin = pin;
   if(digitalMode[pin] == INPUT)
     {
       value = g_value;
  
+      currentValueD[pin] = value;
+
       wmove(uno,DP+2,digPinPos[pin]);
       wprintw(uno,"r");
       show(uno);
@@ -172,7 +176,9 @@ int analogRead(int pin)  // Values 0 to 1023
       showError(temp,-1);
       value = 0;
     }
-  
+
+  currentValueA[pin] = value;  
+
   wmove(uno,AP,anaPinPos[pin]-3);
   wprintw(uno,"%4d",value);
   wmove(uno,AP-2,anaPinPos[pin]);
@@ -221,6 +227,8 @@ void analogWrite(int pin,int value)
 	  showError(temp,-1);
 	  value = 0;
 	}
+
+      currentValueD[pin] = value;
 
       wmove(uno,DP,digPinPos[pin]-2);
       wprintw(uno,"%3d",value);
@@ -313,16 +321,37 @@ void delayMicroseconds(int us)
 //------ External Interrupts ---------------
 
 
-void interrupt(char *m,int intrpt_no)
+void interrupt(char *m, int ir)
 {
-  wLog(m,intrpt_no,-1);
+  int pin;
+
+  pin = inrpt[ir];
+
+  wLog(m,ir,-1);
+
+  if(strstr(m,"RISING") != NULL)  currentValueD[pin] = 1;
+  if(strstr(m,"FALLING") != NULL) currentValueD[pin] = 0;
+  if(strstr(m,"CHANGE") != NULL)  currentValueD[pin]++;
+  if(strstr(m,"LOW") != NULL)     currentValueD[pin] = 0;
+
+  if(currentValueD[pin] > 1)currentValueD[pin] = 0;
+
+  wmove(uno,DP,digPinPos[pin]);
+  wprintw(uno,"%1d",currentValueD[pin]);
+  wmove(uno,DP+2,digPinPos[pin]);
+  wprintw(uno," ");
+  show(uno);
 }
 
 void attachInterrupt(int interrupt,void(*func)(),int mode)
 {
+  int pin;
 
   interruptMode[interrupt] = mode;
   attached[interrupt] = YES;
+
+  pin = inrpt[interrupt];
+  digitalMode[pin] == INTERRUPT;
 
 /*  if(interrupt == 0)
     {
@@ -347,7 +376,7 @@ void attachInterrupt(int interrupt,void(*func)(),int mode)
 //---------------------------------------------------
 void detachInterrupt(int interrupt)
 {
-
+  attached[interrupt] = NO;
   if(interrupt == 0)
     {
       interrupt0 = NULL;

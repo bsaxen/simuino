@@ -4,20 +4,20 @@
 //  digital_pins
 //           step 0  1  2  3  4  5  6  7  8  9 10 11 12 13
 //          --- -------------------------------------------
-// SCENDIGPIN 0   0  0  0  0  0  0  0  0  0  0  0  0  0  0
-// SCENDIGPIN 50   0  0  1  0  0  0  0  0  0  0  0  0  0  0
-// SCENDIGPIN 100   0  0  0  0  0  0  0  0  0  0  0  0  0  0
-// SCENDIGPIN 150   0  0  1  0  0  0  0  0  0  0  0  0  0  0
-// SCENDIGPIN 200   0  0  0  0  0  0  0  0  0  0  0  0  0  0
-// SCENDIGPIN 250   0  0  1  0  0  0  0  0  0  0  0  0  0  0
-// SCENDIGPIN 300   0  0  0  0  0  0  0  0  0  0  0  0  0  0
+// SCENDIGPIN 0     0  0  0  0  0  0  0  0  0  0  0  0  0  0
+// SCENxDIGPIN 50    0  0  1  0  0  0  0  0  0  0  0  0  0  0
+// SCENxDIGPIN 100   0  0  0  1  0  0  0  0  0  0  0  0  0  0
+// SCENxDIGPIN 150   0  0  1  0  0  0  0  0  0  0  0  0  0  0
+// SCENxDIGPIN 200   0  0  0  1  0  0  0  0  0  0  0  0  0  0
+// SCENxDIGPIN 250   0  0  1  0  0  0  0  0  0  0  0  0  0  0
+// SCENxDIGPIN 300   0  0  0  1  0  0  0  0  0  0  0  0  0  0
 //
 //  analog_pins
 //            step    0   1   2   3   4   5
 //            ------------------------------
-// SCENANAPIN  1    0    0    0    0    0    3 
-// SCENANAPIN 20    0    0    0    0    0    1 
-// SCENANAPIN 30    0    0    0    0    0    2 
+// SCENANAPIN   1     0    0    0    0   0  0 
+// SCENxANAPIN  50    0    0    0    0   131  2 
+// SCENxANAPIN 100    0    0    0    0   116  8 
 //
 //================================================
 // Simuino log text customization
@@ -32,6 +32,8 @@
 // DIGITALWRITE_LOW:  12  "Led is on"
 // DIGITALWRITE_HIGH: 12  "Led is off"
 
+// DIGITALREAD: 10  "Read from somewhere"
+
 
 // ANALOGREAD: 5  "read analog value"
 
@@ -41,9 +43,12 @@
 // Leds
 int URGENTLED    = 11;
 int BLINKLED     = 12;
+int IN_PIN       = 10;
+int CONTROL      =  9;
  
 //-------- ANALOGUE PIN settings
-int SENSOR  = 5;
+int SENSOR1  = 4;
+int SENSOR2  = 5;
 
 //================================================
 //  Function Declarations
@@ -56,7 +61,15 @@ void urgent()
 //================================================
 {
       digitalWrite(URGENTLED, HIGH); 
-      delay(400);
+      delay(401);
+      digitalWrite(URGENTLED, LOW); 
+}
+//================================================
+void very_urgent()
+//================================================
+{
+      digitalWrite(URGENTLED, HIGH); 
+      delay(402);
       digitalWrite(URGENTLED, LOW); 
 }
 //================================================
@@ -65,21 +78,34 @@ void setup()
 {
   Serial.begin(9600); 
   attachInterrupt(0,urgent, CHANGE);
+  attachInterrupt(1,very_urgent, RISING);
   pinMode(BLINKLED,OUTPUT);   
   pinMode(URGENTLED,OUTPUT);   
+  pinMode(IN_PIN,INPUT);
+  pinMode(CONTROL,INPUT);
 }
 	 
 //================================================ 
 void loop()
 //================================================
 {
-int value;
+  int value1,value2,i;
 
   Serial.println("Hello Simuino!");
-  value = analogRead(SENSOR);
-  Serial.print("Analog value read: ");
-  Serial.println(value);
-  blinkLed(value);
+  value1 = analogRead(SENSOR1);
+  value2 = analogRead(SENSOR2);
+  Serial.print("Analog 1 value read: ");
+  Serial.println(value1);
+  Serial.print("Analog 2 value read: ");
+  Serial.println(value2);
+  blinkLed(value1);
+  value1 = digitalRead(IN_PIN);
+  value2 = digitalRead(CONTROL);
+  Serial.print("Digital IN_PIN read: ");
+  Serial.println(value1);
+  Serial.print("Digital CONTROL read: ");
+  Serial.println(value2);
+  
   delay(1000); 
 }
 
