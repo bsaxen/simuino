@@ -15,6 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
+
 //====================================
 int __nsleep(const struct timespec *req, struct timespec *rem)  
 //====================================
@@ -60,7 +61,7 @@ int analyzeEvent(char *event)
 	g_pinValue = value;
 	if(strstr(event,"analog"))  g_pinType = ANA;
 	if(strstr(event,"digital")) g_pinType = DIG;
-	if(currentStep+1 != step) putMsg(5,"Step No Mismatch in analyzeEvent");
+	if(currentStep+1 != step) putMsg(5,"Step number mismatch in analyzeEvent");
 	return(g_pinType);
       } 
     return(0); 
@@ -113,9 +114,9 @@ void showError(const char *m, int value)
 //====================================
 {
   char err_msg[300];
-  strcpy(err_msg,"ERROR ");
+  strcpy(err_msg,"SimuinoERROR: ");
   strcat(err_msg,m);
-  wLog(err_msg,value,-1);
+  fprintf(err,"%s %d\n",err_msg,value,-1);
   error = 1;
 }
 //====================================
@@ -149,6 +150,8 @@ void saveConfig(char *cf)
       fprintf(out,"# Simuino Configuration %s",ctime(&lt));
       fprintf(out,"# %s\n",cf);
 
+      fprintf(out,"BOARD_TYPE %d\n",confBoardType);
+
       if(confSteps > MAX_STEP)confSteps = MAX_STEP; 
       fprintf(out,"SIM_LENGTH %d\n",confSteps);
 
@@ -167,7 +170,6 @@ void saveConfig(char *cf)
 
       fprintf(out,"LOG_FILE   %d\n",confLogFile);
       fprintf(out,"SKETCH     %s\n",confSketchFile);
-      fprintf(out,"SERVUINO   %s\n",confServuinoFile);
     }
   fclose(out);
 }
@@ -199,18 +201,16 @@ void logFile(char *m)
 {
   FILE *out;
 
-  out = fopen("log.txt","a");
+  out = fopen(fileLog,"a");
   if(out == NULL)
     {
-      showError("Unable to open log.txt",-1);
+      showError("Unable to open log file",-1);
     }
   else
     {
       fprintf(out,"%s\n",m);
       fclose(out);
     }
-
-
 }
 
 //====================================
@@ -418,7 +418,7 @@ void unoInfo()
   wprintw(uno,"Sketch: %s",appName);
 
   if(g_warning == YES)
-    wprintw(uno,"  ***MISMATCH? - load!***");
+    wprintw(uno,"  *** Possible Mismatch ***");
   else
     wprintw(uno,"                   ");
 
@@ -521,9 +521,15 @@ void showSerial(const char *m, int newLine)
 	}
       else
 	{
-	  strcat(prevSerial,m);
-	  wmove(ser,2,1);
-	  wprintw(ser,"%s",prevSerial);
+	  slen = strlen(prevSerial);
+	  if(slen < MAX_SERIAL_BUFFER)
+	    {
+	      strcat(prevSerial,m);
+	      wmove(ser,2,1);
+	      wprintw(ser,"%s",prevSerial);
+	    }
+	  else
+	    showError("Serial Buffer full",currentStep);
 	}
       show(ser);
     }
@@ -574,7 +580,7 @@ void readSketchInfo()
   char row[80],res[40],*p,*q,value[5];
   int pin;
 
-  in = fopen("servuino/sketch.pde","r");
+  in = fopen(fileServSketch,"r");
   if(in == NULL)
     {
       showError("No servuino/sketch.pde",-1);
@@ -657,10 +663,13 @@ void initSim()
 
       strcpy(textAnalogWrite[i],"void");
       strcpy(textDigitalRead[i],"void");
+   
+      currentValueD[i] = 0;
     }
   for(i=0;i<MAX_PIN_ANALOG;i++)
     {
       strcpy(textAnalogRead[i],"void");
+      currentValueA[i] = 0;
     }
 
 }
@@ -729,10 +738,6 @@ void readConfig(char *cf)
               if(p=strstr(row,"SKETCH"))
                 {
                   sscanf(p,"%s%s",temp,confSketchFile);
-                }
-              if(p=strstr(row,"SERVUINO"))
-                {
-                  sscanf(p,"%s%s",temp,confServuinoFile);
                 }
               if(p=strstr(row,"BOARD_TYPE"))
                 {
@@ -949,9 +954,9 @@ void selectProj(int projNo,char *projName)
   char row[SIZE_ROW],temp[SIZE_ROW],*p;
   int i=0;
 
-  strcpy(projName,"default.conf");
+  strcpy(projName,fileDefault);
 
-  in = fopen(listConf,"r");
+  in = fopen(fileProjList,"r");
   if(in == NULL)
     {
       showError("Unable to open list conf file",-1);
@@ -991,7 +996,7 @@ void readMsg(char *fileName)
 	{
           i++;
           // If Conf List File
-          if(strstr(fileName,listConf) != NULL)
+          if(strstr(fileName,fileProjList) != NULL)
 	    {
 	      strcpy(temp,row);
 	      if(p = strstr(temp,".conf")) strcpy(p,"\0");
@@ -1212,21 +1217,76 @@ void init(int mode)
   for(i=0;i<log_w;i++)logBlankRow[i] = ' ';logBlankRow[i]='\0';
   for(i=0;i<ser_w;i++)serBlankRow[i] = ' ';serBlankRow[i]='\0';
 }
+
 //====================================
-void loadSketch(char sketch[])
+int  countRowsInFile(char *fileName)
+//====================================
+{
+  FILE *in;
+  char row[SIZE_ROW];
+  int res=0;
+  
+  in = fopen(fileName,"r");
+  if(in == NULL)
+    {
+      showError("countRowsInFile: Unable to open file",-1);
+    }
+  else
+    {
+      while (fgets(row,SIZE_ROW,in)!=NULL)
+        {
+	  res++;
+	}
+      fclose(in);
+      return(res);
+    }
+}
+//====================================
+void anyErrors()
 //====================================
 {
   int x;
-  char syscom[120], fileName[80];
+  char syscom[120];
 
-  sprintf(syscom,"cp %s servuino/sketch.pde;",sketch);
+  if(g_errorSupervision == ON)
+    {
+      sprintf(syscom,"cat %s %s > %s",fileError,fileServError,fileTemp);
+      x=system(syscom); 
+      x=countRowsInFile(fileTemp);
+      if(x>0)readMsg(fileTemp);
+      show(uno);
+    }
+}
+
+
+//====================================
+int loadSketch(char sketch[])
+//====================================
+{
+  int x,ch,res;
+  char syscom[120];
+
+  sprintf(syscom,"cp %s %s;",sketch,fileServSketch);
   x=system(syscom);
   strcpy(confSketchFile,sketch);
-  sprintf(syscom,"cd servuino; g++ -O2 -o servuino servuino.c > g++.result 2>&1");
+  sprintf(syscom,"cd servuino; g++ -O2 -o servuino servuino.c > g++.result 2>&1;");
+  //putMsg(2,syscom);
+  //iDelay(5000);
   x=system(syscom);
-  strcpy(fileName,"servuino/g++.result");
-  readMsg(fileName);
+
+  x=countRowsInFile(fileServComp);
+  if(x > 0)
+    {
+      readMsg(fileServComp);
+      wmove(msg,msg_h-2,1);
+      wprintw(msg,"press any key to continue >>");
+      wrefresh(msg);
+      ch = getchar();
+      putMsg(2,"Check your sketch or report an Issue to Simuino");
+      return(1);
+    }
   readSketchInfo();
+  return(0);
 }
 
 //====================================

@@ -50,6 +50,7 @@
 #define HIGH   1
 #define INPUT  1
 #define OUTPUT 2
+#define INTERRUPT 3
 
 #define FORWARD  1
 #define BACKWARD 2
@@ -67,6 +68,7 @@
 #define MAX_LOOP 2000
 #define MAX_PIN_ANALOG 6
 #define MAX_PIN_DIGITAL 14
+#define MAX_SERIAL_BUFFER 900
 #define INTPINS  6
 #define SIZE_ROW 180
 
@@ -115,6 +117,9 @@ int  currentStep = 0;
 int  currentLoop = 0;
 char currentConf[SIZE_ROW];
 int  currentPin  = 0;
+int  currentValueD[MAX_PIN_DIGITAL];
+int  currentValueA[MAX_PIN_ANALOG];
+
 
 // Limits
 int  g_loops    = 0;
@@ -129,6 +134,8 @@ int g_scenSource = 0;
 int g_pinType    = 0;
 int g_pinNo      = 0;
 int g_pinValue   = 0;
+
+int g_errorSupervision = ON;
 
 void (*interrupt0)();
 void (*interrupt1)();
@@ -151,12 +158,12 @@ int   baud = 0;
 int   error = 0;
 
 // Log
-char  logBlankRow[500];
+char  logBlankRow[MAX_SERIAL_BUFFER];
 
 // Serial Interface
 int   serialMode = OFF;
-char  prevSerial[SIZE_ROW];
-char  serBlankRow[500];
+char  prevSerial[MAX_SERIAL_BUFFER];
+char  serBlankRow[MAX_SERIAL_BUFFER];
 
 char  textPinModeIn[MAX_PIN_DIGITAL][SIZE_ROW];
 char  textPinModeOut[MAX_PIN_DIGITAL][SIZE_ROW];
@@ -170,17 +177,28 @@ int   scenDigital   = 0;
 int   scenInterrupt = 0;
 
 // Configuration default values
-char  listConf[80];
 int   confSteps   = 1000;
 int   confWinMode =    2;
 int   confDelay   =  100;
 int   confLogLev  =    1;
 int   confLogFile =    0;
 char  confSketchFile[200];
-char  confServuinoFile[200];
 int   confBoardType = UNO;
 
-char  workSketchFile[80];
+char  fileTemp[80]       = "temp.txt";
+char  fileInfoRun[80]    = "help.txt";
+char  fileInfoAdmin[80]  = "help_command.txt";
+char  fileInfoGpl[80]    = "gpl.txt";
+char  fileProjList[80]   = "conf_list.txt";
+char  fileLog[80]        = "log.txt";
+char  fileDefault[80]    = "default.conf";
+char  fileError[80]      = "error.txt";
+char  fileServComp[80]   = "servuino/g++.result";
+char  fileServSketch[80] = "servuino/sketch.pde";
+char  fileServData[80]   = "servuino/data.su";
+char  fileServError[80]  = "servuino/data.error";
+char  fileServScen[80]   = "servuino/data.scen";
+
 int   inrpt[INTPINS];
 int   attached[INTPINS];
 
@@ -194,6 +212,8 @@ static struct termios orig, nnew;
  
 char  stemp[80];
 char  gplFile[80];
+
+FILE  *err;
 
 #include "simuino.h"
 #include "simuino_lib.c"
@@ -303,7 +323,7 @@ int runStep(int dir)
 	  sscanf(event,"%d %s %d",&step,temp,&x);
 	  detachInterrupt(x);
 	}
- /*     else if (p=strstr(event,"interruptRISING"))
+      else if (p=strstr(event,"interruptRISING"))
 	{
 	  sscanf(event,"%d %s %d",&step,temp,&x);
 	  interrupt(temp,x);
@@ -322,7 +342,7 @@ int runStep(int dir)
 	{
 	  sscanf(event,"%d %s %d",&step,temp,&x);
 	  interrupt(temp,x);
-	} */
+	} 
       else
 	unimplemented(temp);
 
@@ -358,23 +378,27 @@ int tokCommand(char res[40][40],char *inp)
 void loadCurrentProj()
 //====================================
 {
-  int x;
+  int x,res;
   char syscom[120];
 
   g_warning = NO;
   putMsg(1,"Loading Proj...");
-  loadSketch(confSketchFile);
-  if(confSteps < 0) confSteps = 100;
-  if(confSteps > MAX_STEP) confSteps = MAX_STEP-1;
-  sprintf(syscom,"cd servuino;./servuino %d %d;",confSteps,g_scenSource);
-  x=system(syscom);
-  init(confWinMode);
-  initSim();
-  resetSim();
-  readSimulation(confServuinoFile);
-  readSketchInfo();
-  unoInfo();
-  putMsg(msg_h-2,"Loading ready!");
+  res = loadSketch(confSketchFile);
+  if(res == 0)
+  {
+    if(confSteps < 0) confSteps = 100;
+    if(confSteps > MAX_STEP) confSteps = MAX_STEP-1;
+    sprintf(syscom,"cd servuino;./servuino %d %d;",confSteps,g_scenSource);
+    x=system(syscom);
+    init(confWinMode);
+    initSim();
+    resetSim();
+    readSimulation(fileServData);
+    readSketchInfo();
+    unoInfo();
+    putMsg(msg_h-2,"Sketch load ready!");
+    //putMsg(msg_h-2,syscom);
+  }
 }
 
 //====================================
@@ -400,6 +424,8 @@ void openCommand()
       show(uno);
       wmove(uno,UNO_H-2,4);
       strcpy(command[0],"");
+
+      anyErrors();
       wgetstr(uno,str);
 
       n = tokCommand(command,str);
@@ -435,7 +461,7 @@ void openCommand()
 	}
       else if(strstr(sstr,"help")) //
 	{
-	  strcpy(fileName,"help_command.txt");
+	  strcpy(fileName,fileInfoAdmin);
 	  readMsg(fileName);
 	}
       else if(strstr(sstr,"info"))
@@ -444,23 +470,19 @@ void openCommand()
 	    {
 	      if(strstr(command[1],"conf"))
 		{
-		  strcpy(fileName,"default.conf");
-		  readMsg(fileName);
+		  readMsg(fileDefault);
 		}
 	      else if(strstr(command[1],"err"))
 		{
-		  strcpy(fileName,"servuino/data.error");
-		  readMsg(fileName);
+		  readMsg(fileServError);
 		}
 	      else if(strstr(command[1],"g++"))
 		{
-		  strcpy(fileName,"servuino/g++.result");
-		  readMsg(fileName);
+		  readMsg(fileServComp);
 		}
 	      else if(strstr(command[1],"help"))
 		{
-		  strcpy(fileName,"help_command.txt");
-		  readMsg(fileName);
+		  readMsg(fileInfoAdmin);
 		}
 	      else if(strstr(command[1],"loop")) 
 		{
@@ -473,8 +495,7 @@ void openCommand()
 	    }
 	  else
 	    {
-	      strcpy(fileName,"help_command.txt");
-	      readMsg(fileName);
+	      readMsg(fileInfoAdmin);
 	    }
 	}
 
@@ -492,7 +513,7 @@ void openCommand()
 	}
       else if(strstr(sstr,"list"))
 	{
-	  readMsg(listConf);	
+	  readMsg(fileProjList);	
 	}
       else if(strstr(sstr,"sketch"))
 	{
@@ -504,11 +525,11 @@ void openCommand()
 		}
 	      else if(strstr(command[1],"work"))
 		{
-		  readMsg(workSketchFile);
+		  readMsg(fileServSketch);
 		}
 	    }
 	  else
-	    readMsg(workSketchFile);	
+	    readMsg(fileServSketch);	
 	}
       else if(strstr(sstr,"conf"))
 	{
@@ -546,10 +567,6 @@ void openCommand()
 		      putMsg(msg_h-2,temp);
 		    }
 		}
-	      else if(strstr(sstr,"serv")) // Servuino data file
-		{
-		  strcpy(confServuinoFile,command[2]);
-		}
 	      saveConfig(currentConf);
 	    }
 	  readMsg(currentConf); 
@@ -581,10 +598,10 @@ void openCommand()
 	    {
 	      sprintf(syscom,"rm %s;",currentConf);
 	      x=system(syscom);
-	      sprintf(syscom,"ls *.conf > conf_list.txt;");
+	      sprintf(syscom,"ls *.conf > %s;",fileProjList);
 	      x=system(syscom);
-	      readMsg(listConf);
-	      strcpy(currentConf,"default.conf");
+	      readMsg(fileProjList);
+	      strcpy(currentConf,fileDefault);
 	    }	
 	}
       else if(strstr(sstr,"record"))
@@ -613,7 +630,7 @@ void openCommand()
 	}
       else if(strstr(sstr,"sim")) //status
 	{
-	  readSimulation(confServuinoFile);
+	  readSimulation(fileServData);
 	}
       else if(strstr(sstr,"sys"))
 	{
@@ -679,6 +696,7 @@ void runMode(int stop)
       if(g_silent==1)mvwprintw(uno,UNO_H-2,1,"R%1d<",confWinMode);
       show(uno);
 
+      anyErrors();
       ch = getchar();
 
       if (ch=='q' || ch=='x')
@@ -687,7 +705,7 @@ void runMode(int stop)
 	}
       if (ch=='h')
         {
-          readMsg(tempName);
+          readMsg(fileInfoRun);
         }
       else if(ch=='z')//silent mode
 	{
@@ -736,20 +754,41 @@ void runMode(int stop)
       else if (ch=='i')
         {
           step = currentStep + 1;
-          putMsg(2," Enter interrupt and value, ex 0 1");
+	  if(confBoardType == UNO)
+	    putMsg(2," Enter interrupt (0 or 1) and value (0 or 1)");
+	  if(confBoardType == MEGA)
+	    putMsg(2," Enter interrupt (0,1,2,3,4,5) and value (0 or 1)");
           wgetstr(uno,temp);
-          sscanf(temp,"%d %d",&ir,&x);
-          g_scenSource = 1;
-          g_pinType = DIG;
-          g_pinNo = inrpt[ir];
-              // steps, source, pintype, pinno, pinvalue, pinstep
-          sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1);
-          putMsg(2,syscom);
-          tmp=system(syscom);
-          initSim();
-          readSketchInfo();
-          readSimulation(confServuinoFile);
-          runStep(FORWARD);
+          if(strstr(temp,"q") == NULL)
+	    {
+	      sscanf(temp,"%d%d",&ir,&x);
+	      if(confBoardType == UNO) {a = 0;b = 1;}
+	      if(confBoardType == MEGA){a = 0;b = 5;}
+	      if(ir >= a && ir <= b && x < 2)
+		{      
+		  if(attached[ir] == YES)
+		    {
+		      putMsg(2," Accepted!");
+		      g_scenSource = 1;
+		      g_pinType = DIG;
+		      g_pinNo = inrpt[ir];
+		      // steps, source, pintype, pinno, pinvalue, pinstep
+		      sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1);
+		      putMsg(2,syscom);
+		      tmp=system(syscom);
+		      initSim();
+		      readSketchInfo();
+		      readSimulation(fileServData);
+		      runStep(FORWARD);
+		    }
+		  else
+		    putMsg(2,"Interrupt not attached");
+		}
+	      else
+		putMsg(2,"Interrupt values out of range");
+	    }
+	  else
+	    putMsg(2,"Cancelled!");
         }
       else if (ch=='v') 
 	{
@@ -759,22 +798,30 @@ void runMode(int stop)
           if(res > 0)
 	    {
 	      wgetstr(uno,temp);
-	      x = atoi(temp); 
-              if(res == ANA){a = 0;b = 1023;}
-	      if(res == DIG){a = 0;b = 1;}
-	      if(x >= a && x <= b)
-		{         
-	      g_scenSource = 1;
-	      // steps, source, pintype, pinno, pinvalue, pinstep
-	      sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1);
-	      tmp=system(syscom);
-	      initSim();
-	      readSketchInfo();
-	      readSimulation(confServuinoFile);
-	      runStep(FORWARD);
+
+	      if(strstr(temp,"q") == NULL)
+		{
+		  x = atoi(temp); 
+		  if(res == ANA){a = 0;b = 1023;}
+		  if(res == DIG){a = 0;b = 1;}
+		  if(x >= a && x <= b)
+		    {         
+		      putMsg(2," Value accepted!");
+		      g_scenSource = 1;
+		      // steps, source, pintype, pinno, pinvalue, pinstep
+		      sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1);
+		      //putMsg(2,syscom);
+		      tmp=system(syscom);
+		      initSim();
+		      readSketchInfo();
+		      readSimulation(fileServData);
+		      runStep(FORWARD);
+		    }
+		  else
+		    putMsg(2,"Value out of range");
 		}
 	      else
-		putMsg(2,"Value out of range");
+		putMsg(2,"Cancelled!");
 	    }
 	  else
 	    putMsg(2,"Next step is not a Read event");
@@ -815,7 +862,17 @@ int main(int argc, char *argv[])
   char syscom[120];
   int ch,i,x;
 
+  err = fopen(fileError,"w");
+
   strcpy(gplFile,"gpl.txt");
+
+  inrpt[0] = IR0;
+  inrpt[1] = IR1;
+  inrpt[2] = IR2;
+  inrpt[3] = IR3;
+  inrpt[4] = IR4;
+  inrpt[5] = IR5;
+
 
   if(argc == 2)
     {
@@ -823,12 +880,9 @@ int main(int argc, char *argv[])
       strcat(currentConf,".conf");
     }
   else
-    strcpy(currentConf,"default.conf");
+    strcpy(currentConf,fileDefault);
 
-  strcpy(listConf,"conf_list.txt");
-  strcpy(workSketchFile,"servuino/sketch.pde");
-
-  sprintf(syscom,"ls *.conf > conf_list.txt;");
+  sprintf(syscom,"ls *.conf > %s;",fileProjList);
   x=system(syscom);
 
   readConfig(currentConf);
@@ -836,7 +890,7 @@ int main(int argc, char *argv[])
   initSim();
   resetSim();
 
-  readSimulation(confServuinoFile);
+  readSimulation(fileServData);
   readSketchInfo();
   unoInfo();
   show(slog);
@@ -852,6 +906,8 @@ int main(int argc, char *argv[])
   delwin(slog);
   delwin(msg);
   endwin();
+
+  fclose(err);
 
 }
 //====================================

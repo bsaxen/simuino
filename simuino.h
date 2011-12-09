@@ -14,9 +14,11 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-int analyzeEvent(char *Event);
-int readEvent(char *ev, int step);
-int readComment(int step);
+void anyErrors();
+int  countRowsInFile(char *fileName);
+int  analyzeEvent(char *Event);
+int  readEvent(char *ev, int step);
+int  readComment(int step);
 void mLog0(const char *p);
 void wLog0(const char *p);
 void mLog1(const char *p, int value1);
@@ -49,7 +51,7 @@ void readSimulation(char *fileName);
 void showScenario(char *fileName);
 void readMsg(char *fileName);
 void init();
-void loadSketch(char sketch[]);
+int  loadSketch(char sketch[]);
 void pinMode(int pin,int mode);
 void digitalWrite(int pin,int value);
 void analogReference(char type[]);
