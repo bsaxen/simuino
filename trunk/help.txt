@@ -10,7 +10,10 @@
  a  re-run simulation
 
  v  set value in next analogRead/digitalRead
-    Current step must be one step before Read. 
+    Current step must be one step before Read
+    Use 't' to step between Read events.
+
+ i  set value for interrupts
 
  w  toggles window layout mode.
 

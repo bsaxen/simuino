@@ -46,6 +46,9 @@
 #define ANA 1
 #define DIG 2
 
+#define ADD 10
+#define DELETE 20
+
 #define LOW    0
 #define HIGH   1
 #define INPUT  1
@@ -74,7 +77,7 @@
 
 #define UNO_H  16
 #define UNO_W  61
-#define UNO_COLOR 6
+#define UNO_COLOR 7
 
 #define MSG_H  20
 #define MSG_W  61
@@ -134,8 +137,9 @@ int g_scenSource = 0;
 int g_pinType    = 0;
 int g_pinNo      = 0;
 int g_pinValue   = 0;
+int g_pinStep    = 0;
 
-int g_errorSupervision = ON;
+int g_errorSupervision = OFF;
 
 void (*interrupt0)();
 void (*interrupt1)();
@@ -164,6 +168,9 @@ char  logBlankRow[MAX_SERIAL_BUFFER];
 int   serialMode = OFF;
 char  prevSerial[MAX_SERIAL_BUFFER];
 char  serBlankRow[MAX_SERIAL_BUFFER];
+
+int   s_digitalPin[MAX_STEP][MAX_PIN_DIGITAL];
+int   s_analogPin[MAX_STEP][MAX_PIN_ANALOG];
 
 char  textPinModeIn[MAX_PIN_DIGITAL][SIZE_ROW];
 char  textPinModeOut[MAX_PIN_DIGITAL][SIZE_ROW];
@@ -201,6 +208,9 @@ char  fileServScen[80]   = "servuino/data.scen";
 
 int   inrpt[INTPINS];
 int   attached[INTPINS];
+
+int  g_nScenDigital = 0;
+int  g_nScenAnalog  = 0;
 
 int uno_h=0, uno_w=0, uno_x=0, uno_y=0;
 int msg_h=0, msg_w=0, msg_x=0, msg_y=0;
@@ -244,6 +254,7 @@ int runStep(int dir)
 
   if(res1 > 0)
     {
+
       if(p=strstr(event,"pinMode"))
 	{
 	  sscanf(event,"%d %s %s %d",&step,temp,mode,&pin);
@@ -323,26 +334,6 @@ int runStep(int dir)
 	  sscanf(event,"%d %s %d",&step,temp,&x);
 	  detachInterrupt(x);
 	}
-      else if (p=strstr(event,"interruptRISING"))
-	{
-	  sscanf(event,"%d %s %d",&step,temp,&x);
-	  interrupt(temp,x);
-	}
-      else if (p=strstr(event,"interruptFALLING"))
-	{
-	  sscanf(event,"%d %s %d",&step,temp,&x);
-	  interrupt(temp,x);
-	}
-      else if (p=strstr(event,"interruptCHANGE"))
-	{
-	  sscanf(event,"%d %s %d",&step,temp,&x);
-	  interrupt(temp,x);
-	}
-      else if (p=strstr(event,"interruptLOW"))
-	{
-	  sscanf(event,"%d %s %d",&step,temp,&x);
-	  interrupt(temp,x);
-	} 
       else
 	unimplemented(temp);
 
@@ -406,7 +397,7 @@ void openCommand()
 //====================================
 {
   struct stat st;
-  int ch,nsteps=1000,x,i,n,stop=0,loop,projNo = 0;
+  int ch,nsteps=1000,x,i,n,stop=0,loop,projNo = 0,ok,tmp;
   char *p,str[120],sstr[20],fileName[120],temp[120],syscom[120];
   char command[40][40];
 
@@ -464,6 +455,65 @@ void openCommand()
 	  strcpy(fileName,fileInfoAdmin);
 	  readMsg(fileName);
 	}
+      else if(strstr(sstr,"rem")) //
+	{
+	  if(n == 4)
+	    {
+	      if(strstr(command[1],"a"))g_pinType = ANA;
+	      if(strstr(command[1],"d"))g_pinType = DIG;
+	      g_pinNo   = atoi(command[2]);
+	      g_pinStep = atoi(command[3]);
+	      ok = NO;
+	      if(g_pinType == ANA && g_pinNo >=0 && g_pinNo < MAX_PIN_ANALOG)ok = YES;
+	      if(g_pinType == DIG && g_pinNo >=0 && g_pinNo < MAX_PIN_DIGITAL)ok = YES;
+	      if(ok == YES)
+		{
+		  g_scenSource = 1;
+		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,0,g_pinStep,DELETE);
+		  //putMsg(2,syscom);
+		  tmp=system(syscom);
+		  initSim();
+		  readSketchInfo();
+		  readSimulation(fileServData);
+		  runStep(FORWARD);
+		  readMsg(fileServScen);
+		}
+	      else
+		putMsg(2,"Wrong pin number or pin type!");
+	    }
+	  else
+	    putMsg(2,"Syntax: del <a or d> <pin> <step>");
+	}
+      else if(strstr(sstr,"add")) //
+	{
+	  if(n == 5)
+	    {
+	      if(strstr(command[1],"a"))g_pinType = ANA;
+	      if(strstr(command[1],"d"))g_pinType = DIG;
+	      g_pinNo    = atoi(command[2]);
+	      g_pinStep  = atoi(command[3]);
+	      g_pinValue = atoi(command[4]);
+	      ok = NO;
+	      if(g_pinType == ANA && g_pinNo >=0 && g_pinNo < MAX_PIN_ANALOG)ok = YES;
+	      if(g_pinType == DIG && g_pinNo >=0 && g_pinNo < MAX_PIN_DIGITAL)ok = YES;
+	      if(ok == YES)
+		{
+		  g_scenSource = 1;
+		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,g_pinValue,g_pinStep,ADD);
+		  //putMsg(2,syscom);
+		  tmp=system(syscom);
+		  initSim();
+		  readSketchInfo();
+		  readSimulation(fileServData);
+		  runStep(FORWARD);
+		  readMsg(fileServScen);
+		}
+	      else
+		putMsg(2,"Wrong pin number or pin type!");
+	    }
+	  else
+	    putMsg(2,"Syntax: add <a or d> <pin> <step> <value>");
+	}
       else if(strstr(sstr,"info"))
 	{
 	  if(n == 2)
@@ -490,7 +540,7 @@ void openCommand()
 		}
 	      else if(strstr(command[1],"scen")) // scenario
 		{
-		  showScenario(confSketchFile);
+		  readMsg(fileServScen);
 		}
 	    }
 	  else
@@ -583,7 +633,7 @@ void openCommand()
 	    }
 	  saveConfig(currentConf);
 	  readMsg(currentConf);
-	  sprintf(syscom,"ls *.conf > conf_list.txt;");
+	  sprintf(syscom,"ls *.conf > %s;",fileProjList);
 	  x=system(syscom);
 	}
       else if(strstr(sstr,"del")) //delete config
@@ -703,10 +753,15 @@ void runMode(int stop)
 	{
 	  return;
 	}
+
       if (ch=='h')
         {
           readMsg(fileInfoRun);
         }
+      else if(ch=='c' ) // scenario
+	{
+	  readMsg(fileServScen);
+	}
       else if(ch=='z')//silent mode
 	{
 	  g_silent++;;
@@ -754,10 +809,8 @@ void runMode(int stop)
       else if (ch=='i')
         {
           step = currentStep + 1;
-	  if(confBoardType == UNO)
-	    putMsg(2," Enter interrupt (0 or 1) and value (0 or 1)");
-	  if(confBoardType == MEGA)
-	    putMsg(2," Enter interrupt (0,1,2,3,4,5) and value (0 or 1)");
+	  sprintf(temp," Enter interrupt id and value to be set at step %d. Ex. 1 0 ",step);
+	  putMsg(2,temp);
           wgetstr(uno,temp);
           if(strstr(temp,"q") == NULL)
 	    {
@@ -768,18 +821,19 @@ void runMode(int stop)
 		{      
 		  if(attached[ir] == YES)
 		    {
-		      putMsg(2," Accepted!");
+		      //putMsg(2," Accepted!");
 		      g_scenSource = 1;
 		      g_pinType = DIG;
 		      g_pinNo = inrpt[ir];
 		      // steps, source, pintype, pinno, pinvalue, pinstep
-		      sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1);
+		      sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1,ADD);
 		      putMsg(2,syscom);
 		      tmp=system(syscom);
 		      initSim();
 		      readSketchInfo();
 		      readSimulation(fileServData);
 		      runStep(FORWARD);
+		      readMsg(fileServScen);
 		    }
 		  else
 		    putMsg(2,"Interrupt not attached");
@@ -793,7 +847,8 @@ void runMode(int stop)
       else if (ch=='v') 
 	{
           step = currentStep + 1;
-          putMsg(2," Enter value to be read");
+	  sprintf(temp," Enter value to be read at step %d",step);
+          putMsg(2,temp);
 	  res = analyzeEvent(simulation[step]);
           if(res > 0)
 	    {
@@ -806,16 +861,17 @@ void runMode(int stop)
 		  if(res == DIG){a = 0;b = 1;}
 		  if(x >= a && x <= b)
 		    {         
-		      putMsg(2," Value accepted!");
+		      //putMsg(2," Value accepted!");
 		      g_scenSource = 1;
 		      // steps, source, pintype, pinno, pinvalue, pinstep
-		      sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1);
+		      sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1,ADD);
 		      //putMsg(2,syscom);
 		      tmp=system(syscom);
 		      initSim();
 		      readSketchInfo();
 		      readSimulation(fileServData);
 		      runStep(FORWARD);
+		      readMsg(fileServScen);
 		    }
 		  else
 		    putMsg(2,"Value out of range");
