@@ -1013,9 +1013,14 @@ void readMsg(char *fileName)
           else
 	    {
 	      wmove(msg,msg_h-2,1);
-	      wprintw(msg,"press any key for next page >>");
+	      wprintw(msg,"press any key (q to quit) >>");
 	      wrefresh(msg);
 	      ch = getchar();
+	      if(ch == 'q')
+		{
+		  fclose(in);
+		  return;
+		}
 	      wscrl(msg,msg_h-2);
 	      i = 1;
 	      wmove(msg,i,1);
@@ -1063,6 +1068,7 @@ void init(int mode)
   init_pair(4,COLOR_RED,COLOR_WHITE); 
   init_pair(5,COLOR_MAGENTA,COLOR_WHITE); 
   init_pair(6,COLOR_WHITE,COLOR_BLACK); 
+  init_pair(7,COLOR_WHITE,COLOR_BLUE);
   
   /*     COLOR_BLACK   0 */
   /*     COLOR_RED     1 */

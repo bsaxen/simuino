@@ -1,23 +1,21 @@
 //================================================
 //  Example HelloWorld
 //================================================
-//  digital_pins
-//           step 0  1  2  3  4  5  6  7  8  9 10 11 12 13
-//          --- -------------------------------------------
-// SCENDIGPIN 0     0  0  0  0  0  0  0  0  0  0  0  0  0  0
-// SCENxDIGPIN 50    0  0  1  0  0  0  0  0  0  0  0  0  0  0
-// SCENxDIGPIN 100   0  0  0  1  0  0  0  0  0  0  0  0  0  0
-// SCENxDIGPIN 150   0  0  1  0  0  0  0  0  0  0  0  0  0  0
-// SCENxDIGPIN 200   0  0  0  1  0  0  0  0  0  0  0  0  0  0
-// SCENxDIGPIN 250   0  0  1  0  0  0  0  0  0  0  0  0  0  0
-// SCENxDIGPIN 300   0  0  0  1  0  0  0  0  0  0  0  0  0  0
+// SCENxLENGTH 466
 //
-//  analog_pins
-//            step    0   1   2   3   4   5
-//            ------------------------------
-// SCENANAPIN   1     0    0    0    0   0  0 
-// SCENxANAPIN  50    0    0    0    0   131  2 
-// SCENxANAPIN 100    0    0    0    0   116  8 
+// SCENDIGPIN 10 1    0
+// SCENDIGPIN 10 50   1
+// SCENDIGPIN 10 100  0
+// SCENDIGPIN 10 200  1
+// 
+// SCENDIGPIN  9   1  0
+// SCENDIGPIN  9  40  1
+// SCENDIGPIN  9 130  0
+//
+// SCENANAPIN  4   1  5
+// SCENANAPIN  5   1  8 
+// SCENANAPIN  4   80  12
+// SCENANAPIN  5   120  18 
 //
 //================================================
 // Simuino log text customization
@@ -32,10 +30,12 @@
 // DIGITALWRITE_LOW:  12  "Led is on"
 // DIGITALWRITE_HIGH: 12  "Led is off"
 
-// DIGITALREAD: 10  "Read from somewhere"
+// DIGITALREAD:  9  "Read from nine"
+// DIGITALREAD: 10  "Read from ten"
 
 
-// ANALOGREAD: 5  "read analog value"
+// ANALOGREAD: 4  "read analog four"
+// ANALOGREAD: 5  "read analog five"
 
 
 //-------- DIGITAL PIN settings ------------------
@@ -114,7 +114,7 @@ void blinkLed(int n)
 //================================================
 {
   int i;
-  for(i=1;i<=n;i++)
+  for(i=1;i<=10;i++)
     {
       digitalWrite(BLINKLED, HIGH); 
       delay(500);

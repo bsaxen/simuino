@@ -321,6 +321,7 @@ void delayMicroseconds(int us)
 //------ External Interrupts ---------------
 
 
+
 void interrupt(char *m, int ir)
 {
   int pin;
@@ -331,13 +332,14 @@ void interrupt(char *m, int ir)
 
   if(strstr(m,"RISING") != NULL)  currentValueD[pin] = 1;
   if(strstr(m,"FALLING") != NULL) currentValueD[pin] = 0;
-  if(strstr(m,"CHANGE") != NULL)  currentValueD[pin]++;
+  if(strstr(m,"CHANGE") != NULL)  currentValueD[pin] = 1;
   if(strstr(m,"LOW") != NULL)     currentValueD[pin] = 0;
 
   if(currentValueD[pin] > 1)currentValueD[pin] = 0;
 
   wmove(uno,DP,digPinPos[pin]);
-  wprintw(uno,"%1d",currentValueD[pin]);
+  //wprintw(uno,"%1d",currentValueD[pin]);
+  wprintw(uno,"*");
   wmove(uno,DP+2,digPinPos[pin]);
   wprintw(uno," ");
   show(uno);
@@ -371,6 +373,40 @@ void attachInterrupt(int interrupt,void(*func)(),int mode)
   }
   else
     showError("Unsupported interrupt number",interrupt);
+
+  if(mode == RISING || mode == FALLING || mode == CHANGE || mode == LOW)
+    {
+      digitalMode[pin] = mode;
+      wmove(uno,DP-1,digPinPos[pin]);
+      waddch(uno,ACS_VLINE);
+      wmove(uno,DP-2,digPinPos[pin]-1);
+
+      if(mode==RISING)
+	{
+	  wprintw(uno," R");
+	}
+
+      if(mode==FALLING)
+	{
+	  wprintw(uno," F");
+	}      
+
+      if(mode==CHANGE)
+	{
+	  wprintw(uno," C");
+	}   
+
+      if(mode==LOW)
+	{
+	  wprintw(uno," L");
+	}      
+
+      show(uno);
+    }
+  else
+    {
+      showError("Unknown Pin Mode",mode);
+    }
 }
 
 //---------------------------------------------------

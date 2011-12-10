@@ -17,7 +17,7 @@ run <steps>      Step until step=<steps>
 
 loop <loop>      Step until loop <loop>
 
-reset            Reset simulation. Current step = 0
+reset            Reset simulation. Current step set to 0
 
 save  <name>     Save current project as <name>
                  If no <name>, saved to current project
@@ -25,6 +25,16 @@ save  <name>     Save current project as <name>
 del   <name>     Delete project. If no parameter,
                  current project will be deleted.
                  Default project cannot be deleted.
+
+add   <...>      Add pin-value-point in scenario
+                 Ex. add a 3 100 650
+                 Analog Pin 3 will read values 650 
+                 from step 100 and forward.
+
+rem   <...>	 Remove pin-value-point in scenario
+                 Ex. rem d 7 50
+                 Digital Pin 7 will no longer read values
+                 specified at step 50	 
 
 info  <area>     Show info about <area>
     - scen       Show scenario data
