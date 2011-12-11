@@ -75,7 +75,7 @@ void show(WINDOW *win)
   if(win == uno) 
     {
       wmove(win,0,2);
-      wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.2");
+      wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.3");
     }
   if(win == ser)
     {
@@ -108,7 +108,12 @@ void putMsg(int line,const char *message)
   show(msg);
   return;
 }
-
+//====================================
+void errorLog(const char msg[], int x)
+//====================================
+{
+  showError(msg,x);
+}
 //====================================
 void showError(const char *m, int value)
 //====================================
@@ -509,7 +514,7 @@ void showSerial(const char *m, int newLine)
 	{
 	  slen = strlen(prevSerial);
 
-	  wmove(ser,2,1+slen);
+	  wmove(ser,1,1+slen);
 	  wprintw(ser,"%s",m);
 
 	  wscrl(ser,-1);
@@ -525,7 +530,7 @@ void showSerial(const char *m, int newLine)
 	  if(slen < MAX_SERIAL_BUFFER)
 	    {
 	      strcat(prevSerial,m);
-	      wmove(ser,2,1);
+	      wmove(ser,1,1);
 	      wprintw(ser,"%s",prevSerial);
 	    }
 	  else
@@ -838,7 +843,7 @@ void runNextRead()
 
 
 //====================================
-void readSimulation(char *fileName)
+int readSimulation(char *fileName)
 //====================================
 {
   FILE *in;
@@ -908,7 +913,7 @@ void readSimulation(char *fileName)
       g_loops = loop;
       fclose(in);
     }
-  return;
+  return(g_loops);
 }    
 
 //====================================

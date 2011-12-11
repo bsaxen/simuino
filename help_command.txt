@@ -1,6 +1,6 @@
 exit             Exit Simuino
 
-proj <name>      Read project configauration  		 
+proj <name>      Read project configuration  		 
                  Do enter "load" to load project
 
 load <steps>     Load current project and
@@ -47,7 +47,6 @@ info  <area>     Show info about <area>
 conf <par> <val> Edit project configuration with commands below:
     - win        Set Window layout mode to <val> (0,1,2,3,4)
     - sketch     Set sketch source file
-    - serv       Set Servuino data file
     - delay      Set delay to <val> (ms)
     - log        Set log level to <val> (0,1,2,3)
     - record     Record log to log.txt (1/0)
