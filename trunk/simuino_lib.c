@@ -71,11 +71,19 @@ int analyzeEvent(char *event)
 void show(WINDOW *win)
 //====================================
 {
+  int next;
+
   box(win,0,0);
   if(win == uno) 
     {
       wmove(win,0,2);
-      wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.3");
+      if(confBoardType ==UNO)
+	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.3");
+      if(confBoardType ==MEGA)
+	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.3");
+      wmove(win,1,2);
+      if(g_errorSupervision == NO)wprintw(uno, "*Sketch: %s",appName);
+      if(g_errorSupervision == YES)wprintw(uno," Sketch: %s",appName);
     }
   if(win == ser)
     {
@@ -84,8 +92,11 @@ void show(WINDOW *win)
     }
   if(win == slog)
     {
+      next =  loopPos[currentLoop+1];
+      if(currentStep == loopPos[currentLoop+1]) next = loopPos[currentLoop+2];
       wmove(win,0,2);
-      wprintw(win,"Log");
+      wprintw(win,"Log  ");
+      wprintw(slog,"%4d->%4d (%d,%4d)",currentStep,next,g_loops,g_steps);
     }
   if(win == msg)
     {
@@ -93,7 +104,7 @@ void show(WINDOW *win)
       wprintw(win,"Messages");
     }
   
-  wmove(uno,UNO_H-2,4);
+  wmove(uno,board_h-2,4);
   wrefresh(win);
   iDelay(confDelay);
 }
@@ -155,7 +166,7 @@ void saveConfig(char *cf)
       fprintf(out,"# Simuino Configuration %s",ctime(&lt));
       fprintf(out,"# %s\n",cf);
 
-      fprintf(out,"BOARD_TYPE %d\n",confBoardType);
+      //fprintf(out,"BOARD_TYPE %d\n",confBoardType);
 
       if(confSteps > MAX_STEP)confSteps = MAX_STEP; 
       fprintf(out,"SIM_LENGTH %d\n",confSteps);
@@ -417,23 +428,24 @@ void wLog2(const char *p, int value1, int value2)
 void unoInfo()
 //====================================
 {
-  int next;
+  //int next;
 
-  wmove(uno,8,3); 
-  wprintw(uno,"Sketch: %s",appName);
+  wmove(uno,ap+2,3); 
+  //if(g_errorSupervision == NO)wprintw(uno,"*Sketch: %s",appName);
+  //if(g_errorSupervision == YES)wprintw(uno,"Sketch: %s",appName);
 
   if(g_warning == YES)
-    wprintw(uno,"  *** Possible Mismatch ***");
+    wprintw(uno,"  [Please - load]");
   else
-    wprintw(uno,"                   ");
+    wprintw(uno,"                           ");
 
-  wmove(uno,10,3);
-  next =  loopPos[currentLoop+1];
-  if(currentStep == loopPos[currentLoop+1]) next = loopPos[currentLoop+2];
-  wprintw(uno,"Step: %4d->%4d (%d,%4d)",currentStep,next,g_loops,g_steps);
-  wmove(uno,11,3);
-  wprintw(uno,"Scenario: %2d %2d %2d",scenDigital,scenAnalog,scenInterrupt);
-  show(uno);
+  //wmove(slog,0,8);
+  //next =  loopPos[currentLoop+1];
+  //if(currentStep == loopPos[currentLoop+1]) next = loopPos[currentLoop+2];
+  //wprintw(slog,"%4d->%4d (%d,%4d)",currentStep,next,g_loops,g_steps);
+  //wmove(uno,11,3);
+  //wprintw(uno,"Scenario: %2d %2d %2d",scenDigital,scenAnalog,scenInterrupt);
+  show(slog);
 }
 
 //====================================
@@ -600,6 +612,11 @@ void readSketchInfo()
 	      q = strstr(p,":");q++;
 	      sscanf(q,"%s",appName);
 	    }
+	  if(p=strstr(row,"BOARD_TYPE"))
+	    {
+	      if(strstr(row,"UNO") != NULL) confBoardType = UNO;
+	      if(strstr(row,"MEGA")!= NULL) confBoardType = MEGA;
+	    }
 	  if(p=strstr(row,"PINMODE_IN:"))
 	    {
 	      pin = wCustomLog(p,res);
@@ -658,7 +675,7 @@ void initSim()
     {
       loopPos[i] = 0;
     }
-  for(i=0;i<MAX_PIN_DIGITAL;i++)
+  for(i=0;i<max_digPin;i++)
     {
       strcpy(textPinModeIn[i],"void");
       strcpy(textPinModeOut[i],"void");
@@ -671,7 +688,7 @@ void initSim()
    
       currentValueD[i] = 0;
     }
-  for(i=0;i<MAX_PIN_ANALOG;i++)
+  for(i=0;i<max_anaPin;i++)
     {
       strcpy(textAnalogRead[i],"void");
       currentValueA[i] = 0;
@@ -685,7 +702,7 @@ void resetSim()
   int i;
   currentStep = 0;
   currentLoop = 0;
-  for(i=0;i<MAX_PIN_DIGITAL;i++)
+  for(i=0;i<max_digPin;i++)
     {
       digitalMode[i] = FREE;
     }
@@ -744,10 +761,10 @@ void readConfig(char *cf)
                 {
                   sscanf(p,"%s%s",temp,confSketchFile);
                 }
-              if(p=strstr(row,"BOARD_TYPE"))
-                {
-                  sscanf(p,"%s%d",temp,&confBoardType);
-                }
+/*               if(p=strstr(row,"BOARD_TYPE")) */
+/*                 { */
+/*                   sscanf(p,"%s%d",temp,&confBoardType); */
+/*                 } */
 	    }
 	 
 	}
@@ -1043,12 +1060,26 @@ void readMsg(char *fileName)
 void init(int mode)
 //====================================
 {
-  int i;
+  int i,j,k;
+  
+  if(confBoardType == UNO)
+    {
+      board_w = UNO_W;
+      board_h = UNO_H;
+      board_x = 0;
+      board_y = 0;
+    }
 
-  uno_w = UNO_W;
-  uno_h = UNO_H;
-  uno_x = 0;
-  uno_y = 0;
+  if(confBoardType == MEGA)
+    {
+      board_w = MEGA_W;
+      board_h = MEGA_H;
+      board_x = 0;
+      board_y = 0;
+    }
+
+  dp = 5;
+  ap = board_h - 5;
 
   g_value = 0;
 
@@ -1085,128 +1116,180 @@ void init(int mode)
   /*     COLOR_WHITE   7 */
 
   // Board Window    
-  uno=newwin(uno_h,uno_w,uno_x,uno_y);
+  uno=newwin(board_h,board_w,board_x,board_y);
   wbkgd(uno,COLOR_PAIR(UNO_COLOR));
   //box(uno, 0 , 0);
 
-  wmove(uno,DP-1,RF);waddch(uno,ACS_ULCORNER); 
-  wmove(uno,DP-1,RF+UNO_W-3);waddch(uno,ACS_URCORNER); 
-  wmove(uno,AP+1,RF);waddch(uno,ACS_LLCORNER); 
-  wmove(uno,AP+1,RF+UNO_W-3);waddch(uno,ACS_LRCORNER); 
-  for(i=1;i<UNO_W-3;i++)
+  wmove(uno,dp-1,RF);waddch(uno,ACS_ULCORNER); 
+  wmove(uno,dp-1,RF+board_w-3);waddch(uno,ACS_URCORNER); 
+  wmove(uno,ap+1,RF);waddch(uno,ACS_LLCORNER); 
+  wmove(uno,ap+1,RF+board_w-3);waddch(uno,ACS_LRCORNER); 
+  for(i=1;i<board_w-3;i++)
     {
-      wmove(uno,DP-1,RF+i);
+      wmove(uno,dp-1,RF+i);
       waddch(uno,ACS_HLINE);
-      wmove(uno,AP+1,RF+i);
+      wmove(uno,ap+1,RF+i);
       waddch(uno,ACS_HLINE);
     }
-  for(i=DP;i<AP+1;i++)
+  for(i=dp;i<ap+1;i++)
     {
       wmove(uno,i,RF);
       waddch(uno,ACS_VLINE);
-      wmove(uno,i,RF+UNO_W-3);
+      wmove(uno,i,RF+board_w-3);
       waddch(uno,ACS_VLINE);
     }
 
   // Pin positions on the board
-  for(i=0;i<14;i++)digPinPos[13-i] = RF+4+4*i;
-  for(i=0;i<6;i++) anaPinPos[i] = RF+31+5*i;
+  for(i=0;i<MAX_PIN_DIGITAL_UNO;i++)
+    {
+      digPinCol[i]  = RF+3+4*(MAX_PIN_DIGITAL_UNO-i-1);
+      digPinRow[i]  = dp;
+      digIdCol[i]   = RF+2+4*(MAX_PIN_DIGITAL_UNO-i-1);
+      digIdRow[i]   = dp+1;
+      digActCol[i]  = RF+3+4*(MAX_PIN_DIGITAL_UNO-i-1);
+      digActRow[i]  = dp+2;
+      digStatCol[i] = RF+3+4*(MAX_PIN_DIGITAL_UNO-i-1);
+      digStatRow[i] = dp-2;
+    }
+  for(i=MAX_PIN_DIGITAL_UNO;i<22;i++)
+    {
+      digPinCol[i]  = RF+10+4*i;
+      digPinRow[i]  = dp;
+      digIdCol[i]   = RF+9+4*i;
+      digIdRow[i]   = dp+1;
+      digActCol[i]  = RF+10+4*i;
+      digActRow[i]  = dp+2;
+      digStatCol[i] = RF+10+4*i;
+      digStatRow[i] = dp-2;
+    }
+  if(confBoardType == MEGA)
+    {
+      j = dp+3;
+      for(i=22;i<=max_digPin;i=i+2)
+	{
+	  j++;
+	  digPinCol[i]  = board_w - 35;
+	  digPinRow[i]  = j; 
+	  digIdCol[i]   = board_w - 39;
+	  digIdRow[i]   = j; 
+	  digActCol[i]  = board_w - 41;
+	  digActRow[i]  = j; 
+	  digStatCol[i] = board_w - 32;
+	  digStatRow[i] = j; 
+	}
+      j = dp+3;
+      for(i=23;i<=max_digPin;i=i+2)
+	{
+	  j++;
+	  digPinCol[i]  = board_w - 11;
+	  digPinRow[i]  = j; 
+	  digIdCol[i]   = board_w -  9;
+	  digIdRow[i]   = j; 
+	  digActCol[i]  = board_w -  6;
+	  digActRow[i]  = j; 
+	  digStatCol[i] = board_w - 14;
+	  digStatRow[i] = j; 
+	}
+    }
+  for(i=0;i<=max_anaPin;i++) anaPinCol[i] = RF+27+5*i;
 
-  for(i=0;i<14;i++){wmove(uno,DP+1,digPinPos[i]-2); wprintw(uno,"%3d",i);}
-  for(i=0;i<14;i++){wmove(uno,DP,digPinPos[i]); waddch(uno,ACS_BULLET);}
+  for(i=0;i<=max_digPin;i++){wmove(uno,digIdRow[i],digIdCol[i]); wprintw(uno,"%2d",i);}
+  for(i=0;i<=max_digPin;i++){wmove(uno,digPinRow[i],digPinCol[i]); waddch(uno,ACS_BULLET);}
+  //for(i=0;i<=max_digPin;i++){wmove(uno,digActRow[i],digActCol[i]); wprintw(uno,"a");}
+  //for(i=0;i<=max_digPin;i++){wmove(uno,digStatRow[i],digStatCol[i]);wprintw(uno,"s");}
 
-  for(i=0;i<6;i++){wmove(uno,AP-1,anaPinPos[i]-1); wprintw(uno,"A%1d",i);}
-  for(i=0;i<6;i++){wmove(uno,AP,anaPinPos[i]); waddch(uno,ACS_BULLET);}
+  for(i=0;i<=max_anaPin;i++){wmove(uno,ap-1,anaPinCol[i]-1); wprintw(uno,"A%1d",i);}
+  for(i=0;i<=max_anaPin;i++){wmove(uno,ap,anaPinCol[i]); waddch(uno,ACS_BULLET);}
 
   show(uno);
 
   if(mode == 0) // side by side
     {
-      msg_h = s_row - uno_h;
-      msg_w = MSG_W;
-      msg_x = uno_h;
+      msg_h = s_row - board_h;
+      msg_w = board_w;
+      msg_x = board_h;
       msg_y = 0;
 
       log_h = s_row;
       log_w = LOG_W;
       log_x = 0;
-      log_y = uno_w;   
+      log_y = board_w;   
       
       ser_h = s_row;
-      ser_w = s_col - uno_w - log_w;
+      ser_w = s_col - board_w - log_w;
       ser_x = 0;
-      ser_y = uno_w+log_w;
+      ser_y = board_w+log_w;
     }
 
   if(mode == 1) // 50 on 50
     {
-      msg_h = s_row - uno_h;
-      msg_w = MSG_W;
-      msg_x = uno_h;
+      msg_h = s_row - board_h;
+      msg_w = board_w;
+      msg_x = board_h;
       msg_y = 0;
 
       log_h = s_row/2;
       log_w = s_col-uno_w;
       log_x = 0;
-      log_y = uno_w;   
+      log_y = board_w;   
 
       ser_h = s_row/2+1;
-      ser_w = s_col-uno_w;
+      ser_w = s_col-board_w;
       ser_x = s_row/2;
-      ser_y = uno_w;
+      ser_y = board_w;
     }
 
   if(mode == 2) // 90 on 10
     {
-      msg_h = s_row - uno_h;
-      msg_w = MSG_W;
-      msg_x = uno_h;
+      msg_h = s_row - board_h;
+      msg_w = board_w;
+      msg_x = board_h;
       msg_y = 0;
 
       log_h = s_row-10;
-      log_w = s_col-uno_w;
+      log_w = s_col-board_w;
       log_x = 0;
-      log_y = uno_w;   
+      log_y = board_w;   
 
       ser_h = 10;
-      ser_w = s_col-uno_w;
+      ser_w = s_col-board_w;
       ser_x = log_h;
-      ser_y = uno_w;
+      ser_y = board_w;
     }
 
   if(mode == 3) // 10 on 90
     {      
-      msg_h = s_row - uno_h;
-      msg_w = MSG_W;
-      msg_x = uno_h;
+      msg_h = s_row - board_h;
+      msg_w = board_w;
+      msg_x = board_h;
       msg_y = 0;
       
       log_h = 10;
-      log_w = s_col-uno_w;
+      log_w = s_col-board_w;
       log_x = 0;
-      log_y = uno_w;   
+      log_y = board_w;   
 
       ser_h = s_row-10;
-      ser_w = s_col-uno_w;
+      ser_w = s_col-board_w;
       ser_x = log_h;
-      ser_y = uno_w;
+      ser_y = board_w;
     }
 
   if(mode == 4) // big message to the right
     {      
       msg_h = s_row;
-      msg_w = s_col - uno_w;
+      msg_w = s_col - board_w;
       msg_x = 0;
-      msg_y = uno_w;
+      msg_y = board_w;
       
-      log_h = s_row-uno_h-10;
-      log_w = MSG_W;
-      log_x = uno_h;
+      log_h = s_row-board_h-10;
+      log_w = board_w;
+      log_x = board_h;
       log_y = 0;   
 
-      ser_h = s_row-uno_h-log_h;
-      ser_w = MSG_W;
-      ser_x = log_h+uno_h;
+      ser_h = s_row-board_h-log_h;
+      ser_w = board_w;
+      ser_x = log_h+board_h;
       ser_y = 0;
     }
 
@@ -1261,10 +1344,11 @@ void anyErrors()
 
   if(g_errorSupervision == ON)
     {
+      x = system("rm temp.txt");
       sprintf(syscom,"cat %s %s > %s",fileError,fileServError,fileTemp);
-      x=system(syscom); 
-      x=countRowsInFile(fileTemp);
-      if(x>0)readMsg(fileTemp);
+      x = system(syscom); 
+      x = countRowsInFile(fileTemp);
+      if(x > 0)readMsg(fileTemp);
       show(uno);
     }
 }

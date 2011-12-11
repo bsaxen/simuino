@@ -31,12 +31,13 @@ void pinMode(int pin,int mode)
   if(mode == INPUT || mode == OUTPUT)
     {
       digitalMode[pin] = mode;
-      wmove(uno,DP-1,digPinPos[pin]);
-      waddch(uno,ACS_VLINE);
-      wmove(uno,DP-2,digPinPos[pin]-1);
+      wmove(uno,digPinRow[pin]-1,digPinCol[pin]);
+      if(pin < 22)
+	waddch(uno,ACS_VLINE);
 
       if(mode==INPUT)
 	{
+	  wmove(uno,digStatRow[pin],digStatCol[pin]);
 	  strcpy(temp,textPinModeIn[pin]);
 	  wprintw(uno,"In");
 	  if(strstr(temp,"void"))
@@ -47,6 +48,7 @@ void pinMode(int pin,int mode)
 
       if(mode==OUTPUT)
 	{
+	  wmove(uno,digStatRow[pin],digStatCol[pin]-1);
 	  strcpy(temp,textPinModeOut[pin]);
 	  wprintw(uno,"Out");
 	  if(strstr(temp,"void"))
@@ -71,7 +73,7 @@ void digitalWrite(int pin,int value)
     {
       currentValueD[pin] = value;
 
-      wmove(uno,DP,digPinPos[pin]);
+      wmove(uno,digPinRow[pin],digPinCol[pin]);
       if(value==HIGH)
 	{
 	  strcpy(temp,textDigitalWriteHigh[pin]);
@@ -96,12 +98,12 @@ void digitalWrite(int pin,int value)
 		wLog1(temp,pin);
 	    }
 	}
-      wmove(uno,DP+2,digPinPos[pin]);
+      wmove(uno,digActRow[pin],digActCol[pin]);
       wprintw(uno,"w");
       show(uno);
-      wmove(uno,DP,digPinPos[pin]-2);
+      wmove(uno,digPinRow[pin],digPinCol[pin]-2);
       wprintw(uno,"%3d",value);
-      wmove(uno,DP+2,digPinPos[pin]);
+      wmove(uno,digActRow[pin],digActCol[pin]);
       wprintw(uno," ");
       show(uno);
     }
@@ -125,7 +127,7 @@ int digitalRead(int pin)
  
       currentValueD[pin] = value;
 
-      wmove(uno,DP+2,digPinPos[pin]);
+      wmove(uno,dp+2,digPinCol[pin]);
       wprintw(uno,"r");
       show(uno);
 
@@ -139,9 +141,9 @@ int digitalRead(int pin)
 	}
 
 
-      wmove(uno,DP,digPinPos[pin]);
+      wmove(uno,dp,digPinCol[pin]);
       wprintw(uno,"%1d",value);
-      wmove(uno,DP+2,digPinPos[pin]);
+      wmove(uno,dp+2,digPinCol[pin]);
       wprintw(uno," ");
       show(uno);
     }
@@ -179,9 +181,9 @@ int analogRead(int pin)  // Values 0 to 1023
 
   currentValueA[pin] = value;  
 
-  wmove(uno,AP,anaPinPos[pin]-3);
+  wmove(uno,ap,anaPinCol[pin]-3);
   wprintw(uno,"%4d",value);
-  wmove(uno,AP-2,anaPinPos[pin]);
+  wmove(uno,ap-2,anaPinCol[pin]);
   wprintw(uno,"r");
   show(uno);
 
@@ -195,12 +197,12 @@ int analogRead(int pin)  // Values 0 to 1023
     }
 
 
-  wmove(uno,AP-2,anaPinPos[pin]);
+  wmove(uno,ap-2,anaPinCol[pin]);
   wprintw(uno," ");
 
-  wmove(uno,AP+1,anaPinPos[pin]);
+  wmove(uno,ap+1,anaPinCol[pin]);
   waddch(uno,ACS_VLINE);
-  wmove(uno,AP+2,anaPinPos[pin]-1);
+  wmove(uno,ap+2,anaPinCol[pin]-1);
   wprintw(uno,"In");
 
   show(uno);
@@ -212,47 +214,35 @@ void analogWrite(int pin,int value)
 {
   char temp[120];
   currentPin = pin;
-  if(digitalMode[pin] != OUTPUT)
+
+  if(value > 256 || value < 0)
     {
-      showError("Pin is not in OUPUT mode: ",pin);
-      return;
+      sprintf(temp,"%d AnalogWrite pin=%d value out of range = %d",currentStep,pin,value);
+      showError(temp,-1);
+      value = 0;
     }
 
-  if(pin==3 || pin==5 || pin==6 || pin==9 || pin==10 || pin==11)
-    {
+  wmove(uno,digPinRow[pin]-1,digPinCol[pin]);
+  if(pin < 22)
+    waddch(uno,ACS_VLINE);
+  wmove(uno,digStatRow[pin],digStatCol[pin]-1);
+  strcpy(temp,textPinModeOut[pin]);
+  wprintw(uno,"PWM");
 
-      if(value > 256 || value < 0)
-	{
-	  sprintf(temp,"%d AnalogWrite pin=%d value out of range = %d",currentStep,pin,value);
-	  showError(temp,-1);
-	  value = 0;
-	}
-
-      currentValueD[pin] = value;
-
-      wmove(uno,DP,digPinPos[pin]-2);
-      wprintw(uno,"%3d",value);
-      wmove(uno,DP+2,digPinPos[pin]);
-      wprintw(uno,"a");
-      show(uno);
-
-      strcpy(temp,textAnalogWrite[pin]);
-      if(confLogLev > 0)
-	{
-	  if(strstr(temp,"void"))
-	    wLog2("analogWrite",pin,value);
-	  else
-	    wLog2(temp,pin,value);
-	}
-
-      wmove(uno,DP+2,digPinPos[pin]);
-      wprintw(uno," ");
-      show(uno);
-    }
+  currentValueD[pin] = value;
+  wmove(uno,digPinRow[pin],digPinCol[pin]-2);
+  wprintw(uno,"%3d",value);
+  wmove(uno,digActRow[pin],digActCol[pin]);
+  wprintw(uno,"a");
+  show(uno);
+  strcpy(temp,textAnalogWrite[pin]);
+  if(strstr(temp,"void"))
+    wLog2("analogWrite",pin,value);
   else
-    {
-      showError("Pin is not of PWM type",pin);
-    }
+    wLog2(temp,pin,value);
+  wmove(uno,digActRow[pin],digActCol[pin]);
+  wprintw(uno," ");
+  show(uno);
   return;
 }
 
@@ -337,10 +327,10 @@ void interrupt(char *m, int ir)
 
   if(currentValueD[pin] > 1)currentValueD[pin] = 0;
 
-  wmove(uno,DP,digPinPos[pin]);
+  wmove(uno,dp,digPinCol[pin]);
   //wprintw(uno,"%1d",currentValueD[pin]);
   wprintw(uno,"*");
-  wmove(uno,DP+2,digPinPos[pin]);
+  wmove(uno,dp+2,digPinCol[pin]);
   wprintw(uno," ");
   show(uno);
 }
@@ -377,28 +367,28 @@ void attachInterrupt(int interrupt,void(*func)(),int mode)
   if(mode == RISING || mode == FALLING || mode == CHANGE || mode == LOW)
     {
       digitalMode[pin] = mode;
-      wmove(uno,DP-1,digPinPos[pin]);
+      wmove(uno,digPinRow[pin]-1,digPinCol[pin]);
       waddch(uno,ACS_VLINE);
-      wmove(uno,DP-2,digPinPos[pin]-1);
+      wmove(uno,digStatRow[pin],digStatCol[pin]);
 
       if(mode==RISING)
 	{
-	  wprintw(uno," R");
+	  wprintw(uno,"R");
 	}
 
       if(mode==FALLING)
 	{
-	  wprintw(uno," F");
+	  wprintw(uno,"F");
 	}      
 
       if(mode==CHANGE)
 	{
-	  wprintw(uno," C");
+	  wprintw(uno,"C");
 	}   
 
       if(mode==LOW)
 	{
-	  wprintw(uno," L");
+	  wprintw(uno,"L");
 	}      
 
       show(uno);

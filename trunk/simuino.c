@@ -29,13 +29,35 @@
 
 #include "servuino/common.h"
 
+
+// Window  ====================
+#define UNO_H  16
+#define UNO_W  61
+#define MEGA_H  32
+#define MEGA_W  110
+#define UNO_COLOR 7
+
+#define MSG_H  20
+#define MSG_W  61
+#define MSG_COLOR 6
+
+#define LOG_H  40
+#define LOG_W  40
+#define LOG_COLOR 3
+
+#define SER_H  40
+#define SER_W  30
+#define SER_COLOR 4
+
+#define WIN_MODES 4
+
 // Current data
 int  currentStep = 0;
 int  currentLoop = 0;
 char currentConf[SIZE_ROW];
 int  currentPin  = 0;
-int  currentValueD[MAX_PIN_DIGITAL];
-int  currentValueA[MAX_PIN_ANALOG];
+int  currentValueD[MAX_PIN_DIGITAL_MEGA];
+int  currentValueA[MAX_PIN_ANALOG_MEGA];
 
 
 // Limits
@@ -55,22 +77,35 @@ int g_pinStep    = 0;
 
 int g_errorSupervision = ON;
 
-//void (*interrupt0)();
-//void (*interrupt1)();
+int   digPinCol[MAX_PIN_DIGITAL_MEGA];
+int   digPinRow[MAX_PIN_DIGITAL_MEGA];
+int   digIdCol[MAX_PIN_DIGITAL_MEGA];
+int   digIdRow[MAX_PIN_DIGITAL_MEGA];
+int   digStatCol[MAX_PIN_DIGITAL_MEGA];
+int   digStatRow[MAX_PIN_DIGITAL_MEGA];
+int   digActCol[MAX_PIN_DIGITAL_MEGA];
+int   digActRow[MAX_PIN_DIGITAL_MEGA];
+
+int   anaPinCol[MAX_PIN_ANALOG_MEGA];
+int   anaPinRow[MAX_PIN_ANALOG_MEGA];
+int   anaIdCol[MAX_PIN_ANALOG_MEGA];
+int   anaIdRow[MAX_PIN_ANALOG_MEGA];
+int   anaStatCol[MAX_PIN_ANALOG_MEGA];
+int   anaStatRow[MAX_PIN_ANALOG_MEGA];
+int   anaActCol[MAX_PIN_ANALOG_MEGA];
+int   anaActRow[MAX_PIN_ANALOG_MEGA];
+
+int   s_row,s_col;
 
 char  simulation[MAX_STEP][SIZE_ROW];
 char  simComment[MAX_STEP][SIZE_ROW];
 int   stepComment[MAX_STEP];
 int   loopPos[MAX_LOOP];
 
-
-int   s_row,s_col;
-int   digPinPos[MAX_PIN_DIGITAL];
-int   anaPinPos[MAX_PIN_ANALOG];
 char  appName[120];
 
 int   interruptMode[2];
-int   digitalMode[MAX_PIN_DIGITAL];
+int   digitalMode[MAX_PIN_DIGITAL_MEGA];
 int   paceMaker = 0;
 int   baud = 0;
 int   error = 0;
@@ -83,16 +118,16 @@ int   serialMode = OFF;
 char  prevSerial[MAX_SERIAL_BUFFER];
 char  serBlankRow[MAX_SERIAL_BUFFER];
 
-int   s_digitalPin[MAX_STEP][MAX_PIN_DIGITAL];
-int   s_analogPin[MAX_STEP][MAX_PIN_ANALOG];
+int   s_digitalPin[MAX_STEP][MAX_PIN_DIGITAL_MEGA];
+int   s_analogPin[MAX_STEP][MAX_PIN_ANALOG_MEGA];
 
-char  textPinModeIn[MAX_PIN_DIGITAL][SIZE_ROW];
-char  textPinModeOut[MAX_PIN_DIGITAL][SIZE_ROW];
-char  textDigitalWriteLow[MAX_PIN_DIGITAL][SIZE_ROW];
-char  textDigitalWriteHigh[MAX_PIN_DIGITAL][SIZE_ROW];
-char  textAnalogWrite[MAX_PIN_DIGITAL][SIZE_ROW];
-char  textAnalogRead[MAX_PIN_ANALOG][SIZE_ROW];
-char  textDigitalRead[MAX_PIN_DIGITAL][SIZE_ROW];
+char  textPinModeIn[MAX_PIN_DIGITAL_MEGA][SIZE_ROW];
+char  textPinModeOut[MAX_PIN_DIGITAL_MEGA][SIZE_ROW];
+char  textDigitalWriteLow[MAX_PIN_DIGITAL_MEGA][SIZE_ROW];
+char  textDigitalWriteHigh[MAX_PIN_DIGITAL_MEGA][SIZE_ROW];
+char  textAnalogWrite[MAX_PIN_DIGITAL_MEGA][SIZE_ROW];
+char  textAnalogRead[MAX_PIN_ANALOG_MEGA][SIZE_ROW];
+char  textDigitalRead[MAX_PIN_DIGITAL_MEGA][SIZE_ROW];
 int   scenAnalog    = 0;
 int   scenDigital   = 0;
 int   scenInterrupt = 0;
@@ -108,6 +143,7 @@ int   confBoardType = UNO;
 
 char  fileTemp[80]       = "temp.txt";
 char  fileInfoRun[80]    = "help.txt";
+char  fileHints[80]      = "hints.txt";
 char  fileInfoAdmin[80]  = "help_command.txt";
 char  fileInfoGpl[80]    = "gpl.txt";
 char  fileProjList[80]   = "conf_list.txt";
@@ -120,9 +156,6 @@ char  fileServData[80]   = "servuino/data.su";
 char  fileServError[80]  = "servuino/data.error";
 char  fileServScen[80]   = "servuino/data.scen";
 
-int   inrpt[INTPINS];
-int   attached[INTPINS];
-
 int  g_nScenDigital = 0;
 int  g_nScenAnalog  = 0;
 
@@ -130,6 +163,15 @@ int uno_h=0, uno_w=0, uno_x=0, uno_y=0;
 int msg_h=0, msg_w=0, msg_x=0, msg_y=0;
 int log_h=0, log_w=0, log_x=0, log_y=0;
 int ser_h=0, ser_w=0, ser_x=0, ser_y=0;
+int board_w=0,board_h=0,board_x=0,board_y=0;
+int ap,dp;
+
+//#define DP 5   // Digital Pin Row No
+//#define AP 11  // Analog Pin Row No
+#define RF 1 
+#define ER 1
+#define SR 20
+
 
 WINDOW *uno,*ser,*slog,*msg;
 static struct termios orig, nnew;
@@ -296,11 +338,12 @@ void loadCurrentProj()
     if(confSteps > MAX_STEP) confSteps = MAX_STEP-1;
     sprintf(syscom,"cd servuino;./servuino %d %d;",confSteps,g_scenSource);
     x=system(syscom);
-    init(confWinMode);
     initSim();
     resetSim();
     readSimulation(fileServData);
     readSketchInfo();
+    setRange(confBoardType);
+    init(confWinMode);
     unoInfo();
     putMsg(msg_h-2,"Sketch load ready!");
     //putMsg(msg_h-2,syscom);
@@ -323,12 +366,12 @@ void openCommand()
 
   while(strstr(str,"ex") == NULL)
     {
-      wmove(uno,UNO_H-2,1);
+      wmove(uno,board_h-2,1);
       wprintw(uno,"                                                  ");
-      if(g_silent==0)mvwprintw(uno,UNO_H-2,1,"A%1d>",confWinMode);
-      if(g_silent==1)mvwprintw(uno,UNO_H-2,1,"A%1d<",confWinMode);
+      if(g_silent==NO )mvwprintw(uno,board_h-2,1,"A%1d>",confWinMode);
+      if(g_silent==YES)mvwprintw(uno,board_h-2,1,"A%1d<",confWinMode);
       show(uno);
-      wmove(uno,UNO_H-2,4);
+      wmove(uno,board_h-2,4);
       strcpy(command[0],"");
 
       anyErrors();
@@ -346,6 +389,13 @@ void openCommand()
 	{
 	  g_silent++;;
           if(g_silent > 1)g_silent = 0;
+	}
+      if(strstr(sstr,"sup"))//silent mode
+	{
+	  g_errorSupervision++;;
+          if(g_errorSupervision > 1)g_errorSupervision = 0;
+	  unoInfo();
+          readMsg(fileHints);
 	}
       else if(strstr(sstr,"gpl"))
         {
@@ -538,6 +588,24 @@ void openCommand()
 		      putMsg(msg_h-2,temp);
 		    }
 		}
+	      else if(strstr(command[1],"board"))
+		{
+
+		  strcpy(temp,command[2]);
+		  if(strstr(temp,"uno"))
+		    {
+		      confBoardType = UNO;
+		    }
+		  else if(strstr(temp,"mega"))
+		    {
+		      confBoardType = MEGA;
+		    }
+		  else
+		    {
+		      sprintf(temp,"Board type not found: %s",temp);
+		      putMsg(msg_h-2,temp);
+		    }
+		}
 	      saveConfig(currentConf);
 	    }
 	  readMsg(currentConf); 
@@ -661,10 +729,12 @@ void runMode(int stop)
 
   while(1)  
     {
-      wmove(uno,UNO_H-2,1);
+      wmove(uno,board_h-2,1);
       wprintw(uno,"                                                  ");
-      if(g_silent==0)mvwprintw(uno,UNO_H-2,1,"R%1d>",confWinMode);
-      if(g_silent==1)mvwprintw(uno,UNO_H-2,1,"R%1d<",confWinMode);
+
+      if(g_silent==NO )mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
+      if(g_silent==YES)mvwprintw(uno,board_h-2,1,"R%1d<",confWinMode);
+
       show(uno);
 
       anyErrors();
@@ -687,8 +757,8 @@ void runMode(int stop)
 	{
 	  g_silent++;;
           if(g_silent > 1)g_silent = 0;
-	  if(g_silent==0)mvwprintw(uno,UNO_H-2,1,"R%1d>",confWinMode);
-	  if(g_silent==1)mvwprintw(uno,UNO_H-2,1,"R%1d<",confWinMode);
+	  if(g_silent==0)mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
+	  if(g_silent==1)mvwprintw(uno,board_h-2,1,"R%1d<",confWinMode);
 	  show(uno);
 	}
       else if (ch=='g')
@@ -704,7 +774,7 @@ void runMode(int stop)
 	  confWinMode++;
 	  if(confWinMode > WIN_MODES)confWinMode = 0;
           init(confWinMode);
-	  mvwprintw(uno,UNO_H-2,1,"R%1d>",confWinMode);
+	  mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
 	  unoInfo();
 	}
       else if (ch=='a')
@@ -712,7 +782,21 @@ void runMode(int stop)
 	  resetSim();
 	  init(confWinMode);
 	  unoInfo();
-	  mvwprintw(uno,UNO_H-2,1,"R%1d>",confWinMode);
+	  mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
+	  show(uno);
+	}
+      else if (ch=='b')
+	{
+	  if(confBoardType==UNO)
+	    confBoardType = MEGA;
+	  else
+	    confBoardType = UNO;
+	  //initSim();
+	  setRange(confBoardType);
+	  resetSim();
+	  init(confWinMode);
+	  unoInfo();
+	  mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
 	  show(uno);
 	}
       else if (ch=='r')
@@ -862,15 +946,15 @@ int main(int argc, char *argv[])
   sprintf(syscom,"ls *.conf > %s;",fileProjList);
   x=system(syscom);
 
-  setRange(UNO);
-
   readConfig(currentConf);
-  init(confWinMode);
+
   initSim();
   resetSim();
-
   max_steps = readSimulation(fileServData);
   readSketchInfo();
+  setRange(confBoardType);
+  init(confWinMode);
+
   unoInfo();
   show(slog);
 
