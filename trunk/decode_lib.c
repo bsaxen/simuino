@@ -413,14 +413,6 @@ void attachInterrupt(int interrupt,void(*func)(),int mode)
 void detachInterrupt(int interrupt)
 {
   attached[interrupt] = NO;
-  if(interrupt == 0)
-    {
-      interrupt0 = NULL;
-    }
-  if(interrupt == 1)
-    {
-      interrupt1 = NULL;
-    }
   
   if(interrupt != 0 && interrupt != 1)
     showError("Unsupported interrupt number",interrupt);

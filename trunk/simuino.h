@@ -47,7 +47,7 @@ void unimplemented(const char *f);
 void readConfig();
 void runLoop();
 void runAll();
-void readSimulation(char *fileName);
+int  readSimulation(char *fileName);
 void showScenario(char *fileName);
 void readMsg(char *fileName);
 void init();

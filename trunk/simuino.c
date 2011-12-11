@@ -27,93 +27,7 @@
 #include <sys/stat.h>
 #include <form.h>
 
-#define IR0  2
-#define IR1  3
-#define IR2 21
-#define IR3 20
-#define IR4 19
-#define IR5 18
-
-#define A0 0
-#define A1 1
-#define A2 2
-#define A3 3
-#define A4 4
-#define A5 5
-
-#define STOP 1
-
-#define ANA 1
-#define DIG 2
-
-#define ADD 10
-#define DELETE 20
-
-#define LOW    0
-#define HIGH   1
-#define INPUT  1
-#define OUTPUT 2
-#define INTERRUPT 3
-
-#define FORWARD  1
-#define BACKWARD 2
-
-#define BYTE   1
-#define BIN    2
-#define OCT    3
-#define DEC    4
-#define HEX    5
-
-#define CHANGE  1
-#define RISING  2
-#define FALLING 3
-#define MAX_STEP 2000
-#define MAX_LOOP 2000
-#define MAX_PIN_ANALOG 6
-#define MAX_PIN_DIGITAL 14
-#define MAX_SERIAL_BUFFER 900
-#define INTPINS  6
-#define SIZE_ROW 180
-
-#define UNO_H  16
-#define UNO_W  61
-#define UNO_COLOR 7
-
-#define MSG_H  20
-#define MSG_W  61
-#define MSG_COLOR 6
-
-#define LOG_H  40
-#define LOG_W  40
-#define LOG_COLOR 3
-
-#define SER_H  40
-#define SER_W  30
-#define SER_COLOR 4
-
-#define WIN_MODES 4
-
-#define DP 5
-#define AP 11
-#define RF 1
-#define ER 1
-#define SR 20
-
-#define ON     1
-#define OFF    0
-
-#define YES    1
-#define NO     2
-
-#define RUN    1
-#define ADMIN  2
-
-#define FREE   0
-#define RX     3
-#define TX     4
-
-#define UNO    1
-#define MEGA   2
+#include "servuino/common.h"
 
 // Current data
 int  currentStep = 0;
@@ -139,10 +53,10 @@ int g_pinNo      = 0;
 int g_pinValue   = 0;
 int g_pinStep    = 0;
 
-int g_errorSupervision = OFF;
+int g_errorSupervision = ON;
 
-void (*interrupt0)();
-void (*interrupt1)();
+//void (*interrupt0)();
+//void (*interrupt1)();
 
 char  simulation[MAX_STEP][SIZE_ROW];
 char  simComment[MAX_STEP][SIZE_ROW];
@@ -225,6 +139,7 @@ char  gplFile[80];
 
 FILE  *err;
 
+#include "servuino/common_lib.c"
 #include "simuino.h"
 #include "simuino_lib.c"
 #include "decode_lib.c"
@@ -397,7 +312,7 @@ void openCommand()
 //====================================
 {
   struct stat st;
-  int ch,nsteps=1000,x,i,n,stop=0,loop,projNo = 0,ok,tmp;
+  int ch,nsteps=1000,x,i,n,stop=0,loop,projNo = 0,ok1,ok2,ok3,tmp;
   char *p,str[120],sstr[20],fileName[120],temp[120],syscom[120];
   char command[40][40];
 
@@ -463,10 +378,11 @@ void openCommand()
 	      if(strstr(command[1],"d"))g_pinType = DIG;
 	      g_pinNo   = atoi(command[2]);
 	      g_pinStep = atoi(command[3]);
-	      ok = NO;
-	      if(g_pinType == ANA && g_pinNo >=0 && g_pinNo < MAX_PIN_ANALOG)ok = YES;
-	      if(g_pinType == DIG && g_pinNo >=0 && g_pinNo < MAX_PIN_DIGITAL)ok = YES;
-	      if(ok == YES)
+	      if(g_pinType == ANA)
+		ok1 = checkRange(S_OK,"anapin",g_pinNo);
+	      if(g_pinType == DIG)
+		ok2 = checkRange(S_OK,"digpin",g_pinNo);
+	      if(ok1 == S_OK && ok2 == S_OK)
 		{
 		  g_scenSource = 1;
 		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,0,g_pinStep,DELETE);
@@ -490,13 +406,18 @@ void openCommand()
 	    {
 	      if(strstr(command[1],"a"))g_pinType = ANA;
 	      if(strstr(command[1],"d"))g_pinType = DIG;
+
 	      g_pinNo    = atoi(command[2]);
 	      g_pinStep  = atoi(command[3]);
 	      g_pinValue = atoi(command[4]);
-	      ok = NO;
-	      if(g_pinType == ANA && g_pinNo >=0 && g_pinNo < MAX_PIN_ANALOG)ok = YES;
-	      if(g_pinType == DIG && g_pinNo >=0 && g_pinNo < MAX_PIN_DIGITAL)ok = YES;
-	      if(ok == YES)
+
+	      if(g_pinType == ANA)
+		ok1 = checkRange(S_OK,"anapin",g_pinNo);
+	      if(g_pinType == DIG)
+		ok2 = checkRange(S_OK,"digpin",g_pinNo);
+
+	      ok3 = checkRange(OK,"step",g_pinNo);
+	      if(ok1 == S_OK && ok2 == S_OK && ok3 == S_OK)
 		{
 		  g_scenSource = 1;
 		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,g_pinValue,g_pinStep,ADD);
@@ -712,7 +633,7 @@ void openCommand()
         }
       else 
 	{
-	  putMsg(msg_h-2,"Unknown A command");
+	  putMsg(msg_h-2,"Unknown Admin command");
 	}
     }
 }
@@ -941,12 +862,14 @@ int main(int argc, char *argv[])
   sprintf(syscom,"ls *.conf > %s;",fileProjList);
   x=system(syscom);
 
+  setRange(UNO);
+
   readConfig(currentConf);
   init(confWinMode);
   initSim();
   resetSim();
 
-  readSimulation(fileServData);
+  max_steps = readSimulation(fileServData);
   readSketchInfo();
   unoInfo();
   show(slog);
