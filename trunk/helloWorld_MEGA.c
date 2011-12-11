@@ -1,7 +1,9 @@
 //================================================
 //  Example HelloWorld
 //================================================
-
+// SKETCH_NAME: HelloWorld
+// BOARD_TYPE   MEGA
+// SCENSIMLEN   600
 //================================================
 //  Scenario
 //================================================
@@ -22,7 +24,6 @@
 //================================================
 // Simuino log text customization
 //================================================
-// SKETCH_NAME: HelloWorld
 
 // PINMODE_OUT: 11  "PIN: Led Urgent"
 // PINMODE_OUT: 12  "PIN: Led Blink"
@@ -43,10 +44,10 @@
 //-------- DIGITAL PIN settings ------------------
 
 // Leds
-int URGENTLED    = 11;
-int BLINKLED     = 12;
-int IN_PIN       = 10;
-int CONTROL      =  9;
+int URGENTLED    = 31;
+int BLINKLED     = 32;
+int IN_PIN       = 20;
+int CONTROL      = 19;
  
 //-------- ANALOGUE PIN settings
 int SENSOR1  = 4;
@@ -85,6 +86,11 @@ void setup()
   pinMode(URGENTLED,OUTPUT);   
   pinMode(IN_PIN,INPUT);
   pinMode(CONTROL,INPUT);
+  pinMode(15,OUTPUT);
+  pinMode(44,INPUT);
+  pinMode(45,OUTPUT);
+  pinMode(46,OUTPUT);
+  pinMode(47,INPUT);
 }
 	 
 //================================================ 
@@ -107,6 +113,12 @@ void loop()
   Serial.println(value1);
   Serial.print("Digital CONTROL read: ");
   Serial.println(value2);
+
+  analogWrite(10,123);
+  analogWrite(11,167);
+
+  analogWrite(3,127);
+  analogWrite(4,147);
   
   delay(1000); 
 }
