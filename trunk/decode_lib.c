@@ -101,8 +101,17 @@ void digitalWrite(int pin,int value)
       wmove(uno,digActRow[pin],digActCol[pin]);
       wprintw(uno,"w");
       show(uno);
-      wmove(uno,digPinRow[pin],digPinCol[pin]-2);
-      wprintw(uno,"%3d",value);
+      iDelay(confDelay);
+      if(value < 10)
+	{
+	  wmove(uno,digPinRow[pin],digPinCol[pin]);
+	  wprintw(uno,"%1d",value);
+	}
+      else
+	{
+	  wmove(uno,digPinRow[pin],digPinCol[pin]-2);
+	  wprintw(uno,"%3d",value);
+	}
       wmove(uno,digActRow[pin],digActCol[pin]);
       wprintw(uno," ");
       show(uno);
@@ -127,10 +136,6 @@ int digitalRead(int pin)
  
       currentValueD[pin] = value;
 
-      wmove(uno,dp+2,digPinCol[pin]);
-      wprintw(uno,"r");
-      show(uno);
-
       strcpy(temp,textDigitalRead[pin]);
       if(confLogLev > 0)
 	{
@@ -140,12 +145,24 @@ int digitalRead(int pin)
 	    wLog2(temp,pin,value);
 	}
 
-
-      wmove(uno,dp,digPinCol[pin]);
-      wprintw(uno,"%1d",value);
-      wmove(uno,dp+2,digPinCol[pin]);
+      wmove(uno,digActRow[pin],digActCol[pin]);
+      wprintw(uno,"r");
+      show(uno);
+      iDelay(confDelay);
+      if(value < 10)
+	{
+	  wmove(uno,digPinRow[pin],digPinCol[pin]);
+	  wprintw(uno,"%1d",value);
+	}
+      else
+	{
+	  wmove(uno,digPinRow[pin],digPinCol[pin]-2);
+	  wprintw(uno,"%3d",value);
+	}
+      wmove(uno,digActRow[pin],digActCol[pin]);
       wprintw(uno," ");
       show(uno);
+
     }
   else
     {
@@ -198,13 +215,15 @@ int analogRead(int pin)  // Values 0 to 1023
 
 
   wmove(uno,ap-2,anaPinCol[pin]);
-  wprintw(uno," ");
-
+  wprintw(uno,"r");
+  show(uno);
+  iDelay(confDelay);
   wmove(uno,ap+1,anaPinCol[pin]);
   waddch(uno,ACS_VLINE);
   wmove(uno,ap+2,anaPinCol[pin]-1);
   wprintw(uno,"In");
-
+  wmove(uno,ap-2,anaPinCol[pin]);
+  wprintw(uno," ");
   show(uno);
   return(value); 
 }
@@ -235,6 +254,7 @@ void analogWrite(int pin,int value)
   wmove(uno,digActRow[pin],digActCol[pin]);
   wprintw(uno,"a");
   show(uno);
+  iDelay(confDelay);
   strcpy(temp,textAnalogWrite[pin]);
   if(strstr(temp,"void"))
     wLog2("analogWrite",pin,value);
