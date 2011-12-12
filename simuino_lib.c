@@ -82,8 +82,7 @@ void show(WINDOW *win)
       if(confBoardType ==MEGA)
 	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.3");
       wmove(win,1,2);
-      if(g_errorSupervision == NO)wprintw(uno, "*Sketch: %s",appName);
-      if(g_errorSupervision == YES)wprintw(uno," Sketch: %s",appName);
+      wprintw(uno,"Sketch: %s",appName);
     }
   if(win == ser)
     {
@@ -96,7 +95,10 @@ void show(WINDOW *win)
       if(currentStep == loopPos[currentLoop+1]) next = loopPos[currentLoop+2];
       wmove(win,0,2);
       wprintw(win,"Log  ");
-      wprintw(slog,"%4d->%4d (%d,%4d)",currentStep,next,g_loops,g_steps);
+      if(currentStep == g_steps)
+	wprintw(slog,"%4d ->| (%d,%4d)",currentStep,g_loops,g_steps);
+      else
+	wprintw(slog,"%4d ->%4d (%d,%4d)",currentStep,next,g_loops,g_steps);
     }
   if(win == msg)
     {
@@ -431,20 +433,14 @@ void unoInfo()
   //int next;
 
   wmove(uno,ap+2,3); 
-  //if(g_errorSupervision == NO)wprintw(uno,"*Sketch: %s",appName);
-  //if(g_errorSupervision == YES)wprintw(uno,"Sketch: %s",appName);
 
-  if(g_warning == YES)
-    wprintw(uno,"  [Please - load]");
+  if(g_existError == YES)
+    wprintw(uno,"  [Errors - err]");
+  else if(g_warning == YES)
+    wprintw(uno,"  [Possible Mismatch - load]");
   else
     wprintw(uno,"                           ");
 
-  //wmove(slog,0,8);
-  //next =  loopPos[currentLoop+1];
-  //if(currentStep == loopPos[currentLoop+1]) next = loopPos[currentLoop+2];
-  //wprintw(slog,"%4d->%4d (%d,%4d)",currentStep,next,g_loops,g_steps);
-  //wmove(uno,11,3);
-  //wprintw(uno,"Scenario: %2d %2d %2d",scenDigital,scenAnalog,scenInterrupt);
   show(slog);
 }
 
@@ -675,7 +671,7 @@ void initSim()
     {
       loopPos[i] = 0;
     }
-  for(i=0;i<max_digPin;i++)
+  for(i=0;i<MAX_PIN_DIGITAL_MEGA;i++)
     {
       strcpy(textPinModeIn[i],"void");
       strcpy(textPinModeOut[i],"void");
@@ -688,7 +684,7 @@ void initSim()
    
       currentValueD[i] = 0;
     }
-  for(i=0;i<max_anaPin;i++)
+  for(i=0;i<MAX_PIN_ANALOG_MEGA;i++)
     {
       strcpy(textAnalogRead[i],"void");
       currentValueA[i] = 0;
@@ -775,7 +771,7 @@ void readConfig(char *cf)
 int readEvent(char *ev, int step)
 //====================================
 {
-  if(step > 0 && step < MAX_STEP)
+  if(step > 0 && step <= g_steps)
     strcpy(ev,simulation[step]);
   else
     return(0);
@@ -788,7 +784,7 @@ int readComment(int step)
 {
   int i;
   
-  if(step > 0 && step < MAX_STEP)
+  if(step > 0 && step <= g_steps)
     {
       for(i=1;i<=stepComment[0];i++)
 	{
@@ -826,7 +822,7 @@ void runLoops(int targetLoop)
 //====================================
 {
   int stop;
-  if(targetLoop > g_loops)targetLoop = g_loops;
+  targetLoop = checkRange(HEAL,"loop",targetLoop);
   while(currentLoop < targetLoop && stop == 0)
     {
       stop = runStep(FORWARD);
@@ -838,8 +834,25 @@ void runLoops(int targetLoop)
 void runAll(int stop)
 //====================================
 {
+  int x;
+  stop = checkRange(HEAL,"step",stop);
   while(currentStep < stop)
-    runStep(FORWARD);
+    x = runStep(FORWARD);
+  return;
+}    
+
+//====================================
+void endOfSimulation()
+//====================================
+{
+  wmove(slog,1,1);
+  wprintw(slog,"%s",logBlankRow);
+  wscrl(slog,-1);
+  wmove(slog,1,1);
+  wprintw(slog,">%s",logBlankRow);
+  wmove(slog,2,1);
+  wprintw(slog,"-=End of Simulation=-");
+  show(slog);
   return;
 }    
 
@@ -920,7 +933,7 @@ int readSimulation(char *fileName)
           else if(p=strstr(row,"ENDOFSIM"))
             {
               loopPos[loop] = step;
-              strcpy(simulation[step+1],"End of Simulation");
+              strcpy(simulation[step+1],"End of Simulation !");
             }
           else if(p=strstr(row,"SCENARIODATA"))
             {
@@ -928,6 +941,7 @@ int readSimulation(char *fileName)
             }
 	}
       g_loops = loop;
+      loopPos[loop] = step;
       fclose(in);
     }
   return(g_loops);
@@ -1275,7 +1289,7 @@ void init(int mode)
       ser_y = board_w;
     }
 
-  if(mode == 4) // big message to the right
+  if(mode == 4) // big message to the right. Log on Ser
     {      
       msg_h = s_row;
       msg_w = s_col - board_w;
@@ -1291,6 +1305,24 @@ void init(int mode)
       ser_w = board_w;
       ser_x = log_h+board_h;
       ser_y = 0;
+    }
+
+  if(mode == 5) // big message to the right. Log and Ser side by side
+    {      
+      msg_h = s_row;
+      msg_w = s_col - board_w;
+      msg_x = 0;
+      msg_y = board_w;
+      
+      log_h = s_row-board_h;
+      log_w = board_w/2;
+      log_x = board_h;
+      log_y = 0;   
+
+      ser_h = s_row-board_h;
+      ser_w = board_w/2;
+      ser_x = board_h;
+      ser_y = log_w;
     }
 
   msg=newwin(msg_h,msg_w,msg_x,msg_y);
@@ -1341,16 +1373,14 @@ void anyErrors()
 {
   int x;
   char syscom[120];
-
-  if(g_errorSupervision == ON)
-    {
-      x = system("rm temp.txt");
-      sprintf(syscom,"cat %s %s > %s",fileError,fileServError,fileTemp);
-      x = system(syscom); 
-      x = countRowsInFile(fileTemp);
-      if(x > 0)readMsg(fileTemp);
-      show(uno);
-    }
+  
+  g_existError = NO;
+  x = system("rm temp.txt");
+  sprintf(syscom,"cat %s %s %s> %s",fileError,fileServError,fileCopyError,fileTemp);
+  x = system(syscom); 
+  x = countRowsInFile(fileTemp);
+  if(x > 0)g_existError = YES;
+  show(uno);
 }
 
 
@@ -1361,12 +1391,10 @@ int loadSketch(char sketch[])
   int x,ch,res;
   char syscom[120];
 
-  sprintf(syscom,"cp %s %s;",sketch,fileServSketch);
+  sprintf(syscom,"cp %s %s > %s 2>&1;",sketch,fileServSketch,fileCopyError);
   x=system(syscom);
   strcpy(confSketchFile,sketch);
   sprintf(syscom,"cd servuino; g++ -O2 -o servuino servuino.c > g++.result 2>&1;");
-  //putMsg(2,syscom);
-  //iDelay(5000);
   x=system(syscom);
 
   x=countRowsInFile(fileServComp);
