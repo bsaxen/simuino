@@ -45,8 +45,7 @@ info  <area>     Show info about <area>
     - help       Show command information
 
 conf <par> <val> Edit project configuration with commands below:
-    - win        Set Window layout mode to <val> (0,1,2,3,4)
-    - sketch     Set sketch source file
-    - delay      Set delay to <val> (ms)
-    - log        Set log level to <val> (0,1,2,3)
-    - record     Record log to log.txt (1/0)
+   - win         Set Window layout mode to <val> (0,1,2,3,4)
+   - sketch      Set sketch source file
+   - delay       Set delay to <val> (ms)
+   - sim <steps> Total steps in simulation

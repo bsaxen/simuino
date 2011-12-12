@@ -184,12 +184,12 @@ void saveConfig(char *cf)
 	fprintf(out,"DELAY      %d\n",confDelay);
       else
 	confDelay = 50;
-      if(confLogLev >=0 && confLogLev < 4)
-	fprintf(out,"LOG_LEVEL  %d\n",confLogLev);
-      else
-	confLogLev = 3;
+/*       if(confLogLev >=0 && confLogLev < 4) */
+/* 	fprintf(out,"LOG_LEVEL  %d\n",confLogLev); */
+/*       else */
+/* 	confLogLev = 3; */
 
-      fprintf(out,"LOG_FILE   %d\n",confLogFile);
+      //fprintf(out,"LOG_FILE   %d\n",confLogFile);
       fprintf(out,"SKETCH     %s\n",confSketchFile);
     }
   fclose(out);
@@ -746,18 +746,18 @@ void readConfig(char *cf)
 		{
 		  sscanf(p,"%s%d",temp,&confWinMode);
 		}
-	      if(p=strstr(row,"LOG_LEVEL"))
-		{
-		  sscanf(p,"%s%d",temp,&confLogLev);
-		}
+/* 	      if(p=strstr(row,"LOG_LEVEL")) */
+/* 		{ */
+/* 		  sscanf(p,"%s%d",temp,&confLogLev); */
+/* 		} */
 	      if(p=strstr(row,"DELAY"))
 		{
 		  sscanf(p,"%s%d",temp,&confDelay);
 		}
-	      if(p=strstr(row,"LOG_FILE"))
-		{
-		  sscanf(p,"%s%d",temp,&confLogFile);
-		}
+/* 	      if(p=strstr(row,"LOG_FILE")) */
+/* 		{ */
+/* 		  sscanf(p,"%s%d",temp,&confLogFile); */
+/* 		} */
               if(p=strstr(row,"SKETCH"))
                 {
                   sscanf(p,"%s%s",temp,confSketchFile);
