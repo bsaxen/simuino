@@ -107,8 +107,11 @@ void show(WINDOW *win)
     }
   
   wmove(uno,board_h-2,4);
+  wprintw(uno,"                  ");
+  wmove(uno,board_h-2,4);
+  wrefresh(uno);
   wrefresh(win);
-  iDelay(confDelay);
+  //iDelay(confDelay);
 }
 
 //====================================
@@ -422,6 +425,8 @@ void wLog2(const char *p, int value1, int value2)
   wprintw(slog,">%s",simulation[currentStep+1]);
   wmove(slog,2,1);
   if(g_silent == 0)wprintw(slog,"%s",temp);
+
+  wmove(uno,board_h-2,4);
   show(slog);
 }
 
@@ -441,7 +446,7 @@ void unoInfo()
   else
     wprintw(uno,"                           ");
 
-  show(slog);
+  show(uno);
 }
 
 //====================================
@@ -1366,20 +1371,22 @@ int  countRowsInFile(char *fileName)
       fclose(in);
       return(res);
     }
+  return(999);
 }
 //====================================
 void anyErrors()
 //====================================
 {
   int x;
-  char syscom[120];
+  char syscom[200];
   
   g_existError = NO;
   x = system("rm temp.txt");
   sprintf(syscom,"cat %s %s %s> %s",fileError,fileServError,fileCopyError,fileTemp);
   x = system(syscom); 
   x = countRowsInFile(fileTemp);
-  if(x > 0)g_existError = YES;
+  if(x > 0 && x != 999)g_existError = YES;
+  if(x == 999)putMsg(2,"Unable to read error file");
   show(uno);
 }
 

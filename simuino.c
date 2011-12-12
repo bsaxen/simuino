@@ -376,15 +376,17 @@ void openCommand()
   while(strstr(str,"ex") == NULL)
     {
       if(currentStep == g_steps)endOfSimulation();
+
+      anyErrors();
+      unoInfo();
+
       wmove(uno,board_h-2,1);
       wprintw(uno,"                                                  ");
       if(g_silent==NO )mvwprintw(uno,board_h-2,1,"A%1d>",confWinMode);
       if(g_silent==YES)mvwprintw(uno,board_h-2,1,"A%1d<",confWinMode);
-      show(uno);
-      wmove(uno,board_h-2,4);
+
       strcpy(command[0],"");
 
-      anyErrors();
       wgetstr(uno,str);
 
       n = tokCommand(command,str);
@@ -469,6 +471,7 @@ void openCommand()
 	      g_pinStep  = atoi(command[3]);
 	      g_pinValue = atoi(command[4]);
 
+	      ok = S_OK;
 	      if(g_pinType == ANA)
 		ok = checkRange(S_OK,"anapin",g_pinNo);
 	      if(g_pinType == DIG)
@@ -737,15 +740,15 @@ void runMode(int stop)
   while(1)  
     {
       if(currentStep == g_steps)endOfSimulation();
-      wmove(uno,board_h-2,1);
-      wprintw(uno,"                                                  ");
-
-      if(g_silent==NO )mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
-      if(g_silent==YES)mvwprintw(uno,board_h-2,1,"R%1d<",confWinMode);
-
-      show(uno);
 
       anyErrors();
+      if(g_silent==NO )mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
+      if(g_silent==YES)mvwprintw(uno,board_h-2,1,"R%1d<",confWinMode);
+      unoInfo();
+
+      //      wmove(uno,board_h-2,1);
+      //       wprintw(uno,"                                                  ");
+
 
       ch = getchar();
 
@@ -829,6 +832,7 @@ void runMode(int stop)
           if(strstr(temp,"q") == NULL)
 	    {
 	      sscanf(temp,"%d%d",&ir,&x);
+	      ok = S_OK;
 	      ok = ok + checkRange(S_OK,"interrupt",ir);
 	      ok = ok + checkRange(S_OK,"digval",x);
 	      ok = ok + checkRange(S_OK,"step",step);
@@ -871,6 +875,7 @@ void runMode(int stop)
 	      if(strstr(temp,"q") == NULL)
 		{
 		  x = atoi(temp); 
+		  ok = S_OK;
 		  if(res == ANA)ok = ok + checkRange(S_OK,"anaval",x);
 		  if(res == DIG)ok = ok + checkRange(S_OK,"digval",x);
 		  if(ok == S_OK)
@@ -945,6 +950,14 @@ int main(int argc, char *argv[])
     strcpy(currentConf,fileDefault);
 
   sprintf(syscom,"ls *.conf > %s;",fileProjList);
+  x=system(syscom);
+  sprintf(syscom,"rm %s;touch %s;",fileTemp,fileTemp);
+  x=system(syscom);
+  sprintf(syscom,"rm %s;touch %s;",fileError,fileError);
+  x=system(syscom);
+  sprintf(syscom,"rm %s;touch %s;",fileServError,fileServError);
+  x=system(syscom);
+  sprintf(syscom,"rm %s;touch %s;",fileCopyError,fileCopyError);
   x=system(syscom);
 
   readConfig(currentConf);

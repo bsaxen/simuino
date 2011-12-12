@@ -1,7 +1,7 @@
 //================================================
 //  Example HelloWorld
 //================================================
-// SKETCH_NAME: HelloWorld
+// SKETCH_NAME: HelloWorld_MEGA
 // BOARD_TYPE   MEGA
 // SCENSIMLEN   600
 //================================================
@@ -46,8 +46,8 @@
 // Leds
 int URGENTLED    = 31;
 int BLINKLED     = 32;
-int IN_PIN       = 20;
-int CONTROL      = 19;
+int IN_PIN       = 52;
+int CONTROL      = 53;
  
 //-------- ANALOGUE PIN settings
 int SENSOR1  = 4;
@@ -60,7 +60,15 @@ int SENSOR2  = 5;
 void blinkLed(int n);
 
 //================================================
-void urgent()
+void urgent0()
+//================================================
+{
+      digitalWrite(URGENTLED, HIGH); 
+      delay(400);
+      digitalWrite(URGENTLED, LOW); 
+}
+//================================================
+void urgent1()
 //================================================
 {
       digitalWrite(URGENTLED, HIGH); 
@@ -68,7 +76,7 @@ void urgent()
       digitalWrite(URGENTLED, LOW); 
 }
 //================================================
-void very_urgent()
+void urgent2()
 //================================================
 {
       digitalWrite(URGENTLED, HIGH); 
@@ -76,12 +84,40 @@ void very_urgent()
       digitalWrite(URGENTLED, LOW); 
 }
 //================================================
+void urgent3()
+//================================================
+{
+      digitalWrite(URGENTLED, HIGH); 
+      delay(403);
+      digitalWrite(URGENTLED, LOW); 
+}
+//================================================
+void urgent4()
+//================================================
+{
+      digitalWrite(URGENTLED, HIGH); 
+      delay(404);
+      digitalWrite(URGENTLED, LOW); 
+}
+//================================================
+void urgent5()
+//================================================
+{
+      digitalWrite(URGENTLED, HIGH); 
+      delay(405);
+      digitalWrite(URGENTLED, LOW); 
+}
+//================================================
 void setup()
 //================================================
 {
   Serial.begin(9600); 
-  attachInterrupt(0,urgent, CHANGE);
-  attachInterrupt(1,very_urgent, RISING);
+  attachInterrupt(0,urgent0, CHANGE);
+  attachInterrupt(1,urgent1, RISING);
+  attachInterrupt(2,urgent2, FALLING);
+  attachInterrupt(3,urgent3, LOW);
+  attachInterrupt(4,urgent4, CHANGE);
+  attachInterrupt(5,urgent5, RISING);
   pinMode(BLINKLED,OUTPUT);   
   pinMode(URGENTLED,OUTPUT);   
   pinMode(IN_PIN,INPUT);
@@ -128,7 +164,7 @@ void blinkLed(int n)
 //================================================
 {
   int i;
-  for(i=1;i<=10;i++)
+  for(i=1;i<=2;i++)
     {
       digitalWrite(BLINKLED, HIGH); 
       delay(500);

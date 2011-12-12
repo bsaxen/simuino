@@ -23,7 +23,7 @@
 //================================================
 // Simuino log text customization
 //================================================
-// SKETCH_NAME: HelloWorld
+// SKETCH_NAME: HelloWorld_UNO
 
 // PINMODE_OUT: 11  "PIN: Led Urgent"
 // PINMODE_OUT: 12  "PIN: Led Blink"
