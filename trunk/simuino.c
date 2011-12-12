@@ -49,7 +49,7 @@
 #define SER_W  30
 #define SER_COLOR 4
 
-#define WIN_MODES 4
+#define WIN_MODES 5
 
 // Current data
 int  currentStep = 0;
@@ -75,7 +75,7 @@ int g_pinNo      = 0;
 int g_pinValue   = 0;
 int g_pinStep    = 0;
 
-int g_errorSupervision = ON;
+int g_existError = NO;
 
 int   digPinCol[MAX_PIN_DIGITAL_MEGA];
 int   digPinRow[MAX_PIN_DIGITAL_MEGA];
@@ -143,6 +143,7 @@ int   confBoardType = UNO;
 
 char  fileTemp[80]       = "temp.txt";
 char  fileInfoRun[80]    = "help.txt";
+char  fileCopyError[80]  = "copy.error";
 char  fileHints[80]      = "hints.txt";
 char  fileInfoAdmin[80]  = "help_command.txt";
 char  fileInfoGpl[80]    = "gpl.txt";
@@ -197,16 +198,24 @@ int runStep(int dir)
   char mode[12];
 
   if(dir == FORWARD)currentStep++;
-  if(dir == BACKWARD)currentStep--;
+  //if(dir == BACKWARD)currentStep--;
 
-  if(currentStep > g_steps)return(STOP); 
+  if(currentStep > g_steps)
+    {
+      currentStep = checkRange(HEAL,"step",currentStep);
+      return(STOP); 
+    }
 
   if(currentStep > loopPos[currentLoop+1])
     {
       currentLoop++;
-      if(currentLoop > g_loops)return(STOP);
+      currentLoop = checkRange(HEAL,"loop",currentLoop);
+      if(currentLoop > g_loops)
+	{
+	  return(STOP); 
+	}
     }
-
+  
   res1 = readEvent(event,currentStep);
 
   if(res1 > 0)
@@ -355,7 +364,7 @@ void openCommand()
 //====================================
 {
   struct stat st;
-  int ch,nsteps=1000,x,i,n,stop=0,loop,projNo = 0,ok1,ok2,ok3,tmp;
+  int ch,nsteps=1000,x,i,n,stop=0,loop,projNo = 0,ok=0,tmp;
   char *p,str[120],sstr[20],fileName[120],temp[120],syscom[120];
   char command[40][40];
 
@@ -366,6 +375,7 @@ void openCommand()
 
   while(strstr(str,"ex") == NULL)
     {
+      if(currentStep == g_steps)endOfSimulation();
       wmove(uno,board_h-2,1);
       wprintw(uno,"                                                  ");
       if(g_silent==NO )mvwprintw(uno,board_h-2,1,"A%1d>",confWinMode);
@@ -390,21 +400,19 @@ void openCommand()
 	  g_silent++;;
           if(g_silent > 1)g_silent = 0;
 	}
-      if(strstr(sstr,"sup"))//silent mode
-	{
-	  g_errorSupervision++;;
-          if(g_errorSupervision > 1)g_errorSupervision = 0;
-	  unoInfo();
-          readMsg(fileHints);
-	}
       else if(strstr(sstr,"gpl"))
         {
           readMsg(gplFile);
+        }
+      else if(strstr(sstr,"err"))
+        {
+          readMsg(fileTemp);
         }
       else if(strstr(sstr,"run"))
 	{
 	  stop = 0;
           if(n == 2)stop = atoi(command[1]);
+	  stop = checkRange(HEAL,"step",stop);
 	  runMode(stop);
           if(stop==0)putMsg(2,"Back in Admin Mode!");
 	}
@@ -429,10 +437,10 @@ void openCommand()
 	      g_pinNo   = atoi(command[2]);
 	      g_pinStep = atoi(command[3]);
 	      if(g_pinType == ANA)
-		ok1 = checkRange(S_OK,"anapin",g_pinNo);
+		ok = checkRange(S_OK,"anapin",g_pinNo);
 	      if(g_pinType == DIG)
-		ok2 = checkRange(S_OK,"digpin",g_pinNo);
-	      if(ok1 == S_OK && ok2 == S_OK)
+		ok = checkRange(S_OK,"digpin",g_pinNo);
+	      if(ok == S_OK)
 		{
 		  g_scenSource = 1;
 		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,0,g_pinStep,DELETE);
@@ -462,16 +470,16 @@ void openCommand()
 	      g_pinValue = atoi(command[4]);
 
 	      if(g_pinType == ANA)
-		ok1 = checkRange(S_OK,"anapin",g_pinNo);
+		ok = checkRange(S_OK,"anapin",g_pinNo);
 	      if(g_pinType == DIG)
-		ok2 = checkRange(S_OK,"digpin",g_pinNo);
+		ok = checkRange(S_OK,"digpin",g_pinNo);
 
-	      ok3 = checkRange(OK,"step",g_pinNo);
-	      if(ok1 == S_OK && ok2 == S_OK && ok3 == S_OK)
+	      ok = ok + checkRange(S_OK,"step",g_pinStep);
+
+	      if(ok == S_OK)
 		{
 		  g_scenSource = 1;
 		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,g_pinValue,g_pinStep,ADD);
-		  //putMsg(2,syscom);
 		  tmp=system(syscom);
 		  initSim();
 		  readSketchInfo();
@@ -479,8 +487,6 @@ void openCommand()
 		  runStep(FORWARD);
 		  readMsg(fileServScen);
 		}
-	      else
-		putMsg(2,"Wrong pin number or pin type!");
 	    }
 	  else
 	    putMsg(2,"Syntax: add <a or d> <pin> <step> <value>");
@@ -665,6 +671,7 @@ void openCommand()
       else if(strstr(sstr,"loop")) //status
 	{
           if(n == 2)loop = atoi(command[1]);
+	  loop = checkRange(HEAL,"loop",loop);
 	  runLoops(loop);
 	}
       else if(strstr(sstr,"sim")) //status
@@ -710,7 +717,7 @@ void openCommand()
 void runMode(int stop)
 //====================================
 {
-  int ch,x,step,tmp,res=0,a=0,b=0,ir;
+  int ch,x,step,tmp,res=0,a=0,b=0,ir,ok=0;
   char tempName[80],syscom[120],temp[80];
   strcpy(tempName,"help.txt");
 
@@ -729,6 +736,7 @@ void runMode(int stop)
 
   while(1)  
     {
+      if(currentStep == g_steps)endOfSimulation();
       wmove(uno,board_h-2,1);
       wprintw(uno,"                                                  ");
 
@@ -738,6 +746,7 @@ void runMode(int stop)
       show(uno);
 
       anyErrors();
+
       ch = getchar();
 
       if (ch=='q' || ch=='x')
@@ -820,9 +829,11 @@ void runMode(int stop)
           if(strstr(temp,"q") == NULL)
 	    {
 	      sscanf(temp,"%d%d",&ir,&x);
-	      if(confBoardType == UNO) {a = 0;b = 1;}
-	      if(confBoardType == MEGA){a = 0;b = 5;}
-	      if(ir >= a && ir <= b && x < 2)
+	      ok = ok + checkRange(S_OK,"interrupt",ir);
+	      ok = ok + checkRange(S_OK,"digval",x);
+	      ok = ok + checkRange(S_OK,"step",step);
+
+	      if(ok == S_OK)
 		{      
 		  if(attached[ir] == YES)
 		    {
@@ -843,8 +854,6 @@ void runMode(int stop)
 		  else
 		    putMsg(2,"Interrupt not attached");
 		}
-	      else
-		putMsg(2,"Interrupt values out of range");
 	    }
 	  else
 	    putMsg(2,"Cancelled!");
@@ -862,15 +871,13 @@ void runMode(int stop)
 	      if(strstr(temp,"q") == NULL)
 		{
 		  x = atoi(temp); 
-		  if(res == ANA){a = 0;b = 1023;}
-		  if(res == DIG){a = 0;b = 1;}
-		  if(x >= a && x <= b)
+		  if(res == ANA)ok = ok + checkRange(S_OK,"anaval",x);
+		  if(res == DIG)ok = ok + checkRange(S_OK,"digval",x);
+		  if(ok == S_OK)
 		    {         
-		      //putMsg(2," Value accepted!");
 		      g_scenSource = 1;
 		      // steps, source, pintype, pinno, pinvalue, pinstep
 		      sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1,ADD);
-		      //putMsg(2,syscom);
 		      tmp=system(syscom);
 		      initSim();
 		      readSketchInfo();
@@ -878,8 +885,6 @@ void runMode(int stop)
 		      runStep(FORWARD);
 		      readMsg(fileServScen);
 		    }
-		  else
-		    putMsg(2,"Value out of range");
 		}
 	      else
 		putMsg(2,"Cancelled!");
@@ -891,25 +896,21 @@ void runMode(int stop)
 	{
 	  confLogLev++;
 	  if(confLogLev > 3)confLogLev = 0;
-	  // Todo save to conf
 	}
       else if (ch=='+') 
 	{
 	  confDelay = confDelay + 10;
-	  // Todo save to conf
 	}
       else if (ch=='-') 
 	{
 	  confDelay = confDelay - 10;
 	  if(confDelay < 0)confDelay = 0;
           if(confDelay > 1000)confDelay = 1000;
-	  // Todo save to conf
 	}
       else if (ch=='f') 
 	{
 	  confLogFile++;
 	  if(confLogFile > 1)confLogFile = 0;
-	  // Todo save to conf
 	}
       else
         putMsg(msg_h-2,"Unknown R command");
