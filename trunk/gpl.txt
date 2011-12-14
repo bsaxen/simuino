@@ -1,5 +1,5 @@
  
- SIMUINO Arduino Simulator  
+ SIMUINO Arduino Simulator  www.simuino.com
  Copyright (C) 2011 Benny Saxen
  This program comes with ABSOLUTELY NO WARRANTY.
  This is free software, and you are welcome to redistribute it
