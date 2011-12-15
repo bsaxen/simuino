@@ -184,12 +184,7 @@ void saveConfig(char *cf)
 	fprintf(out,"DELAY      %d\n",confDelay);
       else
 	confDelay = 50;
-/*       if(confLogLev >=0 && confLogLev < 4) */
-/* 	fprintf(out,"LOG_LEVEL  %d\n",confLogLev); */
-/*       else */
-/* 	confLogLev = 3; */
 
-      //fprintf(out,"LOG_FILE   %d\n",confLogFile);
       fprintf(out,"SKETCH     %s\n",confSketchFile);
     }
   fclose(out);
@@ -563,14 +558,35 @@ int wCustomLog(char *in, char *out)
 //====================================
 {
   char *q,*p;
-  int pin;
+  int pin=0;
 
-  p = strstr(in,":"); 
+  p = strstr(in,":");
+  if(p==NULL) 
+  {
+    showError("Custom Log: Cant find any semicolon",0);
+    strcpy(out,"Custom : Failed"); 
+    return(0);
+  }
+
   p++; 
   sscanf(p,"%d",&pin); 
   p = strstr(p,"\""); 
+  if(p==NULL)
+  {
+    showError("Custom Log: Cant find first \" ",0);
+    strcpy(out,"Custom \" Failed");
+    return(0);
+  }
+
   p++; 
   q = strstr(p,"\""); 
+  if(q==NULL)
+  {
+    showError("Custom Log: Cant find second \" ",0);
+    strcpy(out,"Custom \" Failed");
+    return(0);
+  }
+
   strcpy(q,"\0"); 
   strcpy(out,p);
   return(pin);

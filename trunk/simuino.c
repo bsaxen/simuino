@@ -597,24 +597,6 @@ void openCommand()
 		      putMsg(msg_h-2,temp);
 		    }
 		}
-/* 	      else if(strstr(command[1],"board")) */
-/* 		{ */
-
-/* 		  strcpy(temp,command[2]); */
-/* 		  if(strstr(temp,"uno")) */
-/* 		    { */
-/* 		      confBoardType = UNO; */
-/* 		    } */
-/* 		  else if(strstr(temp,"mega")) */
-/* 		    { */
-/* 		      confBoardType = MEGA; */
-/* 		    } */
-/* 		  else */
-/* 		    { */
-/* 		      sprintf(temp,"Board type not found: %s",temp); */
-/* 		      putMsg(msg_h-2,temp); */
-/* 		    } */
-/* 		} */
 	      saveConfig(currentConf);
 	    }
 	  readMsg(currentConf); 
