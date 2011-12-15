@@ -78,9 +78,9 @@ void show(WINDOW *win)
     {
       wmove(win,0,2);
       if(confBoardType ==UNO)
-	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.4");
+	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.5");
       if(confBoardType ==MEGA)
-	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.4");
+	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.5");
       wmove(win,1,2);
       wprintw(uno,"Sketch: %s",appName);
     }
