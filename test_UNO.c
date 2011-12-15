@@ -14,6 +14,13 @@
 // SCENDIGPIN  9    1    0
 // SCENDIGPIN  9   40    1
 // SCENDIGPIN  9  130    0
+// SCENDIGPIN  2    1    0
+// SCENDIGPIN  2  200    1
+// SCENDIGPIN  3    1    0
+// SCENDIGPIN  3  220    1
+// SCENDIGPIN  2  240    0
+// SCENDIGPIN  3  260    0
+
 //
 // SCENANAPIN  4    1    5
 // SCENANAPIN  5    1    8 
@@ -147,8 +154,17 @@ void loop()
     pinMode(8,OUTPUT);
     Serial.println("----- End of Test 4 -----");
   }
-  
-  delay(1000); 
+ 
+// Test 5 --------------------------------
+  if (nloop == 5)
+  {
+    Serial.println("----- Test 5: Interrupts  ------");
+    blinkLed(12,50);
+    Serial.println("----- End of Test 5 -----");
+  }
+
+  delay(10);
+ 
 }
 
 //================================================
