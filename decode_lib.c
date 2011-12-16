@@ -18,7 +18,16 @@
 //=====================================
 // Functions
 //=====================================
-
+void sSetup()
+{
+  wLog0("----- Setup");
+  return;
+}
+void sLoop(int nloop)
+{
+  wLog1("----- Loop",nloop);
+  return;
+}
 
 //------ Digital I/O -----------------------
 

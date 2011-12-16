@@ -153,9 +153,12 @@ char  fileDefault[80]    = "default.conf";
 char  fileError[80]      = "error.txt";
 char  fileServComp[80]   = "servuino/g++.result";
 char  fileServSketch[80] = "servuino/sketch.pde";
-char  fileServData[80]   = "servuino/data.su";
+char  fileServArduino[80]= "servuino/data.arduino";
 char  fileServError[80]  = "servuino/data.error";
 char  fileServScen[80]   = "servuino/data.scen";
+char  fileServCode[80]   = "servuino/data.code";
+char  fileServCustom[80] = "servuino/data.custom";
+char  fileServStatus[80] = "servuino/data.status";
 
 int  g_nScenDigital = 0;
 int  g_nScenAnalog  = 0;
@@ -206,22 +209,32 @@ int runStep(int dir)
       return(STOP); 
     }
 
-  if(currentStep > loopPos[currentLoop+1])
-    {
-      currentLoop++;
-      currentLoop = checkRange(HEAL,"loop",currentLoop);
-      if(currentLoop > g_loops)
-	{
-	  return(STOP); 
-	}
-    }
+/*   if(currentStep > loopPos[currentLoop+1]) */
+/*     { */
+/*       currentLoop++; */
+/*       currentLoop = checkRange(HEAL,"loop",currentLoop); */
+/*       if(currentLoop > g_loops) */
+/* 	{ */
+/* 	  return(STOP);  */
+/* 	} */
+/*     } */
   
   res1 = readEvent(event,currentStep);
 
   if(res1 > 0)
     {
 
-      if(p=strstr(event,"pinMode"))
+      if(p=strstr(event,"Setup"))
+	{
+	  currentLoop = 0;
+	  sSetup();
+	}
+      else if(p=strstr(event,"Loop "))
+	{
+	  sscanf(event,"%d %s %d",&step,temp,&currentLoop);
+	  sLoop(currentLoop);
+	}
+      else if(p=strstr(event,"pinMode"))
 	{
 	  sscanf(event,"%d %s %s %d",&step,temp,mode,&pin);
 	  if(strstr(mode,"IN"))pinMode(pin,INPUT);
@@ -301,7 +314,7 @@ int runStep(int dir)
 	  detachInterrupt(x);
 	}
       else
-	unimplemented(temp);
+	unimplemented(event);
 
       readComment(currentStep);
       
@@ -349,7 +362,7 @@ void loadCurrentProj()
     x=system(syscom);
     initSim();
     resetSim();
-    readSimulation(fileServData);
+    readSimulation(fileServArduino);
     readSketchInfo();
     setRange(confBoardType);
     init(confWinMode);
@@ -450,7 +463,7 @@ void openCommand()
 		  tmp=system(syscom);
 		  initSim();
 		  readSketchInfo();
-		  readSimulation(fileServData);
+		  readSimulation(fileServArduino);
 		  runStep(FORWARD);
 		  readMsg(fileServScen);
 		}
@@ -486,7 +499,7 @@ void openCommand()
 		  tmp=system(syscom);
 		  initSim();
 		  readSketchInfo();
-		  readSimulation(fileServData);
+		  readSimulation(fileServArduino);
 		  runStep(FORWARD);
 		  readMsg(fileServScen);
 		}
@@ -573,10 +586,6 @@ void openCommand()
 		{
 		  confDelay = atoi(command[2]);	
 		}
-/* 	      else if(strstr(command[1],"log")) */
-/* 		{ */
-/* 		  confLogLev = atoi(command[2]); */
-/* 		} */
 	      else if(strstr(command[1],"win"))
 		{
 		  confWinMode = atoi(command[2]);
@@ -653,15 +662,11 @@ void openCommand()
               unoInfo();
 	    }
         }
-      else if(strstr(sstr,"loop")) //status
+      else if(strstr(sstr,"loop"))
 	{
           if(n == 2)loop = atoi(command[1]);
 	  loop = checkRange(HEAL,"loop",loop);
 	  runLoops(loop);
-	}
-      else if(strstr(sstr,"sim")) //status
-	{
-	  readSimulation(fileServData);
 	}
       else if(strstr(sstr,"sys"))
 	{
@@ -691,6 +696,38 @@ void openCommand()
 	  unoInfo();
 	  readMsg(currentConf);   
         }
+      else if(strstr(sstr,"data"))
+	{
+	  if(n == 2)
+	    {
+	      if(strstr(command[1],"ard"))
+		{
+		  readMsg(fileServArduino);
+		}
+	      else if(strstr(command[1],"cus"))
+		{
+		  readMsg(fileServCustom);
+		}
+	      else if(strstr(command[1],"cod"))
+		{
+		  readMsg(fileServCode);
+		}
+	      else if(strstr(command[1],"sta"))
+		{
+		  readMsg(fileServStatus);
+		}
+	      else if(strstr(command[1],"err"))
+		{
+		  readMsg(fileServError);
+		}
+	      else if(strstr(command[1],"sce"))
+		{
+		  readMsg(fileServScen);
+		}
+	    }
+	  else
+	    readMsg(fileServArduino);
+	}
       else 
 	{
 	  putMsg(msg_h-2,"Unknown Admin command");
@@ -833,7 +870,7 @@ void runMode(int stop)
 		      tmp=system(syscom);
 		      initSim();
 		      readSketchInfo();
-		      readSimulation(fileServData);
+		      readSimulation(fileServArduino);
 		      runStep(FORWARD);
 		      readMsg(fileServScen);
 		    }
@@ -868,7 +905,7 @@ void runMode(int stop)
 		      tmp=system(syscom);
 		      initSim();
 		      readSketchInfo();
-		      readSimulation(fileServData);
+		      readSimulation(fileServArduino);
 		      runStep(FORWARD);
 		      readMsg(fileServScen);
 		    }
@@ -946,7 +983,7 @@ int main(int argc, char *argv[])
 
   initSim();
   resetSim();
-  max_steps = readSimulation(fileServData);
+  max_steps = readSimulation(fileServArduino);
   readSketchInfo();
   setRange(confBoardType);
   init(confWinMode);
