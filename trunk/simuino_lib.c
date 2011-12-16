@@ -96,9 +96,9 @@ void show(WINDOW *win)
       wmove(win,0,2);
       wprintw(win,"Log  ");
       if(currentStep == g_steps)
-	wprintw(slog,"%4d ->| (%d,%4d)",currentStep,g_loops,g_steps);
+	wprintw(slog,"%d,%d ->| (%d,%d)",currentLoop,currentStep,g_loops,g_steps);
       else
-	wprintw(slog,"%4d ->%4d (%d,%4d)",currentStep,next,g_loops,g_steps);
+	wprintw(slog,"%d,%d ->%d (%d,%d)",currentLoop,currentStep,next,g_loops,g_steps);
     }
   if(win == msg)
     {
@@ -762,26 +762,14 @@ void readConfig(char *cf)
 		{
 		  sscanf(p,"%s%d",temp,&confWinMode);
 		}
-/* 	      if(p=strstr(row,"LOG_LEVEL")) */
-/* 		{ */
-/* 		  sscanf(p,"%s%d",temp,&confLogLev); */
-/* 		} */
 	      if(p=strstr(row,"DELAY"))
 		{
 		  sscanf(p,"%s%d",temp,&confDelay);
 		}
-/* 	      if(p=strstr(row,"LOG_FILE")) */
-/* 		{ */
-/* 		  sscanf(p,"%s%d",temp,&confLogFile); */
-/* 		} */
               if(p=strstr(row,"SKETCH"))
                 {
                   sscanf(p,"%s%s",temp,confSketchFile);
                 }
-/*               if(p=strstr(row,"BOARD_TYPE")) */
-/*                 { */
-/*                   sscanf(p,"%s%d",temp,&confBoardType); */
-/*                 } */
 	    }
 	 
 	}
@@ -832,8 +820,10 @@ void runLoop()
 
   else if(currentLoop >= 0 && currentLoop < g_loops)
     {
-      while(currentStep < loopPos[currentLoop+1])
-	runStep(FORWARD);
+      while(currentStep < loopPos[currentLoop+1]-1)
+	{
+	  runStep(FORWARD);
+	}
     }
   return;
 }    
@@ -931,6 +921,12 @@ int readSimulation(char *fileName)
 		  showError(row,step);
 		  showError(row,g_steps);
 		}
+	      if(p=strstr(row,"Loop "))
+		{
+		  sscanf(p,"%s%d",temp,&loop);
+		  loopPos[loop] = step;
+		  //g_loops++;
+		}
 	    }
 	  if(row[0] == '=')
 	    {
@@ -945,12 +941,7 @@ int readSimulation(char *fileName)
 		  strcat(simComment[g_comments],p);
 		}
 	    }
-	  else if(p=strstr(row,"LOOP"))
-	    {
-	      sscanf(p,"%s%d",temp,&loop);
-	      loopPos[loop] = step;
-	     // g_loops++;
-	    }
+
           else if(p=strstr(row,"ENDOFSIM"))
             {
               loopPos[loop] = step;
