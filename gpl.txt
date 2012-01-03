@@ -1,8 +1,12 @@
  
  SIMUINO Arduino Simulator  www.simuino.com
- Copyright (C) 2011 Benny Saxen
+ Copyright (C) 2012 Simuino Team
  This program comes with ABSOLUTELY NO WARRANTY.
  This is free software, and you are welcome to redistribute it
  as long it is named Simuino.
 
  Type "help" for list of commands.
+
+ Try Simuino on the web:  webuino.simuino.com
+
+ Contact:  simuino.adcajo@gmail.com

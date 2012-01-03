@@ -1,5 +1,5 @@
 /*  Simuino is a Arduino Simulator based on Servuino Engine 
-    Copyright (C) 2011  Benny Saxen
+    Copyright (C) 2012  Benny Saxen
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -65,6 +65,8 @@ int  g_loops    = 0;
 int  g_steps    = 0;
 int  g_comments = 0;
 
+int g_dir;
+
 int g_value      = 0;
 int s_mode       = ADMIN;
 int g_warning    = YES;
@@ -97,10 +99,17 @@ int   anaActRow[MAX_PIN_ANALOG_MEGA];
 
 int   s_row,s_col;
 
+char  status[MAX_STEP][SIZE_ROW];
 char  simulation[MAX_STEP][SIZE_ROW];
+char  serial[MAX_STEP][SIZE_ROW];
+int   serialL[MAX_STEP];
+
 char  simComment[MAX_STEP][SIZE_ROW];
 int   stepComment[MAX_STEP];
+int   commentStep[MAX_STEP];
 int   loopPos[MAX_LOOP];
+int   stepLoop[MAX_STEP];
+int   loopStep[MAX_LOOP];
 
 char  appName[120];
 
@@ -141,24 +150,26 @@ int   confLogFile =    0;
 char  confSketchFile[200];
 int   confBoardType = UNO;
 
-char  fileTemp[80]       = "temp.txt";
-char  fileInfoRun[80]    = "help.txt";
-char  fileCopyError[80]  = "copy.error";
-char  fileHints[80]      = "hints.txt";
-char  fileInfoAdmin[80]  = "help_command.txt";
-char  fileInfoGpl[80]    = "gpl.txt";
-char  fileProjList[80]   = "conf_list.txt";
-char  fileLog[80]        = "log.txt";
-char  fileDefault[80]    = "default.conf";
-char  fileError[80]      = "error.txt";
-char  fileServComp[80]   = "servuino/g++.result";
-char  fileServSketch[80] = "servuino/sketch.pde";
-char  fileServArduino[80]= "servuino/data.arduino";
-char  fileServError[80]  = "servuino/data.error";
-char  fileServScen[80]   = "servuino/data.scen";
-char  fileServCode[80]   = "servuino/data.code";
-char  fileServCustom[80] = "servuino/data.custom";
-char  fileServStatus[80] = "servuino/data.status";
+char  fileTemp[80]         = "temp.txt";
+char  fileInfoRun[80]      = "help.txt";
+char  fileCopyError[80]    = "copy.error";
+char  fileHints[80]        = "hints.txt";
+char  fileInfoAdmin[80]    = "help_command.txt";
+char  fileInfoGpl[80]      = "gpl.txt";
+char  fileProjList[80]     = "conf_list.txt";
+char  fileLog[80]          = "log.txt";
+char  fileDefault[80]      = "default.conf";
+char  fileError[80]        = "error.txt";
+char  fileServComp[80]     = "servuino/g++.result";
+char  fileServSketch[80]   = "servuino/sketch.pde";
+char  fileServArduino[80]  = "servuino/data.arduino";
+char  fileServError[80]    = "servuino/data.error";
+char  fileServScen[80]     = "servuino/data.scen";
+char  fileServScenario[80] = "servuino/data.scenario";
+char  fileServCode[80]     = "servuino/data.code";
+char  fileServCustom[80]   = "servuino/data.custom";
+char  fileServStatus[80]   = "servuino/data.status";
+char  fileServSerial[80]   = "servuino/data.serial";
 
 int  g_nScenDigital = 0;
 int  g_nScenAnalog  = 0;
@@ -188,145 +199,53 @@ FILE  *err;
 #include "servuino/common_lib.c"
 #include "simuino.h"
 #include "simuino_lib.c"
-#include "decode_lib.c"
 
 //====================================
 int runStep(int dir)
 //====================================
 {
-  char row[SIZE_ROW],event[SIZE_ROW],temp[SIZE_ROW];
-  char *p,temp2[SIZE_ROW],temp3[SIZE_ROW],comment[SIZE_ROW];
-  int res1 = 0,res2 = 0,value = 0;
-  int step = 0,pin,x,y;
-  char mode[12];
+  char stemp[SIZE_ROW];
+  
+  g_dir = dir;
 
   if(dir == FORWARD)currentStep++;
-  //if(dir == BACKWARD)currentStep--;
-
-  if(currentStep > g_steps)
+  if(dir == BACKWARD)currentStep--;
+  if(currentStep > g_steps || currentStep < 1)
     {
       currentStep = checkRange(HEAL,"step",currentStep);
       return(STOP); 
     }
-
-/*   if(currentStep > loopPos[currentLoop+1]) */
-/*     { */
-/*       currentLoop++; */
-/*       currentLoop = checkRange(HEAL,"loop",currentLoop); */
-/*       if(currentLoop > g_loops) */
-/* 	{ */
-/* 	  return(STOP);  */
-/* 	} */
-/*     } */
-  
-  res1 = readEvent(event,currentStep);
-
-  if(res1 > 0)
-    {
-
-      if(p=strstr(event,"Setup"))
-	{
-	  currentLoop = 0;
-	  sSetup();
-	}
-      else if(p=strstr(event,"Loop "))
-	{
-	  sscanf(event,"%d %s %d",&step,temp,&currentLoop);
-	  sLoop(currentLoop);
-	}
-      else if(p=strstr(event,"pinMode"))
-	{
-	  sscanf(event,"%d %s %s %d",&step,temp,mode,&pin);
-	  if(strstr(mode,"IN"))pinMode(pin,INPUT);
-	  if(strstr(mode,"OUT"))pinMode(pin,OUTPUT);
-	}
-      else if (p=strstr(event,"digitalRead"))
-	{
-	  sscanf(event,"%d %s %d %d",&step,temp,&pin,&value);
-	  g_value = value;
-	  digitalRead(pin);
-	}
-      else if (p=strstr(event,"digitalWrite"))
-	{
-	  sscanf(event,"%d %s %s %d",&step,temp,mode,&pin);
-	  if(strstr(mode,"LOW"))digitalWrite(pin,LOW);
-	  if(strstr(mode,"HIGH"))digitalWrite(pin,HIGH);
-	}
-      else if (p=strstr(event,"analogRead"))
-	{
-	  sscanf(event,"%d %s %d %d",&step,temp,&pin,&value);
-	  g_value = value;
-	  analogRead(pin);
-	}
-      else if (p=strstr(event,"analogWrite"))
-	{
-	  sscanf(event,"%d %s %d %d",&step,temp,&pin,&value);
-	  analogWrite(pin,value);
-	}
-      else if (p=strstr(event,"Serial:begin"))
-	{
-	  sscanf(event,"%d %s %d",&step,temp,&x);
-	  Serial.begin(x);
-	}
-      else if (p=strstr(event,"Serial:print(int)"))
-	{
-	  sscanf(event,"%d %s %d",&step,temp,&x);
-	  Serial.print(x);
-	}
-      else if (p=strstr(event,"Serial:print(int,int)"))
-	{
-	  sscanf(event,"%d %s %d",&step,temp,&x,&y);
-	  Serial.print(x,y);
-	}
-      else if (p=strstr(event,"Serial:print(char)"))
-	{
-	  getString(event,temp3);
-	  Serial.print(temp3);
-	}
-      else if (p=strstr(event,"Serial:println(int)"))
-	{
-	  sscanf(event,"%d %s %d",&step,temp,&x);
-	  Serial.println(x);
-	}
-      else if (p=strstr(event,"Serial:println(char)"))
-	{
-	  getString(event,temp3);
-	  Serial.println(temp3);
-	}
-      else if (p=strstr(event,"delay()"))
-	{
-	  sscanf(event,"%d %s %d",&step,temp,&x);
-	  delay(x);
-	}
-      else if (p=strstr(event,"delayMicroseconds"))
-	{
-	  sscanf(event,"%d %s %d",&step,temp,&x);
-	  delayMicroseconds(x);
-	}
-      else if (p=strstr(event,"attachInterrupt"))
-	{
-	  sscanf(event,"%d %s %d %d",&step,temp,&x,&y);
-	  attachInterrupt(x,0,y);
-	}
-      else if (p=strstr(event,"detachInterrupt"))
-	{
-	  sscanf(event,"%d %s %d",&step,temp,&x);
-	  detachInterrupt(x);
-	}
-      else
-	unimplemented(event);
-
-      readComment(currentStep);
-      
-      show(slog);
-    }
-  else
-    showError("Unable to step ",currentStep);
-
+  currentLoop = stepLoop[currentStep];
+  winLog();
+  winSer();
+  strcpy(stemp,status[currentStep]);
+  displayStatus(stemp);
   unoInfo();
-
+  iDelay(confDelay);
   return(0);
 }    
+
+//====================================
+int goStep(int step)
+//====================================
+{
+  char stemp[SIZE_ROW];
+
+  currentStep = step;
+  if(currentStep > g_steps || currentStep < 1)
+    {
+      currentStep = checkRange(HEAL,"step",currentStep);
+      return(STOP); 
+    }
+  currentLoop = stepLoop[currentStep];
+  winLog();
+  winSer();
+  strcpy(stemp,status[currentStep]);
+  displayStatus(stemp);
+  unoInfo();
+  return(0);
+}    
+
 //====================================
 int tokCommand(char res[40][40],char *inp)
 //====================================
@@ -349,7 +268,7 @@ void loadCurrentProj()
 //====================================
 {
   int x,res;
-  char syscom[120];
+  char syscom[120],temp[200];
 
   g_warning = NO;
   putMsg(1,"Loading Proj...");
@@ -362,12 +281,14 @@ void loadCurrentProj()
     x=system(syscom);
     initSim();
     resetSim();
-    readSimulation(fileServArduino);
+    readSimulation();
     readSketchInfo();
     setRange(confBoardType);
     init(confWinMode);
+    saveConfig(currentConf);
     unoInfo();
-    putMsg(msg_h-2,"Sketch load ready!");
+    sprintf(temp,"Sketch load ready: %s",confSketchFile);
+    putMsg(msg_h-2,temp);
     //putMsg(msg_h-2,syscom);
   }
 }
@@ -388,7 +309,7 @@ void openCommand()
 
   while(strstr(str,"ex") == NULL)
     {
-      if(currentStep == g_steps)endOfSimulation();
+      //if(currentStep == g_steps)endOfSimulation();
 
       anyErrors();
       unoInfo();
@@ -410,12 +331,7 @@ void openCommand()
 
       projNo = atoi(sstr);
 
-      if(strstr(sstr,"sil"))//silent mode
-	{
-	  g_silent++;;
-          if(g_silent > 1)g_silent = 0;
-	}
-      else if(strstr(sstr,"gpl"))
+      if(strstr(sstr,"gpl"))
         {
           readMsg(gplFile);
         }
@@ -425,9 +341,10 @@ void openCommand()
         }
       else if(strstr(sstr,"run"))
 	{
-	  stop = 0;
+	  stop = 1;
           if(n == 2)stop = atoi(command[1]);
 	  stop = checkRange(HEAL,"step",stop);
+
 	  runMode(stop);
           if(stop==0)putMsg(2,"Back in Admin Mode!");
 	}
@@ -463,7 +380,7 @@ void openCommand()
 		  tmp=system(syscom);
 		  initSim();
 		  readSketchInfo();
-		  readSimulation(fileServArduino);
+		  readSimulation();
 		  runStep(FORWARD);
 		  readMsg(fileServScen);
 		}
@@ -499,7 +416,7 @@ void openCommand()
 		  tmp=system(syscom);
 		  initSim();
 		  readSketchInfo();
-		  readSimulation(fileServArduino);
+		  readSimulation();
 		  runStep(FORWARD);
 		  readMsg(fileServScen);
 		}
@@ -643,15 +560,6 @@ void openCommand()
 	      strcpy(currentConf,fileDefault);
 	    }	
 	}
-      else if(strstr(sstr,"record"))
-	{
-          if(n == 2)confLogFile = atoi(command[1]);
-	  if(confLogFile >=0 && confLogFile < 2)
-	    {
-	      saveConfig(currentConf);
-	      readMsg(currentConf);
-	    }
-	}
       else if(strstr(sstr,"win")) //windows layout
         {
           if(n == 2)
@@ -667,12 +575,6 @@ void openCommand()
           if(n == 2)loop = atoi(command[1]);
 	  loop = checkRange(HEAL,"loop",loop);
 	  runLoops(loop);
-	}
-      else if(strstr(sstr,"sys"))
-	{
-	  p = p+4;
-	  wLog(p,-1,-1);
-	  x=system(p);
 	}
       else if(strstr(sstr,"clear"))
 	{
@@ -739,17 +641,19 @@ void openCommand()
 void runMode(int stop)
 //====================================
 {
-  int ch,x,step,tmp,res=0,a=0,b=0,ir,ok=0;
+  int ch,x,step,tmp,res=0,a=0,b=0,ir,ok=0,n=0;
   char tempName[80],syscom[120],temp[80];
+  char command[40][40];
+
   strcpy(tempName,"help.txt");
 
   s_mode = RUN;
 
 
-  if(stop > 0)
+  if(stop > 1)
     {
       if(stop > g_steps)stop = g_steps;
-      if(stop > currentStep)
+      //if(stop > currentStep)
 	runAll(stop);
       return;
     }
@@ -758,7 +662,7 @@ void runMode(int stop)
 
   while(1)  
     {
-      if(currentStep == g_steps)endOfSimulation();
+      //if(currentStep == g_steps)endOfSimulation();
 
       anyErrors();
       if(g_silent==NO )mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
@@ -771,7 +675,7 @@ void runMode(int stop)
 
       ch = getchar();
 
-      if (ch=='q' || ch=='x')
+      if (ch=='q')
 	{
 	  return;
 	}
@@ -780,19 +684,19 @@ void runMode(int stop)
         {
           readMsg(fileInfoRun);
         }
-      else if(ch=='c' ) // scenario
+      else if (ch=='c')
+        {
+          readMsg(currentConf);
+        }
+      else if(ch=='y' ) // scenario
 	{
 	  readMsg(fileServScen);
 	}
-      else if(ch=='z')//silent mode
+      else if (ch=='x')
 	{
-	  g_silent++;;
-          if(g_silent > 1)g_silent = 0;
-	  if(g_silent==0)mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
-	  if(g_silent==1)mvwprintw(uno,board_h-2,1,"R%1d<",confWinMode);
-	  show(uno);
+	  readMsg(fileServScenario);
 	}
-      else if (ch=='g')
+      else if (ch=='G')
 	{
 	  runAll(g_steps);
 	}
@@ -810,81 +714,98 @@ void runMode(int stop)
 	}
       else if (ch=='a')
 	{
-	  resetSim();
-	  init(confWinMode);
-	  unoInfo();
-	  mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
-	  show(uno);
-	}
-      else if (ch=='b')
-	{
-	  if(confBoardType==UNO)
-	    confBoardType = MEGA;
-	  else
-	    confBoardType = UNO;
-	  //initSim();
-	  setRange(confBoardType);
-	  resetSim();
-	  init(confWinMode);
-	  unoInfo();
-	  mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
-	  show(uno);
+          goStep(1);
 	}
       else if (ch=='r')
 	{
-	  runLoop();
+          goStep(loopStep[currentLoop+1]);
+	}
+      else if (ch=='o')
+	{
+          goStep(loopStep[currentLoop]);
+	}
+      else if (ch=='p')
+	{
+          goStep(loopStep[currentLoop-1]);
+	}
+      else if (ch=='z')
+	{
+          goStep(g_steps);
+	}
+      else if (ch=='k')
+	{
+	  resetSim();
+	  init(confWinMode);
+	  unoInfo();
+	  mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
+	  show(uno);
+	}
+      else if (ch=='f')// Up Arrow 
+	{
+	  goStep(currentStep+1);
+	}
+      else if (ch=='b')// Down Arrow
+	{
+	  goStep(currentStep-1);
+	}
+      else if (ch=='R') // Right Arrow
+	{
+	  runLoop(FORWARD);
+	}
+      else if (ch=='P') // Left Arrow
+	{
+	  runLoop(BACKWARD);
 	}
       else if (ch=='t')
 	{
 	  runNextRead();
 	}
-      else if (ch=='s') 
+      else if (ch=='i') 
 	{
-	  runStep(FORWARD);
-	}
-      else if (ch=='i')
-        {
           step = currentStep + 1;
-	  sprintf(temp," Enter interrupt id and value to be set at step %d. Ex. 1 0 ",step);
-	  putMsg(2,temp);
-          wgetstr(uno,temp);
-          if(strstr(temp,"q") == NULL)
+	  sprintf(temp,"(Step:%d) Enter: d/a pin value (q - cancel)",step);
+          putMsg(2,temp);
+	  wgetstr(uno,temp);
+	  n = tokCommand(command,temp);
+      
+	  if(strstr(command[0],"q") == NULL && n == 3)
 	    {
-	      sscanf(temp,"%d%d",&ir,&x);
-	      ok = S_OK;
-	      ok = ok + checkRange(S_OK,"interrupt",ir);
-	      ok = ok + checkRange(S_OK,"digval",x);
-	      ok = ok + checkRange(S_OK,"step",step);
+	      g_pinNo = atoi(command[1]);
+	      x = atoi(command[2]);
+
+	      if(!strcmp(command[0],"a"))
+		{
+		  ok = ok + checkRange(S_OK,"anapin",g_pinNo);
+		  ok = ok + checkRange(S_OK,"anaval",x);
+		  g_pinType = ANA;
+		}
+	      if(!strcmp(command[0],"d"))
+		{
+		  ok = ok + checkRange(S_OK,"digpin",g_pinNo);
+		  ok = ok + checkRange(S_OK,"digval",x);
+		  g_pinType = DIG;
+		}
 
 	      if(ok == S_OK)
-		{      
-		  if(attached[ir] == YES)
-		    {
-		      //putMsg(2," Accepted!");
-		      g_scenSource = 1;
-		      g_pinType = DIG;
-		      g_pinNo = inrpt[ir];
-		      // steps, source, pintype, pinno, pinvalue, pinstep
-		      sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1,ADD);
-		      putMsg(2,syscom);
-		      tmp=system(syscom);
-		      initSim();
-		      readSketchInfo();
-		      readSimulation(fileServArduino);
-		      runStep(FORWARD);
-		      readMsg(fileServScen);
-		    }
-		  else
-		    putMsg(2,"Interrupt not attached");
+		{ 
+		  g_scenSource = 1;
+		  // steps, source, pintype, pinno, pinvalue, pinstep
+		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1,ADD);
+		  tmp=system(syscom);
+		  initSim();
+		  readSketchInfo();
+		  readSimulation();
+		  runStep(FORWARD);
+		  readMsg(fileServScen);
 		}
 	    }
 	  else
 	    putMsg(2,"Cancelled!");
-        }
+	}
       else if (ch=='v') 
 	{
           step = currentStep + 1;
-	  sprintf(temp," Enter value to be read at step %d",step);
+	  sprintf(temp," Enter value to be read at step %d (q - cancel)",step);
           putMsg(2,temp);
 	  res = analyzeEvent(simulation[step]);
           if(res > 0)
@@ -905,7 +826,7 @@ void runMode(int stop)
 		      tmp=system(syscom);
 		      initSim();
 		      readSketchInfo();
-		      readSimulation(fileServArduino);
+		      readSimulation();
 		      runStep(FORWARD);
 		      readMsg(fileServScen);
 		    }
@@ -916,28 +837,25 @@ void runMode(int stop)
 	  else
 	    putMsg(2,"Next step is not a Read event");
 	}
-      else if (ch=='l') 
-	{
-	  confLogLev++;
-	  if(confLogLev > 3)confLogLev = 0;
-	}
       else if (ch=='+') 
 	{
 	  confDelay = confDelay + 10;
+          if(confDelay > 1000)confDelay = 1000;
+	  sprintf(temp,"Animation Delay: %d",confDelay);
+	  putMsg(4,temp);
 	}
       else if (ch=='-') 
 	{
 	  confDelay = confDelay - 10;
 	  if(confDelay < 0)confDelay = 0;
-          if(confDelay > 1000)confDelay = 1000;
-	}
-      else if (ch=='f') 
-	{
-	  confLogFile++;
-	  if(confLogFile > 1)confLogFile = 0;
+	  sprintf(temp,"Animation Delay: %d",confDelay);
+	  putMsg(4,temp);
 	}
       else
-        putMsg(msg_h-2,"Unknown R command");
+	{
+	  sprintf(temp,"Unknown command: %c",ch);
+	  putMsg(msg_h-2,temp);
+	}
     }
   return;
 }
@@ -947,6 +865,9 @@ int main(int argc, char *argv[])
 {
   char syscom[120];
   int ch,i,x;
+
+  currentStep = 1;
+  currentLoop = 0;
 
   err = fopen(fileError,"w");
 
@@ -960,14 +881,6 @@ int main(int argc, char *argv[])
   inrpt[5] = IR5;
 
 
-  if(argc == 2)
-    {
-      strcpy(currentConf,argv[1]);
-      strcat(currentConf,".conf");
-    }
-  else
-    strcpy(currentConf,fileDefault);
-
   sprintf(syscom,"ls *.conf > %s;",fileProjList);
   x=system(syscom);
   sprintf(syscom,"rm %s;touch %s;",fileTemp,fileTemp);
@@ -979,11 +892,13 @@ int main(int argc, char *argv[])
   sprintf(syscom,"rm %s;touch %s;",fileCopyError,fileCopyError);
   x=system(syscom);
 
+  readSetting();
   readConfig(currentConf);
 
   initSim();
   resetSim();
-  max_steps = readSimulation(fileServArduino);
+
+  readSimulation();
   readSketchInfo();
   setRange(confBoardType);
   init(confWinMode);

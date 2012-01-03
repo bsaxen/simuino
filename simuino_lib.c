@@ -1,5 +1,5 @@
 /*  Simuino is a Arduino Simulator based on Servuino Engine
-    Copyright (C) 2011  Benny Saxen
+    Copyright (C) 2012  Benny Saxen
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -56,12 +56,11 @@ int analyzeEvent(char *event)
   {
     if(strstr(event,"analogRead") || strstr(event,"digitalRead"))
       {
-	sscanf(event,"%d %s %d %d",&step,str,&pin,&value);
+	sscanf(event,"%s %d %d",str,&pin,&value);
 	g_pinNo = pin;
 	g_pinValue = value;
 	if(strstr(event,"analog"))  g_pinType = ANA;
 	if(strstr(event,"digital")) g_pinType = DIG;
-	if(currentStep+1 != step) putMsg(5,"Step number mismatch in analyzeEvent");
 	return(g_pinType);
       } 
     return(0); 
@@ -82,7 +81,9 @@ void show(WINDOW *win)
       if(confBoardType ==MEGA)
 	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.5");
       wmove(win,1,2);
-      wprintw(uno,"Sketch: %s",appName);
+      wprintw(uno,"Project......: %s              ",currentConf);
+      wmove(win,2,2);
+      wprintw(uno,"Loaded Sketch: %s              ",appName);
     }
   if(win == ser)
     {
@@ -111,7 +112,6 @@ void show(WINDOW *win)
   wmove(uno,board_h-2,4);
   wrefresh(uno);
   wrefresh(win);
-  //iDelay(confDelay);
 }
 
 //====================================
@@ -188,6 +188,20 @@ void saveConfig(char *cf)
       fprintf(out,"SKETCH     %s\n",confSketchFile);
     }
   fclose(out);
+
+  // Store setting
+  out = fopen("settings.txt","w");
+  if(out == NULL)
+    {
+      showError("No setting file ",-1);
+    }
+  else
+    {
+      lt = time(NULL);
+      fprintf(out,"# Simuino Setting %s",ctime(&lt));
+      fprintf(out,"PROJECT: %s\n",cf);
+    }
+  fclose(out);
 }
 
 //====================================
@@ -211,226 +225,90 @@ void resetFile(const char *filename)
   fclose(out);
 }
 
-//====================================
-void logFile(char *m)
-//====================================
-{
-  FILE *out;
-
-  out = fopen(fileLog,"a");
-  if(out == NULL)
-    {
-      showError("Unable to open log file",-1);
-    }
-  else
-    {
-      fprintf(out,"%s\n",m);
-      fclose(out);
-    }
-}
 
 //====================================
-void wLog(const char *p, int value1, int value2)
+void fill(int len,char *p,char c)
 //====================================
 {
   int i;
-  char temp[100],temp1[100];
 
-  strcpy(temp,"");
-  strcpy(temp1,"");
-
-  if(value2 > -2) // add index
+  if(len > 0)
     {
-      sprintf(temp," %d,%d ",currentLoop,currentStep);
+      for(i=0;i<len;i++)p[i]=c;
+      p[len]='\0';
     }
-  strcat(temp,p);
- 
-
-  if(value1 > -1)
-    {
-      sprintf(temp1," %d",value1);
-      strcat(temp,temp1);
-    }
-  
-  if(value2 > -1)
-    {
-      sprintf(temp1," %d",value2);
-      strcat(temp,temp1);
-    }
-
-  if(error == 1)
-    {
-      temp[0]='*';
-      error = 0;
-    }
-
-  if(confLogFile==YES)logFile(temp);
-
+}
+//====================================
+void winLog()
+//====================================
+{
+  int i,k;
+  char filler[120];
 
   wmove(slog,1,1);
-  wprintw(slog,"%s",logBlankRow);
-  wscrl(slog,-1);
-  wmove(slog,1,1);
-  wprintw(slog,">%s",simulation[currentStep+1]);
-  wmove(slog,2,1);
-  if(g_silent == 0)wprintw(slog,"%s",temp);
+  fill(log_w-strlen(simulation[currentStep+1]),filler,' ');
+  wprintw(slog,"next>%s%s",simulation[currentStep+1],filler);
+  for(i=1;i<log_h-2;i++)
+    {
+      wmove(slog,i+1,1);
+      k = currentStep - i+1;
+      if(k>0)
+	{
+	  fill(log_w-strlen(simulation[k]),filler,' ');
+	  wprintw(slog,"[%d,%d] %s%s",k,stepLoop[k],simulation[k],filler);
+	}
+      else
+	wprintw(slog,"%s",logBlankRow);
+    }
   show(slog);
 }
 
 //====================================
-void mLog0(const char *p)
+void winSer()
 //====================================
 {
-  int i;
-  char temp[100];
+  int i,j,k=0,m=0,prevL=1;
+  char buf[MAX_STEP][240];
+  char filler[120];
 
-  strcpy(temp,p);
-  if(confLogFile==YES)logFile(temp);
-
-  wmove(slog,1,1);
-  wprintw(slog,"%s",logBlankRow);
-  wscrl(slog,-1);
-  wmove(slog,1,1);
-  wprintw(slog,">%s",simulation[currentStep+1]);
-  wmove(slog,2,1);
-  if(g_silent == 0)wprintw(slog,"%s",temp);
-  show(slog);
-}
-
-//====================================
-void mLog1(const char *p, int value1)
-//====================================
-{
-  int i;
-  char temp[100], temp1[100];
-
-  strcpy(temp,"");
-  strcpy(temp1,"");
-  strcat(temp,p);
-  sprintf(temp1," %d",value1);
-  strcat(temp,temp1);
-
-  if(error == 1)
+  for(i=1;i<=currentStep;i++)
     {
-      temp[0]='*';
-      error = 0;
+      if(strlen(serial[i]) > 0)
+	{
+	  if(prevL == 1) //New Line
+	    {
+	      m++;
+	      strcpy(buf[m],serial[i]);
+	    }
+	  else
+	    strcat(buf[m],serial[i]);
+
+	  prevL = serialL[i];
+	}
     }
 
-  if(confLogFile==YES)logFile(temp);
-
-  wmove(slog,1,1);
-  wprintw(slog,"%s",logBlankRow);
-  wscrl(slog,-1);
-  wmove(slog,1,1);
-  wprintw(slog,">%s",simulation[currentStep+1]);
-  wmove(slog,2,1);
-  if(g_silent == 0)wprintw(slog,"%s",temp);
-  show(slog);
-}
-
-//====================================
-void wLog0(const char *p)
-//====================================
-{
-  int i;
-  char temp[100];
-
-  strcpy(temp,"");
-  sprintf(temp," %d,%d ",currentLoop,currentStep);
-  strcat(temp,p);
-
-  if(error == 1)
+  wmove(ser,1,1);
+  for(i=1;i<ser_h-1;i++)
     {
-      temp[0]='*';
-      error = 0;
+      wmove(ser,i,1);
+      k = m-i+1;
+      if(k>0)
+	{
+	  fill(ser_w-strlen(buf[k]),filler,' ');
+	  wprintw(ser,"%s%s",buf[k],filler);
+	}
+      else
+	wprintw(ser,"%s",logBlankRow);
     }
 
-  if(confLogFile==YES)logFile(temp);
 
-  wmove(slog,1,1);
-  wprintw(slog,"%s",logBlankRow);
-  wscrl(slog,-1);
-  wmove(slog,1,1);
-  wprintw(slog,">%s",simulation[currentStep+1]);
-  wmove(slog,2,1);
-  if(g_silent == 0)wprintw(slog,"%s",temp);
-  show(slog);
+  show(ser);
 }
-
-//====================================
-void wLog1(const char *p, int value1)
-//====================================
-{
-  int i;
-  char temp[100], temp1[100];
-
-  strcpy(temp,"");
-  strcpy(temp1,"");
-  sprintf(temp," %d,%d ",currentLoop,currentStep);
-  strcat(temp,p);
-  sprintf(temp1," %d",value1);
-  strcat(temp,temp1);
-
-  if(error == 1)
-    {
-      temp[0]='*';
-      error = 0;
-    }
-
-  if(confLogFile==YES)logFile(temp);
-
-  wmove(slog,1,1);
-  wprintw(slog,"%s",logBlankRow);
-  wscrl(slog,-1);
-  wmove(slog,1,1);
-  wprintw(slog,">%s",simulation[currentStep+1]);
-  wmove(slog,2,1);
-  if(g_silent == 0)wprintw(slog,"%s",temp);
-  show(slog);
-}
-
-//====================================
-void wLog2(const char *p, int value1, int value2)
-//====================================
-{
-  int i;
-  char temp[100], temp1[100];
-
-  strcpy(temp,"");
-  strcpy(temp1,"");
-  sprintf(temp," %d,%d ",currentLoop,currentStep);
-  strcat(temp,p);
-  sprintf(temp1," %d",value1);
-  strcat(temp,temp1);
-  sprintf(temp1," %d",value2);
-  strcat(temp,temp1);
-
-  if(error == 1)
-    {
-      temp[0]='*';
-      error = 0;
-    }
-
-  if(confLogFile==YES)logFile(temp);
-
-  wmove(slog,1,1);
-  wprintw(slog,"%s",logBlankRow);
-  wscrl(slog,-1);
-  wmove(slog,1,1);
-  wprintw(slog,">%s",simulation[currentStep+1]);
-  wmove(slog,2,1);
-  if(g_silent == 0)wprintw(slog,"%s",temp);
-
-  wmove(uno,board_h-2,4);
-  show(slog);
-}
-
 
 //====================================
 void unoInfo()
 //====================================
 {
-  //int next;
 
   wmove(uno,ap+2,3); 
 
@@ -457,99 +335,13 @@ void showLoops()
       if(i < msg_h-1)
 	{
 	  wmove(msg,2+i,2);
-          if(currentStep == loopPos[i])
+          if(currentLoop == i)
 	    wprintw(msg,">%3d: %4d -> %4d",i,loopPos[i]+1,loopPos[i+1]);
           else
             wprintw(msg," %3d: %4d -> %4d",i,loopPos[i]+1,loopPos[i+1]);
 	}
     }
   show(msg);
-}
-
-//====================================
-void wLogChar(const char *p, const char *value1, int value2)
-//====================================
-{
-  int i;
-  char temp[100],temp2[100];
-
-  strcpy(temp," ");
-  if(value2 > -2)  //add index 
-    {
-      sprintf(temp," %d,%d ",currentLoop,currentStep);
-    }  
-  strcat(temp,p);
-  
-
-  if(value1)
-    {
-      sprintf(temp2," %s",value1);
-      strcat(temp,temp2);
-    }
-  
-  if(value2 > -1)
-    {
-      sprintf(temp2," %d",value2);
-      strcat(temp,temp2);
-    }
-
-  if(error == 1)
-    {
-      temp[0]='*';
-      error = 0;
-    }
-
-
-  wmove(slog,1,1);
-  wprintw(slog,"%s",logBlankRow);
-  wscrl(slog,-1);
-  wmove(slog,1,1);
-  wprintw(slog,">%s",simulation[currentStep+1]);
-  wmove(slog,2,1);
-  if(g_silent == 0)wprintw(slog,"%s",temp);
-}
-
-
-//====================================
-void showSerial(const char *m, int newLine)
-//====================================
-{
-  int i,slen=0;
-
-  if(serialMode == ON)
-    {
-      if(newLine == 1)
-	{
-	  slen = strlen(prevSerial);
-
-	  wmove(ser,1,1+slen);
-	  wprintw(ser,"%s",m);
-
-	  wscrl(ser,-1);
-
-	  wmove(ser,1,1);
-	  wprintw(ser,"%s",serBlankRow);
-
-	  strcpy(prevSerial,"");
-	}
-      else
-	{
-	  slen = strlen(prevSerial);
-	  if(slen < MAX_SERIAL_BUFFER)
-	    {
-	      strcat(prevSerial,m);
-	      wmove(ser,1,1);
-	      wprintw(ser,"%s",prevSerial);
-	    }
-	  else
-	    showError("Serial Buffer full",currentStep);
-	}
-      show(ser);
-    }
-  else
-    {
-      showError("Serial output without Serial.begin",currentStep);
-    }
 }
 
 
@@ -685,8 +477,10 @@ void initSim()
   for(i=0;i<MAX_STEP;i++)
     {
       strcpy(simulation[i],"");
+      strcpy(serial[i],"");
       strcpy(simComment[i],"");
       stepComment[i] = 0;
+      serialL[i] = 0;
     }
   for(i=0;i<MAX_LOOP;i++)
     {
@@ -717,23 +511,13 @@ void resetSim()
 //====================================
 {
   int i;
-  currentStep = 0;
+  currentStep = 1;
   currentLoop = 0;
   for(i=0;i<max_digPin;i++)
     {
       digitalMode[i] = FREE;
     }
 }
-//====================================
-void unimplemented(const char *f)
-//====================================
-{
-  char temp[200];
-  sprintf(temp,"unimplemented: %s\n",f);
-  wLog(temp,-1,-1);
-}
-
-
 
 //====================================
 void readConfig(char *cf)
@@ -787,42 +571,38 @@ int readEvent(char *ev, int step)
   return(step);
 }    
 
+
 //====================================
-int readComment(int step)
-//====================================
-{
-  int i;
-  
-  if(step > 0 && step <= g_steps)
-    {
-      for(i=1;i<=stepComment[0];i++)
-	{
-	  if(stepComment[i] == step)
-	    mLog0(simComment[i]);
-	}
-    } 
-  else
-    return(0);
- 
-  return(step);   
-}
-//====================================
-void runLoop()
+void runLoop(int dir)
 //====================================
 {
-  runStep(FORWARD);
+  int tmp;
+
+  runStep(dir);
 
   if(currentLoop ==  g_loops)
     {
       while(currentStep < g_steps)
-	runStep(FORWARD);
+	runStep(dir);
     }
 
   else if(currentLoop >= 0 && currentLoop < g_loops)
     {
-      while(currentStep < loopPos[currentLoop+1]-1)
+      if(dir == FORWARD)
 	{
-	  runStep(FORWARD);
+	  tmp = loopPos[currentLoop+1]-1;
+	  while(currentStep < tmp)
+	    {
+	      runStep(FORWARD);
+	    }
+	}
+      if(dir == BACKWARD)
+	{
+	  tmp = loopPos[currentLoop]-1;
+	  while(currentStep > tmp)
+	    {
+	      runStep(BACKWARD);
+	    }
 	}
     }
   return;
@@ -847,8 +627,19 @@ void runAll(int stop)
 {
   int x;
   stop = checkRange(HEAL,"step",stop);
-  while(currentStep < stop)
-    x = runStep(FORWARD);
+
+  if(currentStep < stop)
+    {
+      while(currentStep < stop)
+	x = runStep(FORWARD);
+    }
+
+  if(currentStep > stop)
+    {
+      while(currentStep > stop)
+	x = runStep(BACKWARD);
+    }
+
   return;
 }    
 
@@ -861,8 +652,8 @@ void endOfSimulation()
   wscrl(slog,-1);
   wmove(slog,1,1);
   wprintw(slog,">%s",logBlankRow);
-  wmove(slog,2,1);
-  wprintw(slog,"-=End of Simulation=-");
+  //wmove(slog,2,1);
+  //wprintw(slog,"-=End of Simulation=-");
   show(slog);
   return;
 }    
@@ -884,13 +675,13 @@ void runNextRead()
 
 
 //====================================
-int readSimulation(char *fileName)
+void readSimulation()
 //====================================
 {
   FILE *in;
   char row[SIZE_ROW],*p,temp[SIZE_ROW],junk[5];
   int step=0,loop=0;
-
+  
   g_steps       = 0;
   g_loops       = 0;
   g_comments    = 0;
@@ -898,7 +689,7 @@ int readSimulation(char *fileName)
   scenDigital   = 0;
   scenInterrupt = 0;
 
-  in = fopen(fileName,"r");
+  in = fopen(fileServArduino,"r");
   if(in == NULL)
     {
       showError("No simulation file",-1);
@@ -907,11 +698,11 @@ int readSimulation(char *fileName)
     {
       while (fgets(row,SIZE_ROW,in)!=NULL)
 	{
-
+	  
 	  if(row[0] == '+')
 	    {
-	      p = strstr(row,"+ ");
-              p = p+2;
+	      p = strstr(row," ? ");
+	      p = p+3;
 	      g_steps++;
 	      sscanf(row,"%s%d",junk,&step);
 	      if(step == g_steps)
@@ -921,12 +712,14 @@ int readSimulation(char *fileName)
 		  showError(row,step);
 		  showError(row,g_steps);
 		}
-	      if(p=strstr(row,"Loop "))
+	      if(p=strstr(row,"servuinoLoop "))
 		{
 		  sscanf(p,"%s%d",temp,&loop);
 		  loopPos[loop] = step;
-		  //g_loops++;
+		  loopStep[loop] = step;
+		  sprintf(simulation[step],"Loop %d",loop);
 		}
+	      stepLoop[step] = loop;
 	    }
 	  if(row[0] == '=')
 	    {
@@ -938,13 +731,16 @@ int readSimulation(char *fileName)
               if(step == g_steps)
 		{
 		  stepComment[g_comments] = step;
+		  commentStep[step] = g_comments;
 		  strcat(simComment[g_comments],p);
 		}
 	    }
-
+	  
           else if(p=strstr(row,"ENDOFSIM"))
             {
-              loopPos[loop] = step;
+	      loop++;
+              loopPos[loop]  = step+1;
+	      loopStep[loop] = step+1;
               strcpy(simulation[step+1],"End of Simulation !");
             }
           else if(p=strstr(row,"SCENARIODATA"))
@@ -952,11 +748,16 @@ int readSimulation(char *fileName)
               sscanf(p,"%s%d%d%d",temp,&scenDigital,&scenAnalog,&scenInterrupt);
             }
 	}
+
       g_loops = loop;
-      loopPos[loop] = step;
+      //loopPos[loop] = step;
+      
+      readStatus();
+      readSerial();
+      
       fclose(in);
     }
-  return(g_loops);
+  return;
 }    
 
 //====================================
@@ -1354,6 +1155,10 @@ void init(int mode)
 
   for(i=0;i<log_w;i++)logBlankRow[i] = ' ';logBlankRow[i]='\0';
   for(i=0;i<ser_w;i++)serBlankRow[i] = ' ';serBlankRow[i]='\0';
+
+  //keypad(msg, TRUE);
+  keypad(uno, TRUE);
+  // keypad(msg, TRUE);
 }
 
 //====================================
@@ -1426,6 +1231,305 @@ int loadSketch(char sketch[])
   return(0);
 }
 
+//====================================
+int readScenario()
+//====================================
+{
+  FILE *in;
+  char row[SIZE_ROW];
+  int step=0,res=0,loop=0;
+  
+  in = fopen(fileServArduino,"r");
+  if(in == NULL)
+    {
+      showError("readScenario: Unable to open file",-1);
+    }
+  else
+    {
+      while (fgets(row,SIZE_ROW,in)!=NULL)
+        {
+	  if(row[0] == '+')
+	    {
+	      step++;
+	      strcpy(simulation[step],row);
+	      if(strstr(row,"Loop"))
+		{
+		  loop++;
+		  loopPos[loop]  = step;
+		  loopStep[loop] = step;
+		}
+	      stepLoop[step] = loop;
+	      //printf("%s\n",row);
+	    }
+	}
+      fclose(in);
+      g_steps = step;
+      g_loops = loop;
+      res = step;
+    }
+  return(res);
+}
+
+//====================================
+int readStatus()
+//====================================
+{
+  FILE *in;
+  char row[SIZE_ROW];
+  int step=0,res=0;
+  
+  in = fopen(fileServStatus,"r");
+  if(in == NULL)
+    {
+      showError("readStatus: Unable to open file",-1);
+    }
+  else
+    {
+      fgets(row,SIZE_ROW,in);// read first header line in file
+      while (fgets(row,SIZE_ROW,in)!=NULL)
+        {
+	  sscanf(row,"%d",&step);
+          //step++;
+	  strcpy(status[step],row);
+	  //printf("%s\n",row);
+	}
+      fclose(in);
+      res = step;
+    }
+  return(res);
+}
+
+//====================================
+void readSerial()
+//====================================
+{
+  FILE *in;
+  char *left,*right;  char row[SIZE_ROW],line[SIZE_ROW],value[SIZE_ROW];
+  int  step=0,res=0;
+  
+  in = fopen(fileServSerial,"r");
+  if(in == NULL)
+    {
+      showError("readSerial: Unable to open file",-1);
+    }
+  else
+    {
+      fgets(row,SIZE_ROW,in);// read first header line in file
+      while (fgets(row,SIZE_ROW,in)!=NULL)
+        {
+	  //strcpy(serial[step],row);
+	  //printf("%s\n",row);
+	  sscanf(row,"%d %s",&step,line);
+	  if(strstr(line,"NL")) serialL[step] = 1;
+	  else
+	    serialL[step] = 0;
+	  left = strstr(row,"[");
+	  right = strstr(row,"]");
+	  //printf("%d %s left=%s right=%s\n",step,line,left,right);
+ 	  if(right && left)
+	    {
+	      strcpy(right,"\0"); 
+	      strcpy(serial[step],++left);
+	      //printf("Serial:%s\n",serial[step]);
+	    }
+	}
+      fclose(in);
+    }
+  return;
+}
+
+//====================================
+void displayStatus(char *s)
+//====================================
+{
+  int i;
+  char *pch,res[100][240],temp[240];
+  int count = 0,step = 0, mode,pin,nd,na,value;
+  int digPinValue[MAX_PIN_DIGITAL_MEGA];
+  int anaPinValue[MAX_PIN_ANALOG_MEGA];
+
+  for(i=0;i<MAX_PIN_DIGITAL_MEGA;i++)
+    {
+      digPinValue[i] = 0;
+    }
+  for(i=0;i<MAX_PIN_ANALOG_MEGA;i++)
+    {
+      anaPinValue[i] = 0;
+    }
+
+
+  pch = strtok(s,",");
+  while (pch != NULL)
+    {
+      strcpy(res[count],pch);
+      count++;
+      pch = strtok(NULL, ",");
+    }
+  
+  // ======= Decode =======
+  // Step
+  sscanf(res[0],"%d",&step);
+  
+  // Digital Pin Mode
+  //printf("len=%d %d %s\n",max_digPin,strlen(res[1]),res[1]);
+  for(i=0;i<=max_digPin;i++)
+    {
+      strcpy(temp,res[1]);
+      if(temp[i]=='X')digitalMode[i] = RX;  
+      if(temp[i]=='Y')digitalMode[i] = TX; 
+      if(temp[i]=='I')digitalMode[i] = INPUT; 
+      if(temp[i]=='O')digitalMode[i] = OUTPUT; 
+      if(temp[i]=='C')digitalMode[i] = I_CHANGE; 
+      if(temp[i]=='R')digitalMode[i] = I_RISING; 
+      if(temp[i]=='F')digitalMode[i] = I_FALLING; 
+      if(temp[i]=='L')digitalMode[i] = I_LOW; 
+      if(temp[i]=='-')digitalMode[i] = 0; 
+      if(temp[i]=='Q')digitalMode[i] = WRONG; 
+    }
+  // printf("%s\n",s);
+
+  // Analog Values
+  sscanf(res[2],"%d",&na);
+  for(i=0;i<na;i++)
+    {
+      sscanf(res[4+i*2],"%d",&pin);
+      sscanf(res[3+(i+1)*2],"%d",&value);
+      anaPinValue[pin] = value;
+    }
+  // Digital Values
+  sscanf(res[3],"%d",&nd);
+  for(i=na;i<nd;i++)
+    {
+      sscanf(res[4+i*2],"%d",&pin);
+      sscanf(res[3+(i+1)*2],"%d",&value);
+      digPinValue[pin] = value;
+    }
+  
+  // ======= Display =======
+
+  // Digital Pin Mode
+  for(pin=0;pin<=max_digPin;pin++)
+    {
+      mode = digitalMode[pin];
+      wmove(uno,digPinRow[pin]-1,digPinCol[pin]);
+      if(pin < 22)
+	waddch(uno,ACS_VLINE);
+
+      wmove(uno,digStatRow[pin],digStatCol[pin]);
+      if(mode==INPUT)
+	{
+	  wprintw(uno,"In");
+	}
+      else if(mode==OUTPUT)
+	{
+	  wprintw(uno,"Out");
+	}     
+      else if(mode==RX)
+	{
+	  wprintw(uno,"RX");
+	}     
+      else if(mode==TX)
+	{
+	  wprintw(uno,"TX");
+	}      
+      else if(mode==I_RISING)
+	{
+	  wprintw(uno,"IR");
+	}      
+      else if(mode==I_FALLING)
+	{
+	  wprintw(uno,"IF");
+	}   
+      else if(mode==I_CHANGE)
+	{
+	  wprintw(uno,"IC");
+	}     
+      else if(mode==I_LOW)
+	{
+	  wprintw(uno,"IL");
+	}     
+      else if(mode==WRONG)
+	{
+	  wprintw(uno,"???");
+	}
+      else    
+	  wprintw(uno,"   ");  
+
+    }
+
+  // Digital Pin Value
+  for(pin=0;pin<=max_digPin;pin++)
+    {
+      value = digPinValue[pin];
+      
+      wmove(uno,digPinRow[pin],digPinCol[pin]);
+      if(value==HIGH)
+	{
+	  waddch(uno,ACS_DIAMOND);
+	}
+      else if(value==LOW)
+	{
+	  waddch(uno,ACS_BULLET);
+	}
+      else if(value < 10 && digitalMode[pin] > 0)
+	{
+	  //wmove(uno,digPinRow[pin],digPinCol[pin]);
+	  wprintw(uno,"%1d",value);
+	}
+      else if(value >= 10 && digitalMode[pin] > 0)
+	{
+	  wmove(uno,digPinRow[pin],digPinCol[pin]-2);
+	  wprintw(uno,"%3d",value);
+	}
+      else
+	{
+	  wmove(uno,digPinRow[pin],digPinCol[pin]-2);
+	  wprintw(uno,"   ");
+	}
+
+    }
+
+  // Analog Pin Value
+  for(pin=0;pin<=max_anaPin;pin++)
+    {
+      value = anaPinValue[pin];
+      if(value > 0)
+	{
+	  wmove(uno,ap,anaPinCol[pin]-3);
+	  wprintw(uno,"%4d",value);
+	}
+    }
+  
+  show(uno);
+}
+
+
+//====================================
+void readSetting()
+//====================================
+{
+  FILE *in;
+  char row[120],sketch[120],*p,*q,name[120];
+
+  in = fopen("settings.txt","r");
+  if(in == NULL)
+    {
+      showError("No settings",-1);
+    }
+  else
+    {
+      while (fgets(row,120,in)!=NULL)
+	{
+
+	  if(p=strstr(row,"PROJECT:"))
+	    {
+	      q = strstr(p,":");q++;
+	      sscanf(q,"%s",currentConf);
+	    }
+	  //readSketchName(sketch,name);
+	}
+    }
+}
 //====================================
 // End of file
 //====================================
