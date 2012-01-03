@@ -1,26 +1,35 @@
 [Run Mode]
- s  one step
-
- r  run current loop
-
+Goto:
+ f  step forward
+ b  step backward
+ r  loop forward
+ o  loop reset
+ p  loop backward
+ a  goto first step
+ z  goto last step
  t  step to next analogRead/digitalRead
 
- g  run complete simulation
+Animation:
+ R  loop forward
+ P  loop backward
+ G  step through scenario
+ +  Increase Animation Delay +10
+ -  Decrease Animation Delay -10
 
- a  re-run simulation
-
- v  set value in next analogRead/digitalRead
+Scenario breakpoints:
+ y  View Scenario Breakpoints
+ x  Expanded view of Scenario Breakpoints
+ v  set value analogRead/digitalRead
     Current step must be one step before Read
     Use 't' to step between Read events.
+ i  set Scenario Breakpoint at current step
+    Example: a 4 323  (analog pin=4 value=323)
 
- i  set value for interrupts
-
+Window:
  w  toggles window layout mode.
 
+Loop Information:
  l  show loop information
-
- z  toggles silent mode - no logging
-
+------------------------------------
  q  quit Run Mode, enter Admin Mode. 
-
  h  show this information

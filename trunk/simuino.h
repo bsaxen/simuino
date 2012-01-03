@@ -47,7 +47,7 @@ void unimplemented(const char *f);
 void readConfig();
 void runLoop();
 void runAll();
-int  readSimulation(char *fileName);
+void readSimulation();
 void showScenario(char *fileName);
 void readMsg(char *fileName);
 void init();
@@ -69,5 +69,6 @@ void attachInterrupt(int interrupt,void(*func)(),int mode);
 void detachInterrupt(int interrupt);
 void interrupts();
 void noInterrupts();
-
+int  readStatus();
+void readSerial();
 

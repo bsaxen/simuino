@@ -7,7 +7,7 @@ load <steps>     Load current project and
                  create scenario of length <steps>
                  if no parameters, <steps> are as configured
 
-list             List available projects. 
+list             List available projects (max 10). 
                  Selected is marked with '>'
 
 <n>              Select project according to number in list
