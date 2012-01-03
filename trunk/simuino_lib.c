@@ -215,14 +215,14 @@ void resetFile(const char *filename)
   if(out == NULL)
     {
       showError("Unable to reset file ",-1);
+      return;
     }
   else
     {
       lt = time(NULL);
       fprintf(out,"# Simuino Log File %s",ctime(&lt));
+      fclose(out);
     }
-
-  fclose(out);
 }
 
 
@@ -526,11 +526,15 @@ void readConfig(char *cf)
   FILE *in;
   char row[80],*p,temp[40];
   int x;
-
+  
   in = fopen(cf,"r");
   if(in == NULL)
     {
       showError("No config file",-1);
+      confSteps = 444;
+      confWinMode = 2;
+      confDelay = 100;
+      strcpy(confSketchFile,"helloWorld_UNO.c");
       return;
     }
   else
@@ -774,6 +778,7 @@ void showScenario(char *fileName)
   if(in == NULL)
     {
       showError("Unable to open scenario file",-1);
+      return;
     }
   else
     {
@@ -791,8 +796,8 @@ void showScenario(char *fileName)
           wmove(msg,1,1); wprintw(msg,"No scenario data in sketch");
 	}
       show(msg);
+      fclose(in);
     }
-  fclose(in);
   return;
 }
 
@@ -810,6 +815,7 @@ void selectProj(int projNo,char *projName)
   if(in == NULL)
     {
       showError("Unable to open list conf file",-1);
+      return;
     }
   else
     {
@@ -821,8 +827,8 @@ void selectProj(int projNo,char *projName)
               sscanf(row,"%s",projName);
 	    }
         }
+      fclose(in);
     }
-  fclose(in);
   return;
 }
 
@@ -839,6 +845,7 @@ void readMsg(char *fileName)
   if(in == NULL)
     {
       showError("Unable to open msg file",-1);
+      return;
     }
   else
     {
@@ -878,8 +885,8 @@ void readMsg(char *fileName)
 	    }
 	}
       show(msg);
+      fclose(in);
     }
-  fclose(in);
   return;
 }    
 
@@ -1174,6 +1181,7 @@ int  countRowsInFile(char *fileName)
   if(in == NULL)
     {
       showError("countRowsInFile: Unable to open file",-1);
+      return(999);
     }
   else
     {
@@ -1244,6 +1252,7 @@ int readScenario()
   if(in == NULL)
     {
       showError("readScenario: Unable to open file",-1);
+      return(res);
     }
   else
     {
@@ -1283,6 +1292,7 @@ int readStatus()
   if(in == NULL)
     {
       showError("readStatus: Unable to open file",-1);
+      return(res);
     }
   else
     {
@@ -1312,6 +1322,7 @@ void readSerial()
   if(in == NULL)
     {
       showError("readSerial: Unable to open file",-1);
+      return;
     }
   else
     {
@@ -1516,6 +1527,8 @@ void readSetting()
   if(in == NULL)
     {
       showError("No settings",-1);
+      strcpy(currentConf,"default.conf");
+      return;
     }
   else
     {
