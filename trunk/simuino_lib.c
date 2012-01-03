@@ -531,6 +531,7 @@ void readConfig(char *cf)
   if(in == NULL)
     {
       showError("No config file",-1);
+      return;
     }
   else
     {
