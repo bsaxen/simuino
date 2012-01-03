@@ -1164,9 +1164,6 @@ void init(int mode)
   for(i=0;i<log_w;i++)logBlankRow[i] = ' ';logBlankRow[i]='\0';
   for(i=0;i<ser_w;i++)serBlankRow[i] = ' ';serBlankRow[i]='\0';
 
-  //keypad(msg, TRUE);
-  keypad(uno, TRUE);
-  // keypad(msg, TRUE);
 }
 
 //====================================
@@ -1410,7 +1407,7 @@ void displayStatus(char *s)
     }
   // Digital Values
   sscanf(res[3],"%d",&nd);
-  for(i=na;i<nd;i++)
+  for(i=na;i<na+nd;i++)
     {
       sscanf(res[4+i*2],"%d",&pin);
       sscanf(res[3+(i+1)*2],"%d",&value);
