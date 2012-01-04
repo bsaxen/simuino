@@ -72,4 +72,4 @@ void noInterrupts();
 int  readStatus();
 void readSerial();
 void readTime();
-
+int  goStep(int step);
