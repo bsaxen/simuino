@@ -16,35 +16,46 @@
 */
 
 
-//====================================
-int __nsleep(const struct timespec *req, struct timespec *rem)  
-//====================================
-{  
-  struct timespec temp_rem;  
-  if(nanosleep(req,rem)==-1)  
-    __nsleep(rem,&temp_rem);  
-  else  
-    return 1;  
-}  
+//====================================   
+int milliSleep(unsigned long milisec)
+//====================================   
+{
+  struct timespec req={0};
+  time_t sec=(int)(milisec/1000);
+  milisec=milisec-(sec*1000);
+  req.tv_sec=sec;
+  req.tv_nsec=milisec*1000000L;
+  while(nanosleep(&req,&req)==-1)
+    continue;
+  return 1;
+}
 
 //====================================   
-int msleep(unsigned long milisec)  
-//====================================
-{  
-  struct timespec req={0},rem={0};  
-  time_t sec=(int)(milisec/1000);  
-  milisec=milisec-(sec*1000);  
-  req.tv_sec=sec;  
-  req.tv_nsec=milisec*1000000L;  
-  __nsleep(&req,&rem);  
-  return 1;  
-}  
+int microSleep(unsigned long microsec)
+//====================================   
+{
+  struct timespec req={0};
+  time_t sec=(int)(microsec/1000000L);
+  microsec=microsec-(sec*1000000L);
+  req.tv_sec=sec;
+  req.tv_nsec=microsec*1000;
+  while(nanosleep(&req,&req)==-1)
+    continue;
+  return 1;
+}
 
 //====================================
 void iDelay(int ms)
 //====================================
 {
-  msleep(ms);
+  milliSleep(ms);
+}
+
+//====================================
+void microDelay(int us)
+//====================================
+{
+  microSleep(us);
 }
 
 //====================================
@@ -759,7 +770,7 @@ void readSimulation()
       
       readStatus();
       readSerial();
-      
+      readTime();
       fclose(in);
     }
   return;
@@ -1275,6 +1286,38 @@ int readScenario()
       res = step;
     }
   return(res);
+}
+
+//====================================
+void readTime()
+//====================================
+{
+  FILE *in;
+  char row[SIZE_ROW],junk[10];
+  int i,step,delay;
+  
+
+  for(i=0;i<MAX_STEP;i++)stepDelay[i] = 0;
+
+  in = fopen(fileServTime,"r");
+  if(in == NULL)
+    {
+      showError("readTime: Unable to open file",-1);
+      return;
+    }
+  else
+    {
+      while (fgets(row,SIZE_ROW,in)!=NULL)
+        {
+	  if(row[0] == '+')
+	    {
+	      sscanf(row,"%s %d %d",junk,&step,&delay);
+	      stepDelay[step] = delay;
+	    }
+	}
+      fclose(in);
+    }
+  return;
 }
 
 //====================================

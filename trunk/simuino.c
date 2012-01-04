@@ -111,6 +111,8 @@ int   loopPos[MAX_LOOP];
 int   stepLoop[MAX_STEP];
 int   loopStep[MAX_LOOP];
 
+int   stepDelay[MAX_STEP];
+
 char  appName[120];
 
 int   interruptMode[2];
@@ -170,6 +172,7 @@ char  fileServCode[80]     = "servuino/data.code";
 char  fileServCustom[80]   = "servuino/data.custom";
 char  fileServStatus[80]   = "servuino/data.status";
 char  fileServSerial[80]   = "servuino/data.serial";
+char  fileServTime[80]     = "servuino/data.time";
 
 int  g_nScenDigital = 0;
 int  g_nScenAnalog  = 0;
@@ -205,7 +208,8 @@ int runStep(int dir)
 //====================================
 {
   char stemp[SIZE_ROW];
-  
+  int temp;
+
   g_dir = dir;
 
   if(dir == FORWARD)currentStep++;
@@ -221,7 +225,11 @@ int runStep(int dir)
   strcpy(stemp,status[currentStep]);
   displayStatus(stemp);
   unoInfo();
-  iDelay(confDelay);
+
+  // Realtime animation
+  temp = stepDelay[currentStep];
+  if(temp > 0)microDelay(temp);
+
   return(0);
 }    
 
@@ -289,7 +297,6 @@ void loadCurrentProj()
     unoInfo();
     sprintf(temp,"Sketch load ready: %s",confSketchFile);
     putMsg(msg_h-2,temp);
-    //putMsg(msg_h-2,syscom);
   }
 }
 
@@ -309,8 +316,6 @@ void openCommand()
 
   while(strstr(str,"ex") == NULL)
     {
-      //if(currentStep == g_steps)endOfSimulation();
-
       anyErrors();
       unoInfo();
 
@@ -662,16 +667,10 @@ void runMode(int stop)
 
   while(1)  
     {
-      //if(currentStep == g_steps)endOfSimulation();
-
       anyErrors();
       if(g_silent==NO )mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
       if(g_silent==YES)mvwprintw(uno,board_h-2,1,"R%1d<",confWinMode);
       unoInfo();
-
-      //      wmove(uno,board_h-2,1);
-      //       wprintw(uno,"                                                  ");
-
 
       ch = getchar();
 
