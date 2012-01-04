@@ -1,16 +1,13 @@
 exit             Exit Simuino
 
-proj <name>      Read project configuration  		 
-                 Do enter "load" to load project
-
-load <steps>     Load current project and
+load <steps>     Load current configuration and
                  create scenario of length <steps>
                  if no parameters, <steps> are as configured
 
-list             List available projects (max 10). 
+list             List available configurations (max 10). 
                  Selected is marked with '>'
 
-<n>              Select project according to number in list
+<n>              Select configuration according to number in list
 
 run <steps>      Step until step=<steps>
                  If no steps given - enter Run Mode
@@ -19,12 +16,12 @@ loop <loop>      Step until loop <loop>
 
 reset            Reset simulation. Current step set to 0
 
-save  <name>     Save current project as <name>
-                 If no <name>, saved to current project
+save  <name>     Save current configuration as <name>
+                 If no <name>, saved to current configuration
 
-del   <name>     Delete project. If no parameter,
-                 current project will be deleted.
-                 Default project cannot be deleted.
+del   <name>     Delete configuration. If no parameter,
+                 current configuration will be deleted.
+                 Default configuration cannot be deleted.
 
 add   <...>      Add pin-value-point in scenario
                  Ex. add a 3 100 650
@@ -44,8 +41,8 @@ info  <area>     Show info about <area>
     - g++        Show compilation errors
     - help       Show command information
 
-conf <par> <val> Edit project configuration with commands below:
+conf             Show current configuration
+conf <par> <val> Edit configuration with commands below:
    - win         Set Window layout mode to <val> (0,1,2,3,4)
    - sketch      Set sketch source file
-   - delay       Set delay to <val> (ms)
    - sim <steps> Total steps in simulation
