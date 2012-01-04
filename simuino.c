@@ -146,7 +146,6 @@ int   scenInterrupt = 0;
 // Configuration default values
 int   confSteps   = 1000;
 int   confWinMode =    2;
-int   confDelay   =  100;
 int   confLogLev  =    1;
 int   confLogFile =    0;
 char  confSketchFile[200];
@@ -504,10 +503,6 @@ void openCommand()
 		{
 		  confSteps = atoi(command[2]);	
 		}
-	      if(strstr(command[1],"delay"))
-		{
-		  confDelay = atoi(command[2]);	
-		}
 	      else if(strstr(command[1],"win"))
 		{
 		  confWinMode = atoi(command[2]);
@@ -687,6 +682,10 @@ void runMode(int stop)
         {
           readMsg(currentConf);
         }
+      else if (ch=='d')
+        {
+          readMsg(fileServTime);
+        }
       else if(ch=='y' ) // scenario
 	{
 	  readMsg(fileServScen);
@@ -835,20 +834,6 @@ void runMode(int stop)
 	    }
 	  else
 	    putMsg(2,"Next step is not a Read event");
-	}
-      else if (ch=='+') 
-	{
-	  confDelay = confDelay + 10;
-          if(confDelay > 1000)confDelay = 1000;
-	  sprintf(temp,"Animation Delay: %d",confDelay);
-	  putMsg(4,temp);
-	}
-      else if (ch=='-') 
-	{
-	  confDelay = confDelay - 10;
-	  if(confDelay < 0)confDelay = 0;
-	  sprintf(temp,"Animation Delay: %d",confDelay);
-	  putMsg(4,temp);
 	}
       else
 	{

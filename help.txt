@@ -9,12 +9,10 @@ Goto:
  z  goto last step
  t  step to next analogRead/digitalRead
 
-Animation:
+Animation(realtime time delay):
  R  loop forward
  P  loop backward
  G  step through scenario
- +  Increase Animation Delay +10
- -  Decrease Animation Delay -10
 
 Scenario breakpoints:
  y  View Scenario Breakpoints
@@ -28,7 +26,9 @@ Scenario breakpoints:
 Window:
  w  toggles window layout mode.
 
-Loop Information:
+Information:
+ c  show current configuration
+ d  show scenario delay overview
  l  show loop information
 ------------------------------------
  q  quit Run Mode, enter Admin Mode. 

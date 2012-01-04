@@ -191,10 +191,6 @@ void saveConfig(char *cf)
 	fprintf(out,"WIN_LAYOUT %d\n",confWinMode);
       else
 	confWinMode = 0;
-      if(confDelay >=0 && confDelay < 1000)
-	fprintf(out,"DELAY      %d\n",confDelay);
-      else
-	confDelay = 50;
 
       fprintf(out,"SKETCH     %s\n",confSketchFile);
     }
@@ -544,7 +540,6 @@ void readConfig(char *cf)
       showError("No config file",-1);
       confSteps = 444;
       confWinMode = 2;
-      confDelay = 100;
       strcpy(confSketchFile,"helloWorld_UNO.c");
       return;
     }
@@ -561,10 +556,6 @@ void readConfig(char *cf)
 	      if(p=strstr(row,"WIN_LAYOUT"))
 		{
 		  sscanf(p,"%s%d",temp,&confWinMode);
-		}
-	      if(p=strstr(row,"DELAY"))
-		{
-		  sscanf(p,"%s%d",temp,&confDelay);
 		}
               if(p=strstr(row,"SKETCH"))
                 {
