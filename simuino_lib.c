@@ -320,7 +320,7 @@ void unoInfo()
   wmove(uno,ap+2,3); 
 
   if(g_existError == YES)
-    wprintw(uno,"  [Errors - err]");
+    wprintw(uno,"  [Errors - err]            ");
   else if(g_warning == YES)
     wprintw(uno,"  [Possible Mismatch - load]");
   else
@@ -567,17 +567,6 @@ void readConfig(char *cf)
     }
   fclose(in);
 }
-//====================================
-int readEvent(char *ev, int step)
-//====================================
-{
-  if(step > 0 && step <= g_steps)
-    strcpy(ev,simulation[step]);
-  else
-    return(0);
-  return(step);
-}    
-
 
 //====================================
 void runLoop(int dir)
@@ -669,13 +658,28 @@ void endOfSimulation()
 void runNextRead()
 //====================================
 {
-  char event[80];
-  int x;
+  char event[120];
 
   while (!strstr(event,"digitalRead") && !strstr(event,"analogRead") && currentStep < g_steps)
     {
-      runStep(FORWARD);
-      x = readEvent(event, currentStep+1);
+      currentStep++;
+      goStep(currentStep);
+      strcpy(event,simulation[currentStep]);
+    }
+  return;
+}    
+
+//====================================
+void runPrevRead()
+//====================================
+{
+  char event[80];
+
+  while (!strstr(event,"digitalRead") && !strstr(event,"analogRead") && currentStep > 0)
+    {
+      currentStep--;
+      goStep(currentStep);
+      strcpy(event,simulation[currentStep]);
     }
   return;
 }    
@@ -1316,7 +1320,7 @@ int readStatus()
 //====================================
 {
   FILE *in;
-  char row[SIZE_ROW];
+  char row[SIZE_ROW],*p;
   int step=0,res=0;
   
   in = fopen(fileServStatus,"r");
@@ -1327,7 +1331,7 @@ int readStatus()
     }
   else
     {
-      fgets(row,SIZE_ROW,in);// read first header line in file
+      p = fgets(row,SIZE_ROW,in);// read first header line in file
       while (fgets(row,SIZE_ROW,in)!=NULL)
         {
 	  sscanf(row,"%d",&step);
@@ -1346,7 +1350,7 @@ void readSerial()
 //====================================
 {
   FILE *in;
-  char *left,*right;  char row[SIZE_ROW],line[SIZE_ROW],value[SIZE_ROW];
+  char *left,*right;  char row[SIZE_ROW],line[SIZE_ROW],value[SIZE_ROW],*p;
   int  step=0,res=0;
   
   in = fopen(fileServSerial,"r");
@@ -1357,7 +1361,7 @@ void readSerial()
     }
   else
     {
-      fgets(row,SIZE_ROW,in);// read first header line in file
+      p = fgets(row,SIZE_ROW,in);// read first header line in file
       while (fgets(row,SIZE_ROW,in)!=NULL)
         {
 	  //strcpy(serial[step],row);

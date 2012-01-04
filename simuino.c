@@ -238,12 +238,13 @@ int goStep(int step)
 {
   char stemp[SIZE_ROW];
 
-  currentStep = step;
-  if(currentStep > g_steps || currentStep < 1)
+
+  if(step > g_steps || step < 1)
     {
-      currentStep = checkRange(HEAL,"step",currentStep);
-      return(STOP); 
+      step = checkRange(HEAL,"step",step);
+      //return(STOP); 
     }
+  currentStep = step;
   currentLoop = stepLoop[currentStep];
   winLog();
   winSer();
@@ -392,7 +393,7 @@ void openCommand()
 		putMsg(2,"Wrong pin number or pin type!");
 	    }
 	  else
-	    putMsg(2,"Syntax: del <a or d> <pin> <step>");
+	    putMsg(2,"Syntax: rem <a or d> <pin> <step>");
 	}
       else if(strstr(sstr,"add")) //
 	{
@@ -758,9 +759,13 @@ void runMode(int stop)
 	{
 	  runNextRead();
 	}
+      else if (ch=='j')
+	{
+	  runPrevRead();
+	}
       else if (ch=='i') 
 	{
-          step = currentStep + 1;
+          step = currentStep;
 	  sprintf(temp,"(Step:%d) Enter: d/a pin value (q - cancel)",step);
           putMsg(2,temp);
 	  wgetstr(uno,temp);
@@ -770,30 +775,29 @@ void runMode(int stop)
 	    {
 	      g_pinNo = atoi(command[1]);
 	      x = atoi(command[2]);
-
-	      if(!strcmp(command[0],"a"))
+	      printf("%s %d %d",command[0],g_pinNo,x);
+	      if(strstr(command[0],"a"))
 		{
 		  ok = ok + checkRange(S_OK,"anapin",g_pinNo);
 		  ok = ok + checkRange(S_OK,"anaval",x);
 		  g_pinType = ANA;
 		}
-	      if(!strcmp(command[0],"d"))
+	      if(strstr(command[0],"d"))
 		{
 		  ok = ok + checkRange(S_OK,"digpin",g_pinNo);
 		  ok = ok + checkRange(S_OK,"digval",x);
 		  g_pinType = DIG;
 		}
-
 	      if(ok == S_OK)
 		{ 
 		  g_scenSource = 1;
 		  // steps, source, pintype, pinno, pinvalue, pinstep
-		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1,ADD);
+		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep,ADD);
 		  tmp=system(syscom);
 		  initSim();
 		  readSketchInfo();
 		  readSimulation();
-		  runStep(FORWARD);
+		  goStep(currentStep);
 		  readMsg(fileServScen);
 		}
 	    }
@@ -802,7 +806,7 @@ void runMode(int stop)
 	}
       else if (ch=='v') 
 	{
-          step = currentStep + 1;
+          step = currentStep ;
 	  sprintf(temp," Enter value to be read at step %d (q - cancel)",step);
           putMsg(2,temp);
 	  res = analyzeEvent(simulation[step]);
@@ -820,12 +824,12 @@ void runMode(int stop)
 		    {         
 		      g_scenSource = 1;
 		      // steps, source, pintype, pinno, pinvalue, pinstep
-		      sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep+1,ADD);
+		      sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep,ADD);
 		      tmp=system(syscom);
 		      initSim();
 		      readSketchInfo();
 		      readSimulation();
-		      runStep(FORWARD);
+		      goStep(currentStep);
 		      readMsg(fileServScen);
 		    }
 		}
