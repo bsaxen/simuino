@@ -88,9 +88,9 @@ void show(WINDOW *win)
     {
       wmove(win,0,2);
       if(confBoardType ==UNO)
-	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.5");
+	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.6");
       if(confBoardType ==MEGA)
-	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.5");
+	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.6");
       wmove(win,1,2);
       wprintw(uno,"Project......: %s              ",currentConf);
       wmove(win,2,2);
@@ -1431,7 +1431,18 @@ void displayStatus(char *s)
       if(temp[i]=='F')digitalMode[i] = I_FALLING; 
       if(temp[i]=='L')digitalMode[i] = I_LOW; 
       if(temp[i]=='-')digitalMode[i] = 0; 
-      if(temp[i]=='Q')digitalMode[i] = WRONG; 
+      //if(temp[i]=='Q')digitalMode[i] = WRONG; 
+
+      if(temp[i]=='x')digitalMode[i] = RX;  
+      if(temp[i]=='y')digitalMode[i] = TX; 
+      if(temp[i]=='i')digitalMode[i] = INPUT; 
+      if(temp[i]=='o')digitalMode[i] = OUTPUT; 
+      if(temp[i]=='c')digitalMode[i] = I_CHANGE; 
+      if(temp[i]=='r')digitalMode[i] = I_RISING; 
+      if(temp[i]=='f')digitalMode[i] = I_FALLING; 
+      if(temp[i]=='l')digitalMode[i] = I_LOW; 
+      if(temp[i]=='-')digitalMode[i] = 0; 
+      //if(temp[i]=='Q')digitalMode[i] = WRONG; 
     }
   // printf("%s\n",s);
 
