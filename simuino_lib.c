@@ -712,6 +712,7 @@ void readSimulation()
 	  
 	  if(row[0] == '+')
 	    {
+	      //printf("%s",row);
 	      p = strstr(row," ? ");
 	      p = p+3;
 	      g_steps++;
@@ -983,13 +984,15 @@ void init(int mode)
   // Pin positions on the board
   for(i=0;i<MAX_PIN_DIGITAL_UNO;i++)
     {
-      digPinCol[i]  = RF+3+4*(MAX_PIN_DIGITAL_UNO-i-1);
-      digPinRow[i]  = dp;
-      digIdCol[i]   = RF+2+4*(MAX_PIN_DIGITAL_UNO-i-1);
+      digPinCol[i]  = RF+4+4*(MAX_PIN_DIGITAL_UNO-i-1);
+      digPinRow[i]  = dp-1;
+      digValCol[i]  = RF+4+4*(MAX_PIN_DIGITAL_UNO-i-1);
+      digValRow[i]  = dp;
+      digIdCol[i]   = RF+3+4*(MAX_PIN_DIGITAL_UNO-i-1);
       digIdRow[i]   = dp+1;
-      digActCol[i]  = RF+3+4*(MAX_PIN_DIGITAL_UNO-i-1);
+      digActCol[i]  = RF+4+4*(MAX_PIN_DIGITAL_UNO-i-1);
       digActRow[i]  = dp+2;
-      digStatCol[i] = RF+3+4*(MAX_PIN_DIGITAL_UNO-i-1);
+      digStatCol[i] = RF+4+4*(MAX_PIN_DIGITAL_UNO-i-1);
       digStatRow[i] = dp-2;
     }
   for(i=MAX_PIN_DIGITAL_UNO;i<22;i++)
@@ -1006,7 +1009,7 @@ void init(int mode)
   if(confBoardType == MEGA)
     {
       j = dp+3;
-      for(i=22;i<=max_digPin;i=i+2)
+      for(i=22;i<max_digPin;i=i+2)
 	{
 	  j++;
 	  digPinCol[i]  = board_w - 35;
@@ -1019,7 +1022,7 @@ void init(int mode)
 	  digStatRow[i] = j; 
 	}
       j = dp+3;
-      for(i=23;i<=max_digPin;i=i+2)
+      for(i=23;i<max_digPin;i=i+2)
 	{
 	  j++;
 	  digPinCol[i]  = board_w - 11;
@@ -1032,15 +1035,26 @@ void init(int mode)
 	  digStatRow[i] = j; 
 	}
     }
-  for(i=0;i<=max_anaPin;i++) anaPinCol[i] = RF+27+5*i;
+  for(i=0;i<max_anaPin;i++) 
+    {
+      anaPinCol[i] = RF+27+5*i;
+      anaPinRow[i] = ap+1;
+      anaValCol[i] = RF+27+5*i;
+      anaValRow[i] = ap;
+      anaActCol[i] = RF+27+5*i;
+      anaActRow[i] = ap-2;
+    }
 
-  for(i=0;i<=max_digPin;i++){wmove(uno,digIdRow[i],digIdCol[i]); wprintw(uno,"%2d",i);}
-  for(i=0;i<=max_digPin;i++){wmove(uno,digPinRow[i],digPinCol[i]); waddch(uno,ACS_BULLET);}
-  //for(i=0;i<=max_digPin;i++){wmove(uno,digActRow[i],digActCol[i]); wprintw(uno,"a");}
-  //for(i=0;i<=max_digPin;i++){wmove(uno,digStatRow[i],digStatCol[i]);wprintw(uno,"s");}
+  for(i=0;i<max_digPin;i++){wmove(uno,digIdRow[i],digIdCol[i]); wprintw(uno,"%2d",i);}
+  for(i=0;i<max_digPin;i++){wmove(uno,digPinRow[i],digPinCol[i]); waddch(uno,ACS_BULLET);}
+  //for(i=0;i<max_digPin;i++){wmove(uno,digActRow[i],digActCol[i]); wprintw(uno,"a");}
+  //for(i=0;i<max_digPin;i++){wmove(uno,digStatRow[i],digStatCol[i]);wprintw(uno,"s");}
+  //for(i=0;i<max_digPin;i++){wmove(uno,digValRow[i],digValCol[i]);wprintw(uno,"v");}
 
-  for(i=0;i<=max_anaPin;i++){wmove(uno,ap-1,anaPinCol[i]-1); wprintw(uno,"A%1d",i);}
-  for(i=0;i<=max_anaPin;i++){wmove(uno,ap,anaPinCol[i]); waddch(uno,ACS_BULLET);}
+  for(i=0;i<max_anaPin;i++){wmove(uno,ap-1,anaPinCol[i]-1); wprintw(uno,"A%1d",i);}
+  //for(i=0;i<max_anaPin;i++){wmove(uno,anaValRow[i],anaValCol[i]); waddch(uno,ACS_BULLET);}
+  for(i=0;i<max_anaPin;i++){wmove(uno,anaPinRow[i],anaPinCol[i]); waddch(uno,ACS_BULLET);}
+  //for(i=0;i<max_anaPin;i++){wmove(uno,anaActRow[i],anaActCol[i]); wprintw(uno,"x");}
 
   show(uno);
 
@@ -1320,29 +1334,144 @@ int readStatus()
 //====================================
 {
   FILE *in;
-  char row[SIZE_ROW],*p;
-  int step=0,res=0;
-  
-  in = fopen(fileServStatus,"r");
+  char row[SIZE_ROW],data[SIZE_ROW],junk[10],*pch,*p;
+  int pin=0,step=0,res=0;
+
+  //int x_pinMode[MAX_TOTAL_PINS];
+  //int x_pinScenario[MAX_TOTAL_PINS][SCEN_MAX];
+  //int x_pinDigValue[MAX_TOTAL_PINS];
+  //int x_pinAnaValue[MAX_TOTAL_PINS];
+  //int x_pinRW[MAX_TOTAL_PINS];
+
+  in = fopen(fileServPinmod,"r");
   if(in == NULL)
     {
-      showError("readStatus: Unable to open file",-1);
-      return(res);
+      showError("No pinmod file",-1);
     }
   else
     {
-      p = fgets(row,SIZE_ROW,in);// read first header line in file
       while (fgets(row,SIZE_ROW,in)!=NULL)
-        {
-	  sscanf(row,"%d",&step);
-          //step++;
-	  strcpy(status[step],row);
-	  //printf("%s\n",row);
+	{
+	  if(row[0] == '+')
+	    {
+	      //printf("pinmod %s",row);
+	      p = strstr(row," ? ");
+	      p = p+3;
+	      sscanf(row,"%s%d",junk,&step);
+	      //printf("%d pinmod %s",step,p);
+	      //strcpy(data,p);
+	      pch = strtok(p,",");
+	      pin = 0;
+	      while (pch != NULL)
+		{
+		  x_pinMode[pin][step] = atoi(pch);
+		  //printf("step=%d pin=%d value=%d\n",step,pin,x_pinMode[pin][step]);
+		  pin++;
+		  pch = strtok(NULL, ",");
+		}
+	    }
 	}
       fclose(in);
-      res = step;
+      //exit(0);
     }
-  return(res);
+
+  in = fopen(fileServDigval,"r");
+  if(in == NULL)
+    {
+      showError("No digval file",-1);
+    }
+  else
+    {
+      while (fgets(row,SIZE_ROW,in)!=NULL)
+	{
+	  if(row[0] == '+')
+	    {
+	      //printf("pinmod %s",row);
+	      p = strstr(row," ? ");
+	      p = p+3;
+	      sscanf(row,"%s%d",junk,&step);
+	      //printf("%d pinmod %s",step,p);
+	      //strcpy(data,p);
+	      pch = strtok(p,",");
+	      pin = 0;
+	      while (pch != NULL)
+		{
+		  x_pinDigValue[pin][step] = atoi(pch);
+		  //printf("step=%d pin=%d value=%d\n",step,pin,x_pinMode[pin][step]);
+		  pin++;
+		  pch = strtok(NULL, ",");
+		}
+	    }
+	}
+      fclose(in);
+      //exit(0);
+    }
+
+  in = fopen(fileServAnaval,"r");
+  if(in == NULL)
+    {
+      showError("No anaval file",-1);
+    }
+  else
+    {
+      while (fgets(row,SIZE_ROW,in)!=NULL)
+	{
+	  if(row[0] == '+')
+	    {
+	      //printf("pinmod %s",row);
+	      p = strstr(row," ? ");
+	      p = p+3;
+	      sscanf(row,"%s%d",junk,&step);
+	      //printf("%d pinmod %s",step,p);
+	      //strcpy(data,p);
+	      pch = strtok(p,",");
+	      pin = 0;
+	      while (pch != NULL)
+		{
+		  x_pinAnaValue[pin][step] = atoi(pch);
+		  //printf("step=%d pin=%d value=%d\n",step,pin,x_pinMode[pin][step]);
+		  pin++;
+		  pch = strtok(NULL, ",");
+		}
+	    }
+	}
+      fclose(in);
+      //exit(0);
+    }
+
+  in = fopen(fileServPinrw,"r");
+  if(in == NULL)
+    {
+      showError("No anaval file",-1);
+    }
+  else
+    {
+      while (fgets(row,SIZE_ROW,in)!=NULL)
+	{
+	  if(row[0] == '+')
+	    {
+	      //printf("pinmod %s",row);
+	      p = strstr(row," ? ");
+	      p = p+3;
+	      sscanf(row,"%s%d",junk,&step);
+	      //printf("%d pinmod %s",step,p);
+	      //strcpy(data,p);
+	      pch = strtok(p,",");
+	      pin = 0;
+	      while (pch != NULL)
+		{
+		  x_pinRW[pin][step] = atoi(pch);
+		  //printf("step=%d pin=%d value=%d\n",step,pin,x_pinMode[pin][step]);
+		  pin++;
+		  pch = strtok(NULL, ",");
+		}
+	    }
+	}
+      fclose(in);
+      //exit(0);
+    }
+  
+  return(0);
 }
 
 //====================================
@@ -1386,97 +1515,32 @@ void readSerial()
 }
 
 //====================================
-void displayStatus(char *s)
+void displayStatus()
 //====================================
 {
   int i;
-  char *pch,res[100][240],temp[240];
+  char *pch,res[100][240],temp[40];
   int count = 0,step = 0, mode,pin,nd,na,value;
   int digPinValue[MAX_PIN_DIGITAL_MEGA];
   int anaPinValue[MAX_PIN_ANALOG_MEGA];
 
-  for(i=0;i<MAX_PIN_DIGITAL_MEGA;i++)
-    {
-      digPinValue[i] = 0;
-    }
-  for(i=0;i<MAX_PIN_ANALOG_MEGA;i++)
-    {
-      anaPinValue[i] = 0;
-    }
-
-
-  pch = strtok(s,",");
-  while (pch != NULL)
-    {
-      strcpy(res[count],pch);
-      count++;
-      pch = strtok(NULL, ",");
-    }
-  
-  // ======= Decode =======
-  // Step
-  sscanf(res[0],"%d",&step);
-  
-  // Digital Pin Mode
-  //printf("len=%d %d %s\n",max_digPin,strlen(res[1]),res[1]);
-  for(i=0;i<=max_digPin;i++)
-    {
-      strcpy(temp,res[1]);
-      if(temp[i]=='X')digitalMode[i] = RX;  
-      if(temp[i]=='Y')digitalMode[i] = TX; 
-      if(temp[i]=='I')digitalMode[i] = INPUT; 
-      if(temp[i]=='O')digitalMode[i] = OUTPUT; 
-      if(temp[i]=='C')digitalMode[i] = I_CHANGE; 
-      if(temp[i]=='R')digitalMode[i] = I_RISING; 
-      if(temp[i]=='F')digitalMode[i] = I_FALLING; 
-      if(temp[i]=='L')digitalMode[i] = I_LOW; 
-      if(temp[i]=='-')digitalMode[i] = 0; 
-      //if(temp[i]=='Q')digitalMode[i] = WRONG; 
-
-      if(temp[i]=='x')digitalMode[i] = RX;  
-      if(temp[i]=='y')digitalMode[i] = TX; 
-      if(temp[i]=='i')digitalMode[i] = INPUT; 
-      if(temp[i]=='o')digitalMode[i] = OUTPUT; 
-      if(temp[i]=='c')digitalMode[i] = I_CHANGE; 
-      if(temp[i]=='r')digitalMode[i] = I_RISING; 
-      if(temp[i]=='f')digitalMode[i] = I_FALLING; 
-      if(temp[i]=='l')digitalMode[i] = I_LOW; 
-      if(temp[i]=='-')digitalMode[i] = 0; 
-      //if(temp[i]=='Q')digitalMode[i] = WRONG; 
-    }
-  // printf("%s\n",s);
-
-  // Analog Values
-  sscanf(res[2],"%d",&na);
-  for(i=0;i<na;i++)
-    {
-      sscanf(res[4+i*2],"%d",&pin);
-      sscanf(res[3+(i+1)*2],"%d",&value);
-      anaPinValue[pin] = value;
-    }
-  // Digital Values
-  sscanf(res[3],"%d",&nd);
-  for(i=na;i<na+nd;i++)
-    {
-      sscanf(res[4+i*2],"%d",&pin);
-      sscanf(res[3+(i+1)*2],"%d",&value);
-      digPinValue[pin] = value;
-    }
   
   // ======= Display =======
 
   // Digital Pin Mode
-  for(pin=0;pin<=max_digPin;pin++)
+  for(pin=0;pin<max_digPin;pin++)
     {
-      mode = digitalMode[pin];
+      //mode = digitalMode[pin];
+      mode = x_pinMode[pin][currentStep];
       wmove(uno,digPinRow[pin]-1,digPinCol[pin]);
       if(pin < 22)
 	waddch(uno,ACS_VLINE);
 
       wmove(uno,digStatRow[pin],digStatCol[pin]);
+      attron(COLOR_PAIR(2));
       if(mode==INPUT)
 	{
-	  wprintw(uno,"In");
+	  wprintw(uno,"In ");
 	}
       else if(mode==OUTPUT)
 	{
@@ -1484,44 +1548,47 @@ void displayStatus(char *s)
 	}     
       else if(mode==RX)
 	{
-	  wprintw(uno,"RX");
+	  wprintw(uno,"RX ");
 	}     
       else if(mode==TX)
 	{
-	  wprintw(uno,"TX");
+	  wprintw(uno,"TX ");
 	}      
-      else if(mode==I_RISING)
+      else if(mode==RISING)
 	{
-	  wprintw(uno,"IR");
+	  wprintw(uno,"IR ");
 	}      
-      else if(mode==I_FALLING)
+      else if(mode==FALLING)
 	{
-	  wprintw(uno,"IF");
+	  wprintw(uno,"IF ");
 	}   
-      else if(mode==I_CHANGE)
+      else if(mode==CHANGE)
 	{
-	  wprintw(uno,"IC");
+	  wprintw(uno,"IC ");
 	}     
-      else if(mode==I_LOW)
+      else if(mode==LOW)
 	{
-	  wprintw(uno,"IL");
+	  wprintw(uno,"IL ");
 	}     
       else if(mode==WRONG)
 	{
 	  wprintw(uno,"???");
 	}
       else    
-	  wprintw(uno,"   ");  
+	wprintw(uno,"   ");  
 
     }
 
   // Digital Pin Value
-  for(pin=0;pin<=max_digPin;pin++)
+  for(pin=0;pin<max_totPin;pin++)
     {
-      value = digPinValue[pin];
-      
-      wmove(uno,digPinRow[pin],digPinCol[pin]);
-      if(value==HIGH)
+      value = x_pinDigValue[pin][currentStep];
+      if(pin < max_digPin)
+	wmove(uno,digPinRow[pin],digPinCol[pin]);
+      else
+	wmove(uno,ap,anaPinCol[pin-max_digPin]);
+
+      if(value == HIGH)
 	{
 	  waddch(uno,ACS_DIAMOND);
 	}
@@ -1529,35 +1596,41 @@ void displayStatus(char *s)
 	{
 	  waddch(uno,ACS_BULLET);
 	}
-      else if(value < 10 && digitalMode[pin] > 0)
-	{
-	  //wmove(uno,digPinRow[pin],digPinCol[pin]);
-	  wprintw(uno,"%1d",value);
-	}
-      else if(value >= 10 && digitalMode[pin] > 0)
-	{
-	  wmove(uno,digPinRow[pin],digPinCol[pin]-2);
-	  wprintw(uno,"%3d",value);
-	}
-      else
-	{
-	  wmove(uno,digPinRow[pin],digPinCol[pin]-2);
-	  wprintw(uno,"   ");
-	}
-
     }
 
   // Analog Pin Value
-  for(pin=0;pin<=max_anaPin;pin++)
+  for(pin=0;pin<max_totPin;pin++)
     {
-      value = anaPinValue[pin];
+      value = x_pinAnaValue[pin][currentStep];
+      if(pin < max_digPin)
+	wmove(uno,digValRow[pin],digValCol[pin]-3);
+      else
+	wmove(uno,ap,anaValCol[pin-max_digPin]-3);
+
       if(value > 0)
-	{
-	  wmove(uno,ap,anaPinCol[pin]-3);
-	  wprintw(uno,"%4d",value);
-	}
+	wprintw(uno,"%4d",value);
+      else
+	wprintw(uno,"   -",value);
     }
   
+  // Action event
+  for(pin=0;pin<max_totPin;pin++)
+    {
+      value = x_pinRW[pin][currentStep];
+      if(pin < max_digPin)
+	wmove(uno,digActRow[pin],digActCol[pin]);
+      else
+	wmove(uno,anaActRow[pin-max_digPin],anaActCol[pin-max_digPin]);
+
+      if(value == 1)
+	wprintw(uno,"R");
+      else if(value == 2)
+	wprintw(uno,"W");
+      else
+	wprintw(uno," ");	
+    }
+
+
   show(uno);
 }
 

@@ -30,9 +30,16 @@
 #include "servuino/common.h"
 
 
+// Simulator status
+int x_pinMode[MAX_TOTAL_PINS][SCEN_MAX];
+int x_pinScenario[MAX_TOTAL_PINS][SCEN_MAX];
+int x_pinDigValue[MAX_TOTAL_PINS][SCEN_MAX];
+int x_pinAnaValue[MAX_TOTAL_PINS][SCEN_MAX];
+int x_pinRW[MAX_TOTAL_PINS][SCEN_MAX];
+
 // Window  ====================
-#define UNO_H  16
-#define UNO_W  61
+#define UNO_H  17
+#define UNO_W  63
 #define MEGA_H  32
 #define MEGA_W  110
 #define UNO_COLOR 7
@@ -81,6 +88,8 @@ int g_existError = NO;
 
 int   digPinCol[MAX_PIN_DIGITAL_MEGA];
 int   digPinRow[MAX_PIN_DIGITAL_MEGA];
+int   digValCol[MAX_PIN_DIGITAL_MEGA];
+int   digValRow[MAX_PIN_DIGITAL_MEGA];
 int   digIdCol[MAX_PIN_DIGITAL_MEGA];
 int   digIdRow[MAX_PIN_DIGITAL_MEGA];
 int   digStatCol[MAX_PIN_DIGITAL_MEGA];
@@ -90,6 +99,8 @@ int   digActRow[MAX_PIN_DIGITAL_MEGA];
 
 int   anaPinCol[MAX_PIN_ANALOG_MEGA];
 int   anaPinRow[MAX_PIN_ANALOG_MEGA];
+int   anaValCol[MAX_PIN_ANALOG_MEGA];
+int   anaValRow[MAX_PIN_ANALOG_MEGA];
 int   anaIdCol[MAX_PIN_ANALOG_MEGA];
 int   anaIdRow[MAX_PIN_ANALOG_MEGA];
 int   anaStatCol[MAX_PIN_ANALOG_MEGA];
@@ -163,15 +174,19 @@ char  fileDefault[80]      = "default.conf";
 char  fileError[80]        = "error.txt";
 char  fileServComp[80]     = "servuino/g++.result";
 char  fileServSketch[80]   = "servuino/sketch.pde";
-char  fileServArduino[80]  = "servuino/data.arduino";
-char  fileServError[80]    = "servuino/data.error";
+char  fileServArduino[80]  = "servuino/serv.event";
+char  fileServError[80]    = "servuino/serv.error";
 char  fileServScen[80]     = "servuino/data.scen";
 char  fileServScenario[80] = "servuino/data.scenario";
 char  fileServCode[80]     = "servuino/data.code";
-char  fileServCustom[80]   = "servuino/data.custom";
-char  fileServStatus[80]   = "servuino/data.status";
-char  fileServSerial[80]   = "servuino/data.serial";
-char  fileServTime[80]     = "servuino/data.time";
+char  fileServCustom[80]   = "servuino/serv.cust";
+
+char  fileServPinmod[80]   = "servuino/serv.pinmod";
+char  fileServDigval[80]   = "servuino/serv.digval";
+char  fileServAnaval[80]   = "servuino/serv.anaval";
+char  fileServPinrw[80]    = "servuino/serv.pinrw";
+char  fileServSerial[80]   = "servuino/serv.serial";
+char  fileServTime[80]     = "servuino/serv.time";
 
 int  g_nScenDigital = 0;
 int  g_nScenAnalog  = 0;
@@ -221,8 +236,8 @@ int runStep(int dir)
   currentLoop = stepLoop[currentStep];
   winLog();
   winSer();
-  strcpy(stemp,status[currentStep]);
-  displayStatus(stemp);
+  //strcpy(stemp,status[currentStep]);
+  displayStatus();
   unoInfo();
 
   // Realtime animation
@@ -248,8 +263,8 @@ int goStep(int step)
   currentLoop = stepLoop[currentStep];
   winLog();
   winSer();
-  strcpy(stemp,status[currentStep]);
-  displayStatus(stemp);
+  //strcpy(stemp,status[currentStep]);
+  displayStatus();
   unoInfo();
   return(0);
 }    
@@ -615,10 +630,10 @@ void openCommand()
 		{
 		  readMsg(fileServCode);
 		}
-	      else if(strstr(command[1],"sta"))
-		{
-		  readMsg(fileServStatus);
-		}
+/* 	      else if(strstr(command[1],"sta")) */
+/* 		{ */
+/* 		  readMsg(fileServStatus); */
+/* 		} */
 	      else if(strstr(command[1],"err"))
 		{
 		  readMsg(fileServError);
