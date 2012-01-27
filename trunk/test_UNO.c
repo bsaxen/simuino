@@ -1,8 +1,5 @@
-//================================================
-//  Example HelloWorld
-//================================================
 // BOARD_TYPE: UNO
-// SCENSIMLEN 670
+// SKETCH_NAME: Test_UNO
 //================================================
 //  Scenario
 //================================================
@@ -15,9 +12,9 @@
 // SCENDIGPIN  9   40    1
 // SCENDIGPIN  9  130    0
 // SCENDIGPIN  2    1    0
-// SCENDIGPIN  2  200    1
+// SCENDIGPIN  2  100    1
 // SCENDIGPIN  3    1    0
-// SCENDIGPIN  3  220    1
+// SCENDIGPIN  3  140    1
 // SCENDIGPIN  2  240    0
 // SCENDIGPIN  3  260    0
 
@@ -30,7 +27,7 @@
 //================================================
 // Simuino log text customization
 //================================================
-// SKETCH_NAME: Test_UNO
+
 
 // PINMODE_OUT: 13  "This is interrupt LED"
 // PINMODE_OUT: 12  "PIN: Led Blink"
@@ -54,15 +51,16 @@
 int SORRY    = 13;
  
 //-------- ANALOGUE PIN settings
-int SENSOR1  = 4;
-int SENSOR2  = 5;
+//int SENSOR1  = 4;
+//int SENSOR2  = 5;
 
 //================================================
 //  Function Declarations
 //================================================
 
 void blinkLed(int pin,int n);
-
+void preTestCase();
+void postTestCase();
 //================================================
 void sorryToBotherYou_1()
 //================================================
@@ -84,38 +82,59 @@ void sorryToBotherYou_2()
 void setup()
 //================================================
 {
-  Serial.begin(9600); 
-  attachInterrupt(0,sorryToBotherYou_1, CHANGE);
-  attachInterrupt(1,sorryToBotherYou_2, RISING);
-  pinMode(SORRY,OUTPUT);
+ // Do nothing
 }
 	 
 int nloop = 0;
-
 //================================================ 
 void loop()
 //================================================
 {
-  int value1,value2,i;
+  int value,i;
   nloop++;
-// Test 1--------------------------------
+
+  preTestCase();
+
+  Serial.print("----- TestCase: ");Serial.print(nloop);
+
+//--------------------------------
   if (nloop == 1)
   {
-    Serial.println("----- Test 1: Serial output ------");
+    pinMode(SORRY,OUTPUT);
+    Serial.println(" Interrupts according to scenario  ------");
+    attachInterrupt(0,sorryToBotherYou_1, CHANGE);
+    attachInterrupt(1,sorryToBotherYou_2, RISING);
+    blinkLed(12,50);
+    detachInterrupt(0);
+    detachInterrupt(1);
+  }
+
+//--------------------------------
+  if (nloop == 2)
+  {
+    Serial.println(" Serial output ------");
+
     Serial.println("This is a line with cr");
-    Serial.println("Test print:");
+    Serial.print("Test print:");
     Serial.print("Hello ");
     Serial.print("Simuino ");
     Serial.print(100);
-    Serial.println(200);
-    Serial.println("----- End of Test 1 -----");
+    Serial.println("end of line");
+    Serial.print("Now the same without ln\n");
+
+    Serial.print("This is a line with cr\n");
+    Serial.print("Test print:");
+    Serial.print("Hello ");
+    Serial.print("Simuino ");
+    Serial.print(100);
+    Serial.print("end of line\n");
   }
 
-// Test 2--------------------------------
-  if (nloop == 2)
+//--------------------------------
+  if (nloop == 3)
   {
-    Serial.println("----- Test 2: Blink All Leds  ------");
-    for (i=4;i<13;i++)
+    Serial.println(" Digital Write Blink Leds 4 - 13  ------");
+    for (i=4;i<=13;i++)
     {
       pinMode(i,OUTPUT);
     }
@@ -123,62 +142,178 @@ void loop()
     {
       blinkLed(i,2);
     }
-    Serial.println("----- End of Test 2 -----");
+
   }
 
-// Test 3 --------------------------------
-  if (nloop == 3)
-  {
-    Serial.println("----- Test 3: Analog Read  ------");
-    value1 = analogRead(SENSOR1);
-    value2 = analogRead(SENSOR2);
-    Serial.print("Analog Value 1: ");
-    Serial.println(value1);
-    Serial.print("Analog Value 2: ");
-    Serial.println(value2);
-    Serial.println("----- End of Test 3 -----");
-  }
-
-// Test 4 --------------------------------
+//--------------------------------
   if (nloop == 4)
   {
-    pinMode(7,INPUT);
-    pinMode(8,INPUT);
-    Serial.println("----- Test 4: Digital Read  ------");
-    value1 = digitalRead(7);
-    value2 = digitalRead(8);
-    Serial.print("Digital Value 1: ");
-    Serial.println(value1);
-    Serial.print("Digital Value 2: ");
-    Serial.println(value2);
-    pinMode(7,OUTPUT);
-    pinMode(8,OUTPUT);
-    Serial.println("----- End of Test 4 -----");
-  }
+    Serial.println(" Analog Read  ------");
+
+    for(i=0;i<=5;i++)
+    {
+       value = analogRead(i);
+       Serial.print("Analog Value Pin "); Serial.print(i);Serial.print(": ");
+       Serial.println(value);
+    }
  
-// Test 5 --------------------------------
-  if (nloop == 5)
-  {
-    Serial.println("----- Test 5: Interrupts  ------");
-    blinkLed(12,50);
-    Serial.println("----- End of Test 5 -----");
   }
 
+//--------------------------------
+  if (nloop == 5)
+  {
+    Serial.println(" Digital Read pin 3-13  ------");
+    for(i=3;i<=13;i++)
+    {
+       value = digitalRead(i);
+       Serial.print("Digital Value Pin "); Serial.print(i);Serial.print(": ");
+       Serial.println(value);
+    }
+
+  }
+  
+
+//--------------------------------
+  if (nloop == 6)
+  {
+    Serial.println(" Port Manipulation DDR and PORT  ------");
+    
+
+    // digital pins 7,6,5,4,3,2,1,0
+    DDRD = B11111110;  
+    // digital pins -,-,13,12,11,10,9,8
+    DDRB = B00111111;  
+    delay(500);
+   // digital pins 7,6,5,4,3,2,1,0
+    DDRD = B00000000;  
+    // digital pins -,-,13,12,11,10,9,8
+    DDRB = B00000000;  
+    delay(500);
+
+    // All odd pins to LOW and even to HIGH
+    PORTD = B01010100; 
+    PORTB = B00010101;
+    delay(500);
+    // All odd pins to HIGH and even to LOW
+    PORTD = B10101000; 
+    PORTB = B00101010;
+    delay(500);
+
+    // PIND and PINB shall reflect  HIGH/LOW if pinMode = INPUT
+
+    //PORTD &= B00000011;   // turns off 2..7, but leaves pins 0 and 1 alone
+
+  }
+
+//--------------------------------
+  if (nloop == 7)
+  {
+    Serial.println(" PWM  ------");
+
+    i = 3;value=100+i;
+    analogWrite(i,value);
+    Serial.print("Analog Write Value Pin "); Serial.print(i);Serial.print(": ");
+    Serial.println(value);
+
+    i = 5;value=100+i;
+    analogWrite(i,value);
+    Serial.print("Analog Write Value Pin "); Serial.print(i);Serial.print(": ");
+    Serial.println(value);
+
+    i = 6;value=100+i;
+    analogWrite(i,value);
+    Serial.print("Analog Write Value Pin "); Serial.print(i);Serial.print(": ");
+    Serial.println(value);
+
+    i = 9;value=100+i;
+    analogWrite(i,value);
+    Serial.print("Analog Write Value Pin "); Serial.print(i);Serial.print(": ");
+    Serial.println(value);
+
+    i = 10;value=100+i;
+    analogWrite(i,value);
+    Serial.print("Analog Write Value Pin "); Serial.print(i);Serial.print(": ");
+    Serial.println(value);
+
+    i = 11;value=100+i;
+    analogWrite(i,value);
+    Serial.print("Analog Write Value Pin "); Serial.print(i);Serial.print(": ");
+    Serial.println(value);
+
+  }
+
+//--------------------------------
+  if (nloop == 8)
+  {
+    Serial.println(" Read PINB PIND register according to scenario ------");
+
+    for (i=3;i<8;i++)
+    {
+      value = bitRead(PIND,i);
+      if(value == HIGH)
+      {
+         Serial.print("Pin is HIGH:");
+         Serial.println(i);
+      }
+      else
+      {
+         Serial.print("Pin is LOW:");
+         Serial.println(i);
+      }
+    }
+
+    for (i=8;i<14;i++)
+    {
+      value = bitRead(PINB,i-8);
+      if(value == HIGH)
+      {
+         Serial.print("Pin is HIGH:");
+         Serial.println(i);
+      }
+      else
+      {
+         Serial.print("Pin is LOW:");
+         Serial.println(i);
+      }
+    }
+
+  }
+
+//--------------------------------
+  postTestCase();
   delay(10);
  
 }
 
 //================================================
+void preTestCase()
+//================================================
+{
+  int i;
+  Serial.begin(9600);
+  for(i=0;i<=13;i++)pinMode(i,INPUT);
+}
+//================================================
+void postTestCase()
+//================================================
+{
+  Serial.println("----- End of Test -----");
+  Serial.end();
+}
+//================================================
 void blinkLed(int pin,int n)
 //================================================
 {
   int i;
+
+  pinMode(pin,OUTPUT);
   for(i=1;i<=n;i++)
     {
       digitalWrite(pin, HIGH); 
       delay(500);
       digitalWrite(pin, LOW); 
     }
+  pinMode(pin,INPUT);
 }
 //================================================
 // End of Sketch
