@@ -630,10 +630,6 @@ void openCommand()
 		{
 		  readMsg(fileServCode);
 		}
-/* 	      else if(strstr(command[1],"sta")) */
-/* 		{ */
-/* 		  readMsg(fileServStatus); */
-/* 		} */
 	      else if(strstr(command[1],"err"))
 		{
 		  readMsg(fileServError);

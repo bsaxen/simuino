@@ -324,7 +324,7 @@ void unoInfo()
   else if(g_warning == YES)
     wprintw(uno,"  [Possible Mismatch - load]");
   else
-    wprintw(uno,"                           ");
+    wprintw(uno,"                            ");
 
   show(uno);
 }
