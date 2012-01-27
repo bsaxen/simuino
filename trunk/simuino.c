@@ -294,7 +294,7 @@ void loadCurrentProj()
   char syscom[120],temp[200];
 
   g_warning = NO;
-  putMsg(1,"Loading Proj...");
+  putMsg(1,"Loading ...");
   res = loadSketch(confSketchFile);
   if(res == 0)
   {
