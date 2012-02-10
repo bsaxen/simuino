@@ -191,6 +191,9 @@ char  fileServTime[80]     = "servuino/serv.time";
 int  g_nScenDigital = 0;
 int  g_nScenAnalog  = 0;
 
+int  g_row_setup = 0;
+int  g_row_loop = 0;
+
 int uno_h=0, uno_w=0, uno_x=0, uno_y=0;
 int msg_h=0, msg_w=0, msg_x=0, msg_y=0;
 int log_h=0, log_w=0, log_x=0, log_y=0;
