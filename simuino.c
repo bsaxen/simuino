@@ -173,7 +173,7 @@ char  fileLog[80]          = "log.txt";
 char  fileDefault[80]      = "default.conf";
 char  fileError[80]        = "error.txt";
 char  fileServComp[80]     = "servuino/g++.result";
-char  fileServSketch[80]   = "servuino/sketch.pde";
+char  fileServSketch[80]   = "servuino/sketch.ino";
 char  fileServArduino[80]  = "servuino/serv.event";
 char  fileServError[80]    = "servuino/serv.error";
 char  fileServScen[80]     = "servuino/data.scen";
@@ -535,7 +535,7 @@ void openCommand()
 		    }
 		  else
 		    {
-		      sprintf(temp,"Sketch not found: %s",temp);
+		      sprintf(temp,"Sketch not found: %s",command[2]);// Issue 16
 		      putMsg(msg_h-2,temp);
 		    }
 		}
@@ -594,7 +594,7 @@ void openCommand()
 	}
       else if(strstr(sstr,"clear"))
 	{
-	  sprintf(syscom,"rm servuino/sketch.pde;rm servuino/data.su;rm servuino/data.scen;");
+	  sprintf(syscom,"rm servuino/sketch.ino;rm servuino/data.su;rm servuino/data.scen;");
 	  x=system(syscom);
 	}
       else if(strstr(sstr,"load"))
@@ -868,7 +868,7 @@ int main(int argc, char *argv[])
   currentStep = 1;
   currentLoop = 0;
 
-  err = fopen(fileError,"w");
+
 
   strcpy(gplFile,"gpl.txt");
 
@@ -890,6 +890,8 @@ int main(int argc, char *argv[])
   x=system(syscom);
   sprintf(syscom,"rm %s;touch %s;",fileCopyError,fileCopyError);
   x=system(syscom);
+
+  err = fopen(fileError,"w"); // Issue 15
 
   readSetting();
   readConfig(currentConf);
