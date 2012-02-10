@@ -88,9 +88,9 @@ void show(WINDOW *win)
     {
       wmove(win,0,2);
       if(confBoardType ==UNO)
-	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.6");
+	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.7");
       if(confBoardType ==MEGA)
-	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.6");
+	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.7");
       wmove(win,1,2);
       wprintw(uno,"Project......: %s              ",currentConf);
       wmove(win,2,2);
@@ -416,7 +416,7 @@ void readSketchInfo()
   in = fopen(fileServSketch,"r");
   if(in == NULL)
     {
-      showError("No servuino/sketch.pde",-1);
+      showError("No servuino/sketch.ino",-1);
     }
   else
     {
@@ -1211,6 +1211,87 @@ int  countRowsInFile(char *fileName)
     }
   return(999);
 }
+
+
+char *replace_str(char *str, char orig[], char rep[])
+{
+  static char buffer[4096];
+  char *p;
+
+  if(!(p = strstr(str, orig)))  // Is 'orig' even in 'str'?
+    return str;
+
+  strncpy(buffer, str, p-str); // Copy characters from 'str' start to 'orig' st$
+  buffer[p-str] = '\0';
+
+  sprintf(buffer+(p-str), "%s%s", rep, p+strlen(orig));
+
+  return buffer;
+}
+//====================================
+void  instrument(char *fileFrom, char *fileTo)
+//====================================
+{
+  FILE *in,*out;
+  char row[SIZE_ROW],sTemp[80],sIn[80],*p;
+  int res=0,count;
+  
+  in = fopen(fileFrom,"r");
+  if(in == NULL)
+    {
+      showError("instrument: Unable to read file",-1);
+      return;
+    }
+
+  out = fopen(fileTo,"w");
+  if(out == NULL)
+    {
+      showError("instrument: Unable to write file",-1);
+      fclose(in);
+      return;
+    }
+
+  count = 0;
+  while (fgets(row,SIZE_ROW,in)!=NULL)
+    {
+      count++;
+      strcpy(sIn,"pinMode(");
+      sprintf(sTemp,"pinModeX(%d,",count);
+      p = replace_str(row,sIn,sTemp);
+
+      strcpy(sIn,"digitalRead(");
+      sprintf(sTemp,"digitalReadX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"digitalWrite(");
+      sprintf(sTemp,"digitalWriteX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"analogRead(");
+      sprintf(sTemp,"analogReadX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"analogWrite(");
+      sprintf(sTemp,"analogWriteX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"delay(");
+      sprintf(sTemp,"delayX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"delayMicroseconds(");
+      sprintf(sTemp,"delayMicrosecondsX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
+
+      fprintf(out,"%s",p);
+
+    }
+
+  fclose(out);
+  fclose(in);
+
+  return;
+}
 //====================================
 void anyErrors()
 //====================================
@@ -1239,6 +1320,9 @@ int loadSketch(char sketch[])
   sprintf(syscom,"cp %s %s > %s 2>&1;",sketch,fileServSketch,fileCopyError);
   x=system(syscom);
   strcpy(confSketchFile,sketch);
+
+  instrument(sketch,fileServSketch);
+
   sprintf(syscom,"cd servuino; g++ -O2 -o servuino servuino.c > g++.result 2>&1;");
   x=system(syscom);
 
