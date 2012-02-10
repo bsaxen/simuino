@@ -1216,17 +1216,28 @@ int  countRowsInFile(char *fileName)
 char *replace_str(char *str, char orig[], char rep[])
 {
   static char buffer[4096];
+  static char work[4096];
   char *p;
 
   if(!(p = strstr(str, orig)))  // Is 'orig' even in 'str'?
     return str;
 
+
+
   strncpy(buffer, str, p-str); // Copy characters from 'str' start to 'orig' st$
   buffer[p-str] = '\0';
-
   sprintf(buffer+(p-str), "%s%s", rep, p+strlen(orig));
+  strcpy(work,buffer);
 
-  return buffer;
+  while(p=strstr(work, orig))
+    {
+      strncpy(buffer, work, p-work); // Copy characters from 'str' start to 'orig' st$
+      buffer[p-work] = '\0';      
+      sprintf(buffer+(p-work), "%s%s", rep, p+strlen(orig));
+      strcpy(work,buffer);
+    }
+
+  return work;
 }
 //====================================
 void  instrument(char *fileFrom, char *fileTo)
@@ -1255,6 +1266,10 @@ void  instrument(char *fileFrom, char *fileTo)
   while (fgets(row,SIZE_ROW,in)!=NULL)
     {
       count++;
+
+      if(strstr(row,"setup(") != NULL)g_row_setup = count;
+      if(strstr(row,"loop(")  != NULL)g_row_loop  = count;
+
       strcpy(sIn,"pinMode(");
       sprintf(sTemp,"pinModeX(%d,",count);
       p = replace_str(row,sIn,sTemp);
@@ -1281,6 +1296,50 @@ void  instrument(char *fileFrom, char *fileTo)
 
       strcpy(sIn,"delayMicroseconds(");
       sprintf(sTemp,"delayMicrosecondsX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"attachInterrupt(");
+      sprintf(sTemp,"attachInterruptX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"detachInterrupt(");
+      sprintf(sTemp,"detachInterruptX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"Serial.begin(");
+      sprintf(sTemp,"Serial.beginX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"Serial.end(");
+      sprintf(sTemp,"Serial.endX(%d",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"Serial.print(");
+      sprintf(sTemp,"Serial.printX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"Serial.println(");
+      sprintf(sTemp,"Serial.printlnX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"Serial.available(");
+      sprintf(sTemp,"Serial.availableX(%d",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"Serial.write(");
+      sprintf(sTemp,"Serial.writeX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"Serial.read(");
+      sprintf(sTemp,"Serial.readX(%d",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"Serial.peek(");
+      sprintf(sTemp,"Serial.peekX(%d",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"Serial.flush(");
+      sprintf(sTemp,"Serial.flushX(%d",count);
       p = replace_str(p,sIn,sTemp);
 
       fprintf(out,"%s",p);
