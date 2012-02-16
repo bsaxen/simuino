@@ -75,16 +75,17 @@ int  g_comments = 0;
 int g_dir;
 
 int g_value      = 0;
-int s_mode       = ADMIN;
-int g_warning    = YES;
+int s_mode       = S_ADMIN;
+int g_warning    = S_YES;
 int g_silent     = 0;
 int g_scenSource = 0;
 int g_pinType    = 0;
 int g_pinNo      = 0;
 int g_pinValue   = 0;
 int g_pinStep    = 0;
+int g_debug      = 0;
 
-int g_existError = NO;
+int g_existError = S_NO;
 
 int   digPinCol[MAX_PIN_DIGITAL_MEGA];
 int   digPinRow[MAX_PIN_DIGITAL_MEGA];
@@ -132,11 +133,15 @@ int   paceMaker = 0;
 int   baud = 0;
 int   error = 0;
 
+// Debug
+int   g_lineSketch[MAX_STEP];
+char  g_sourceSketch[MAX_SOURCE_LINES][SIZE_ROW];
+
 // Log
 char  logBlankRow[MAX_SERIAL_BUFFER];
 
 // Serial Interface
-int   serialMode = OFF;
+int   serialMode = S_OFF;
 char  prevSerial[MAX_SERIAL_BUFFER];
 char  serBlankRow[MAX_SERIAL_BUFFER];
 
@@ -180,6 +185,8 @@ char  fileServScen[80]     = "servuino/data.scen";
 char  fileServScenario[80] = "servuino/data.scenario";
 char  fileServCode[80]     = "servuino/data.code";
 char  fileServCustom[80]   = "servuino/serv.cust";
+
+char  fileServInoDebug[80] = "servuino/ino.debug";
 
 char  fileServPinmod[80]   = "servuino/serv.pinmod";
 char  fileServDigval[80]   = "servuino/serv.digval";
@@ -229,12 +236,12 @@ int runStep(int dir)
 
   g_dir = dir;
 
-  if(dir == FORWARD)currentStep++;
-  if(dir == BACKWARD)currentStep--;
+  if(dir == S_FORWARD)currentStep++;
+  if(dir == S_BACKWARD)currentStep--;
   if(currentStep > g_steps || currentStep < 1)
     {
       currentStep = checkRange(HEAL,"step",currentStep);
-      return(STOP); 
+      return(S_STOP); 
     }
   currentLoop = stepLoop[currentStep];
   winLog();
@@ -296,7 +303,7 @@ void loadCurrentProj()
   int x,res;
   char syscom[120],temp[200];
 
-  g_warning = NO;
+  g_warning = S_NO;
   putMsg(1,"Loading ...");
   res = loadSketch(confSketchFile);
   if(res == 0)
@@ -327,7 +334,7 @@ void openCommand()
   char *p,str[120],sstr[20],fileName[120],temp[120],syscom[120];
   char command[40][40];
 
-  s_mode = ADMIN;
+  s_mode = S_ADMIN;
   g_silent = 0;
 
   readMsg(gplFile);
@@ -339,8 +346,8 @@ void openCommand()
 
       wmove(uno,board_h-2,1);
       wprintw(uno,"                                                  ");
-      if(g_silent==NO )mvwprintw(uno,board_h-2,1,"A%1d>",confWinMode);
-      if(g_silent==YES)mvwprintw(uno,board_h-2,1,"A%1d<",confWinMode);
+      if(g_silent==S_NO )mvwprintw(uno,board_h-2,1,"A%1d>",confWinMode);
+      if(g_silent==S_YES)mvwprintw(uno,board_h-2,1,"A%1d<",confWinMode);
 
       strcpy(command[0],"");
 
@@ -398,13 +405,13 @@ void openCommand()
 	      if(ok == S_OK)
 		{
 		  g_scenSource = 1;
-		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,0,g_pinStep,DELETE);
+		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,0,g_pinStep,S_DELETE);
 		  //putMsg(2,syscom);
 		  tmp=system(syscom);
 		  initSim();
 		  readSketchInfo();
 		  readSimulation();
-		  runStep(FORWARD);
+		  runStep(S_FORWARD);
 		  readMsg(fileServScen);
 		}
 	      else
@@ -435,12 +442,12 @@ void openCommand()
 	      if(ok == S_OK)
 		{
 		  g_scenSource = 1;
-		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,g_pinValue,g_pinStep,ADD);
+		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,g_pinValue,g_pinStep,S_ADD);
 		  tmp=system(syscom);
 		  initSim();
 		  readSketchInfo();
 		  readSimulation();
-		  runStep(FORWARD);
+		  runStep(S_FORWARD);
 		  readMsg(fileServScen);
 		}
 	    }
@@ -489,7 +496,7 @@ void openCommand()
 	      strcpy(currentConf,command[1]);
 	      strcat(currentConf,".conf");
 	      readConfig(currentConf);
-              g_warning = YES;
+              g_warning = S_YES;
 	      unoInfo();
 	    }
 	  readMsg(currentConf);
@@ -613,7 +620,7 @@ void openCommand()
         {
 	  selectProj(projNo,currentConf);
 	  readConfig(currentConf);
-	  g_warning = YES;
+	  g_warning = S_YES;
 	  unoInfo();
 	  readMsg(currentConf);   
         }
@@ -662,7 +669,7 @@ void runMode(int stop)
 
   strcpy(tempName,"help.txt");
 
-  s_mode = RUN;
+  s_mode = S_RUN;
 
 
   if(stop > 1)
@@ -678,9 +685,13 @@ void runMode(int stop)
   while(1)  
     {
       anyErrors();
-      if(g_silent==NO )mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
-      if(g_silent==YES)mvwprintw(uno,board_h-2,1,"R%1d<",confWinMode);
+      if(g_silent==S_NO )mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
+      if(g_silent==S_YES)mvwprintw(uno,board_h-2,1,"R%1d<",confWinMode);
       unoInfo();
+
+      if(g_debug == 1) 
+	readFile(confSketchFile,g_lineSketch[currentStep]);
+
 
       ch = getchar();
 
@@ -716,6 +727,11 @@ void runMode(int stop)
       else if (ch=='l')
 	{
 	  showLoops();
+	}
+      else if (ch=='s')
+	{
+	  g_debug++;
+	  if(g_debug > 1)g_debug = 0;
 	}
       else if (ch=='w')
 	{
@@ -763,11 +779,11 @@ void runMode(int stop)
 	}
       else if (ch=='R') // Right Arrow
 	{
-	  runLoop(FORWARD);
+	  runLoop(S_FORWARD);
 	}
       else if (ch=='P') // Left Arrow
 	{
-	  runLoop(BACKWARD);
+	  runLoop(S_BACKWARD);
 	}
       else if (ch=='t')
 	{
@@ -806,7 +822,7 @@ void runMode(int stop)
 		{ 
 		  g_scenSource = 1;
 		  // steps, source, pintype, pinno, pinvalue, pinstep
-		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep,ADD);
+		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep,S_ADD);
 		  tmp=system(syscom);
 		  initSim();
 		  readSketchInfo();
@@ -838,7 +854,7 @@ void runMode(int stop)
 		    {         
 		      g_scenSource = 1;
 		      // steps, source, pintype, pinno, pinvalue, pinstep
-		      sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep,ADD);
+		      sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep,S_ADD);
 		      tmp=system(syscom);
 		      initSim();
 		      readSketchInfo();
@@ -899,18 +915,23 @@ int main(int argc, char *argv[])
   readSetting();
   readConfig(currentConf);
 
+
   initSim();
+
   resetSim();
 
   readSimulation();
+
   readSketchInfo();
+
   setRange(confBoardType);
+
   init(confWinMode);
 
   unoInfo();
   show(slog);
 
-  if(confLogFile == YES)resetFile("log.txt");
+  if(confLogFile == S_YES)resetFile("log.txt");
 
   readMsg(gplFile);
 

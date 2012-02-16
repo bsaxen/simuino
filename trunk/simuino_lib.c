@@ -174,11 +174,15 @@ void saveConfig(char *cf)
   if(out == NULL)
     {
       showError("No config file ",-1);
+      return;
     }
   else
     {
+
       putMsg(msg_h-2,"Configuration saved");
+
       lt = time(NULL);
+
       fprintf(out,"# Simuino Configuration %s",ctime(&lt));
       fprintf(out,"# %s\n",cf);
 
@@ -201,6 +205,7 @@ void saveConfig(char *cf)
   if(out == NULL)
     {
       showError("No setting file ",-1);
+      return;
     }
   else
     {
@@ -319,9 +324,9 @@ void unoInfo()
 
   wmove(uno,ap+2,3); 
 
-  if(g_existError == YES)
+  if(g_existError == S_YES)
     wprintw(uno,"  [Errors - err]            ");
-  else if(g_warning == YES)
+  else if(g_warning == S_YES)
     wprintw(uno,"  [Possible Mismatch - load]");
   else
     wprintw(uno,"                            ");
@@ -569,6 +574,53 @@ void readConfig(char *cf)
 }
 
 //====================================
+void readDebug()
+//====================================
+{
+  FILE *in;
+  char row[80];
+  int step, line;
+  
+  in = fopen(fileServInoDebug,"r");
+  if(in == NULL)
+    {
+      showError("No debug file",-1);
+      return;
+    }
+  else
+    {
+      while (fgets(row,80,in)!=NULL)
+	{
+	  if(row[0] != '#')
+	    {
+	      sscanf(row,"%d%d",&step,&line);
+	      g_lineSketch[step] = line;
+	    }
+	  
+	}
+    }
+  fclose(in);
+
+/*   in = fopen(confSketchFile,"r"); */
+/*   if(in == NULL) */
+/*     { */
+/*       showError("readDebug: No sketch file",-1); */
+/*       return; */
+/*     } */
+/*   else */
+/*     { */
+/*       line = 0; */
+/*       while (fgets(row,80,in)!=NULL) */
+/* 	{ */
+/*           line++; */
+/* 	  strcpy(g_sourceSketch[line],row); */
+/* 	} */
+/*     } */
+/*   fclose(in); */
+
+}
+
+//====================================
 void runLoop(int dir)
 //====================================
 {
@@ -584,20 +636,20 @@ void runLoop(int dir)
 
   else if(currentLoop >= 0 && currentLoop < g_loops)
     {
-      if(dir == FORWARD)
+      if(dir == S_FORWARD)
 	{
 	  tmp = loopPos[currentLoop+1]-1;
 	  while(currentStep < tmp)
 	    {
-	      runStep(FORWARD);
+	      runStep(S_FORWARD);
 	    }
 	}
-      if(dir == BACKWARD)
+      if(dir == S_BACKWARD)
 	{
 	  tmp = loopPos[currentLoop]-1;
 	  while(currentStep > tmp)
 	    {
-	      runStep(BACKWARD);
+	      runStep(S_BACKWARD);
 	    }
 	}
     }
@@ -612,7 +664,7 @@ void runLoops(int targetLoop)
   targetLoop = checkRange(HEAL,"loop",targetLoop);
   while(currentLoop < targetLoop && stop == 0)
     {
-      stop = runStep(FORWARD);
+      stop = runStep(S_FORWARD);
     }
   return;
 }    
@@ -627,13 +679,13 @@ void runAll(int stop)
   if(currentStep < stop)
     {
       while(currentStep < stop)
-	x = runStep(FORWARD);
+	x = runStep(S_FORWARD);
     }
 
   if(currentStep > stop)
     {
       while(currentStep > stop)
-	x = runStep(BACKWARD);
+	x = runStep(S_BACKWARD);
     }
 
   return;
@@ -763,10 +815,15 @@ void readSimulation()
 
       g_loops = loop;
       //loopPos[loop] = step;
-      
+ 
       readStatus();
+
       readSerial();
+
+      readDebug();
+
       readTime();
+
       fclose(in);
     }
   return;
@@ -897,6 +954,48 @@ void readMsg(char *fileName)
   return;
 }    
 
+//====================================
+void readFile(char *fileName,int line)
+//====================================
+{
+  FILE *in;
+  char row[SIZE_ROW],temp[10];
+  int i=0,from,to;
+
+  wclear(msg);
+  in = fopen(fileName,"r");
+  if(in == NULL)
+    {
+      showError("readFile:Unable to open file",-1);
+      return;
+    }
+  else
+    {
+      from = line - msg_h/2;
+      to   = line + msg_h/2;
+      if(from < 0)from  = 1;
+      while (fgets(row,SIZE_ROW,in)!=NULL)
+	{
+          i++;
+          if(i > from && i < to)
+	    {
+	      wmove(msg,i,1);
+	      wprintw(msg," ");
+	      if(i==line)
+		{
+		  sprintf(temp,"[%d]:>",i);
+		  wprintw(msg,temp);
+		  //wmove(msg,i,4);
+		}
+	      wprintw(msg,row);
+	    }
+	}
+      show(msg);
+      fclose(in);
+    }
+  return;
+}    
+
 
 //====================================
 void init(int mode)
@@ -998,7 +1097,9 @@ void init(int mode)
   for(i=MAX_PIN_DIGITAL_UNO;i<22;i++)
     {
       digPinCol[i]  = RF+10+4*i;
-      digPinRow[i]  = dp;
+      digPinRow[i]  = dp-1;
+      digValCol[i]  = RF+10+4*i;
+      digValRow[i]  = dp;
       digIdCol[i]   = RF+9+4*i;
       digIdRow[i]   = dp+1;
       digActCol[i]  = RF+10+4*i;
@@ -1014,6 +1115,8 @@ void init(int mode)
 	  j++;
 	  digPinCol[i]  = board_w - 35;
 	  digPinRow[i]  = j; 
+	  digValCol[i]  = board_w - 43;
+	  digValRow[i]  = j; 
 	  digIdCol[i]   = board_w - 39;
 	  digIdRow[i]   = j; 
 	  digActCol[i]  = board_w - 41;
@@ -1027,6 +1130,8 @@ void init(int mode)
 	  j++;
 	  digPinCol[i]  = board_w - 11;
 	  digPinRow[i]  = j; 
+	  digValCol[i]  = board_w -  3;
+	  digValRow[i]  = j; 
 	  digIdCol[i]   = board_w -  9;
 	  digIdRow[i]   = j; 
 	  digActCol[i]  = board_w -  6;
@@ -1358,12 +1463,12 @@ void anyErrors()
   int x;
   char syscom[200];
   
-  g_existError = NO;
+  g_existError = S_NO;
   x = system("rm temp.txt");
   sprintf(syscom,"cat %s %s %s> %s",fileError,fileServError,fileCopyError,fileTemp);
   x = system(syscom); 
   x = countRowsInFile(fileTemp);
-  if(x > 0 && x != 999)g_existError = YES;
+  if(x > 0 && x != 999)g_existError = S_YES;
   if(x == 999)putMsg(2,"Unable to read error file");
   show(uno);
 }
@@ -1480,12 +1585,6 @@ int readStatus()
   char row[SIZE_ROW],data[SIZE_ROW],junk[10],*pch,*p;
   int pin=0,step=0,res=0;
 
-  //int x_pinMode[MAX_TOTAL_PINS];
-  //int x_pinScenario[MAX_TOTAL_PINS][SCEN_MAX];
-  //int x_pinDigValue[MAX_TOTAL_PINS];
-  //int x_pinAnaValue[MAX_TOTAL_PINS];
-  //int x_pinRW[MAX_TOTAL_PINS];
-
   in = fopen(fileServPinmod,"r");
   if(in == NULL)
     {
@@ -1518,6 +1617,7 @@ int readStatus()
       //exit(0);
     }
 
+
   in = fopen(fileServDigval,"r");
   if(in == NULL)
     {
@@ -1540,7 +1640,7 @@ int readStatus()
 	      while (pch != NULL)
 		{
 		  x_pinDigValue[pin][step] = atoi(pch);
-		  //printf("step=%d pin=%d value=%d\n",step,pin,x_pinMode[pin][step]);
+		  //printf("DIGstep=%d pin=%d value=%d\n",step,pin,x_pinMode[pin][step]);
 		  pin++;
 		  pch = strtok(NULL, ",");
 		}
@@ -1572,7 +1672,7 @@ int readStatus()
 	      while (pch != NULL)
 		{
 		  x_pinAnaValue[pin][step] = atoi(pch);
-		  //printf("step=%d pin=%d value=%d\n",step,pin,x_pinMode[pin][step]);
+		  //printf("ANAstep=%d pin=%d value=%d\n",step,pin,x_pinMode[pin][step]);
 		  pin++;
 		  pch = strtok(NULL, ",");
 		}
@@ -1604,7 +1704,7 @@ int readStatus()
 	      while (pch != NULL)
 		{
 		  x_pinRW[pin][step] = atoi(pch);
-		  //printf("step=%d pin=%d value=%d\n",step,pin,x_pinMode[pin][step]);
+		  //printf("RWstep=%d pin=%d value=%d\n",step,pin,x_pinMode[pin][step]);
 		  pin++;
 		  pch = strtok(NULL, ",");
 		}
@@ -1613,7 +1713,7 @@ int readStatus()
       fclose(in);
       //exit(0);
     }
-  
+
   return(0);
 }
 
@@ -1713,7 +1813,7 @@ void displayStatus()
 	{
 	  wprintw(uno,"IL ");
 	}     
-      else if(mode==WRONG)
+      else if(mode==S_WRONG)
 	{
 	  wprintw(uno,"???");
 	}

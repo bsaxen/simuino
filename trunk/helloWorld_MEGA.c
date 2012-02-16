@@ -112,12 +112,7 @@ void setup()
 //================================================
 {
   Serial.begin(9600); 
-  attachInterrupt(0,urgent0, CHANGE);
-  attachInterrupt(1,urgent1, RISING);
-  attachInterrupt(2,urgent2, FALLING);
-  attachInterrupt(3,urgent3, LOW);
-  attachInterrupt(4,urgent4, CHANGE);
-  attachInterrupt(5,urgent5, RISING);
+  
   pinMode(BLINKLED,OUTPUT);   
   pinMode(URGENTLED,OUTPUT);   
   pinMode(IN_PIN,INPUT);
@@ -127,6 +122,12 @@ void setup()
   pinMode(45,OUTPUT);
   pinMode(46,OUTPUT);
   pinMode(47,INPUT);
+  attachInterrupt(0,urgent0, CHANGE);
+  attachInterrupt(1,urgent1, RISING);
+  attachInterrupt(2,urgent2, FALLING);
+  attachInterrupt(3,urgent3, LOW);
+  attachInterrupt(4,urgent4, CHANGE);
+  attachInterrupt(5,urgent5, RISING);
 }
 	 
 //================================================ 
