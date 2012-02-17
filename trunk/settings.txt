@@ -1,2 +1,2 @@
-# Simuino Setting Thu Feb 16 12:14:41 2012
+# Simuino Setting Fri Feb 17 05:20:51 2012
 PROJECT: test_uno.conf
