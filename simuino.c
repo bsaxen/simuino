@@ -113,7 +113,7 @@ int   s_row,s_col;
 
 char  status[MAX_STEP][SIZE_ROW];
 char  simulation[MAX_STEP][SIZE_ROW];
-char  serial[MAX_STEP][SIZE_ROW];
+char  serialM[MAX_STEP][SIZE_ROW];
 int   serialL[MAX_STEP];
 
 char  simComment[MAX_STEP][SIZE_ROW];
@@ -218,12 +218,13 @@ int ap,dp;
 WINDOW *uno,*ser,*slog,*msg;
 static struct termios orig, nnew;
  
-char  stemp[80];
+//char  stemp[80];
 char  gplFile[80];
 
 FILE  *err;
 
 #include "servuino/common_lib.c"
+#include "servuino/arduino.h"
 #include "simuino.h"
 #include "simuino_lib.c"
 
@@ -231,7 +232,7 @@ FILE  *err;
 int runStep(int dir)
 //====================================
 {
-  char stemp[SIZE_ROW];
+  //char stemp[SIZE_ROW];
   int temp;
 
   g_dir = dir;

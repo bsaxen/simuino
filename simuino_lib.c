@@ -285,15 +285,15 @@ void winSer()
 
   for(i=1;i<=currentStep;i++)
     {
-      if(strlen(serial[i]) > 0)
+      if(strlen(serialM[i]) > 0)
 	{
 	  if(prevL == 1) //New Line
 	    {
 	      m++;
-	      strcpy(buf[m],serial[i]);
+	      strcpy(buf[m],serialM[i]);
 	    }
 	  else
-	    strcat(buf[m],serial[i]);
+	    strcat(buf[m],serialM[i]);
 
 	  prevL = serialL[i];
 	}
@@ -489,7 +489,7 @@ void initSim()
   for(i=0;i<MAX_STEP;i++)
     {
       strcpy(simulation[i],"");
-      strcpy(serial[i],"");
+      strcpy(serialM[i],"");
       strcpy(simComment[i],"");
       stepComment[i] = 0;
       serialL[i] = 0;
@@ -1736,7 +1736,7 @@ void readSerial()
       p = fgets(row,SIZE_ROW,in);// read first header line in file
       while (fgets(row,SIZE_ROW,in)!=NULL)
         {
-	  //strcpy(serial[step],row);
+	  //strcpy(serialM[step],row);
 	  //printf("%s\n",row);
 	  sscanf(row,"%d %s",&step,line);
 	  if(strstr(line,"NL")) serialL[step] = 1;
@@ -1748,8 +1748,8 @@ void readSerial()
  	  if(right && left)
 	    {
 	      strcpy(right,"\0"); 
-	      strcpy(serial[step],++left);
-	      //printf("Serial:%s\n",serial[step]);
+	      strcpy(serialM[step],++left);
+	      //printf("Serial:%s\n",serialM[step]);
 	    }
 	}
       fclose(in);
