@@ -1,8 +1,10 @@
 //================================================
 //  Example HelloWorld
 //================================================
-// BOARD_TYPE UNO
-// SCENSIMLEN 650
+// BOARD_TYPE:   UNO
+// SCENSIMLEN:   650
+// WINDOWLAYOUT:   2
+// SO_DELAY:      40
 //================================================
 //  Scenario
 //================================================
@@ -42,7 +44,7 @@
 
 
 //-------- DIGITAL PIN settings ------------------
-
+#include <EEPROM.h>
 // Leds
 int URGENTLED    = 11;
 int BLINKLED     = 12;
@@ -110,6 +112,10 @@ void loop()
   Serial.println(value2);
   
   delay(1000); 
+  EEPROM.write(34,'b');
+  char lue = EEPROM.read(34);
+  Serial.print("EEPROM value is: ");
+  Serial.println(lue);
 }
 
 //================================================

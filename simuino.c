@@ -1,5 +1,5 @@
 /*  Simuino is a Arduino Simulator based on Servuino Engine 
-    Copyright (C) 2012  Benny Saxen
+    Copyright (C) 2012,2013  Benny Saxen
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -456,8 +456,8 @@ void openCommand()
 	    putMsg(2,"Syntax: add <a or d> <pin> <step> <value>");
 	}
       else if(strstr(sstr,"info"))
-	{
-	  if(n == 2)
+	  {
+	    if(n == 2)
 	    {
 	      if(strstr(command[1],"conf"))
 		{
@@ -483,14 +483,14 @@ void openCommand()
 		{
 		  readMsg(fileServScen);
 		}
-	    }
+	  }
 	  else
-	    {
-	      readMsg(fileInfoAdmin);
-	    }
+	  {
+	     readMsg(fileInfoAdmin);
+	  }
 	}
 
-      else if(strstr(sstr,"proj"))
+    else if(strstr(sstr,"proj"))
 	{
 	  if(n == 2)
 	    {
@@ -502,11 +502,11 @@ void openCommand()
 	    }
 	  readMsg(currentConf);
 	}
-      else if(strstr(sstr,"list"))
+    else if(strstr(sstr,"list"))
 	{
 	  readMsg(fileProjList);	
 	}
-      else if(strstr(sstr,"sketch"))
+    else if(strstr(sstr,"sketch"))
 	{
 	  if(n == 2)
 	    {
@@ -552,7 +552,7 @@ void openCommand()
 		}
 	      saveConfig(currentConf);
 	    }
-	  readMsg(currentConf); 
+	  //readMsg(currentConf); 
 	}
       
       

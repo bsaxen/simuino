@@ -1,5 +1,5 @@
 /*  Simuino is a Arduino Simulator based on Servuino Engine
-    Copyright (C) 2012  Benny Saxen
+    Copyright (C) 2013  Benny Saxen
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -88,9 +88,9 @@ void show(WINDOW *win)
     {
       wmove(win,0,2);
       if(confBoardType ==UNO)
-	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.7");
+	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.8");
       if(confBoardType ==MEGA)
-	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.7");
+	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.8");
       wmove(win,1,2);
       wprintw(uno,"Project......: %s              ",currentConf);
       wmove(win,2,2);
@@ -192,9 +192,9 @@ void saveConfig(char *cf)
       fprintf(out,"SIM_LENGTH %d\n",confSteps);
 
       if(confWinMode >=0 && confWinMode <= WIN_MODES)
-	fprintf(out,"WIN_LAYOUT %d\n",confWinMode);
+	    fprintf(out,"WIN_LAYOUT %d\n",confWinMode);
       else
-	confWinMode = 0;
+	    confWinMode = 0;
 
       fprintf(out,"SKETCH     %s\n",confSketchFile);
     }
@@ -438,6 +438,22 @@ void readSketchInfo()
 	      if(strstr(row,"UNO") != NULL) confBoardType = UNO;
 	      if(strstr(row,"MEGA")!= NULL) confBoardType = MEGA;
 	    }
+
+	  if(p=strstr(row,"WINDOWLAYOUT:"))
+	    {
+		  q = strstr(p,":");q++;
+	      sscanf(q,"%d",&confWinMode);
+	    }
+	//  if(p=strstr(row,"SO_DELAY:"))
+	//    {
+	//      q = strstr(p,":");q++;
+	//      sscanf(q,"%d",appName);
+	//    }
+	  if(p=strstr(row,"SCENSIMLEN:"))
+	    {
+		  q = strstr(p,":");q++;
+	      sscanf(q,"%d",&confSteps);
+	    }
 	  if(p=strstr(row,"PINMODE_IN:"))
 	    {
 	      pin = wCustomLog(p,res);
@@ -572,6 +588,18 @@ void readConfig(char *cf)
     }
   fclose(in);
 }
+
+//====================================
+void showConfig()
+//====================================
+{
+  int i;
+  wclear(msg);
+  wmove(msg,1,2);
+  wprintw(msg," Configuration:");
+  show(msg);
+}
+
 
 //====================================
 void readDebug()
@@ -1374,7 +1402,7 @@ void  instrument(char *fileFrom, char *fileTo)
 
       if(strstr(row,"setup(") != NULL)g_row_setup = count;
       if(strstr(row,"loop(")  != NULL)g_row_loop  = count;
-
+      
       strcpy(sIn,"pinMode(");
       sprintf(sTemp,"pinModeX(%d,",count);
       p = replace_str(row,sIn,sTemp);
@@ -1438,6 +1466,14 @@ void  instrument(char *fileFrom, char *fileTo)
       strcpy(sIn,"Serial.read(");
       sprintf(sTemp,"Serial.readX(%d",count);
       p = replace_str(p,sIn,sTemp);
+      
+      strcpy(sIn,"EEPROM.write(");
+      sprintf(sTemp,"EEPROM.writeX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
+
+      strcpy(sIn,"EEPROM.read(");
+      sprintf(sTemp,"EEPROM.readX(%d,",count);
+      p = replace_str(p,sIn,sTemp);
 
       strcpy(sIn,"Serial.peek(");
       sprintf(sTemp,"Serial.peekX(%d",count);
@@ -1446,6 +1482,16 @@ void  instrument(char *fileFrom, char *fileTo)
       strcpy(sIn,"Serial.flush(");
       sprintf(sTemp,"Serial.flushX(%d",count);
       p = replace_str(p,sIn,sTemp);
+      
+      if(strstr(row,"#include") != NULL)
+      {
+        strcpy(sIn,"<");
+        strcpy(sTemp,"\"");
+        p = replace_str(p,sIn,sTemp);
+        strcpy(sIn,">");
+        strcpy(sTemp,"\"");
+        p = replace_str(p,sIn,sTemp);
+      }
 
       fprintf(out,"%s",p);
 

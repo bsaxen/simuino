@@ -1,2 +1,2 @@
-# Simuino Setting Fri Feb 17 05:20:51 2012
-PROJECT: test_uno.conf
+# Simuino Setting Mon Oct 21 22:16:21 2013
+PROJECT: eeprom.conf
