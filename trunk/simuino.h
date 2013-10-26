@@ -32,7 +32,7 @@ void iDelay(int ms);
 void show(WINDOW *win);
 void putMsg(int line,const char *message);
 void showError(const char *m, int value);
-void saveConfig();
+void saveSetting();
 void resetFile(const char *filename);
 void logFile(char *m);
 void wLog(const char *p, int value1, int value2);
