@@ -58,6 +58,13 @@ int x_pinRW[MAX_TOTAL_PINS][SCEN_MAX];
 
 #define WIN_MODES 5
 
+// Sketch Status 
+#define SO_VOID      1
+#define SO_SELECTED  2
+#define SO_LOADED    3
+#define SO_ERROR     4
+
+
 // Current data
 int  currentStep = 0;
 int  currentLoop = 0;
@@ -65,6 +72,8 @@ char currentConf[SIZE_ROW];
 int  currentPin  = 0;
 int  currentValueD[MAX_PIN_DIGITAL_MEGA];
 int  currentValueA[MAX_PIN_ANALOG_MEGA];
+char g_currentSketch[80];
+int  g_currentSketchStatus = SO_VOID;
 
 
 // Limits
@@ -298,15 +307,15 @@ int tokCommand(char res[40][40],char *inp)
 }
 
 //====================================
-void loadCurrentProj()
+void loadCurrentSketch()
 //====================================
 {
   int x,res;
   char syscom[120],temp[200];
 
   g_warning = S_NO;
-  putMsg(1,"Loading ...");
-  res = loadSketch(confSketchFile);
+  putMsg(1,"Loading sketch ...");
+  res = loadSketch(g_currentSketch);
   if(res == 0)
   {
     if(confSteps < 0) confSteps = 100;
@@ -319,7 +328,7 @@ void loadCurrentProj()
     readSketchInfo();
     setRange(confBoardType);
     init(confWinMode);
-    saveConfig(currentConf);
+    saveSetting();
     unoInfo();
     sprintf(temp,"Sketch load ready: %s",confSketchFile);
     putMsg(msg_h-2,temp);
@@ -495,7 +504,7 @@ void openCommand()
 	  if(n == 2)
 	    {
 	      strcpy(currentConf,command[1]);
-	      strcat(currentConf,".conf");
+	      strcat(currentConf,".ino");
 	      readConfig(currentConf);
               g_warning = S_YES;
 	      unoInfo();
@@ -510,7 +519,7 @@ void openCommand()
 	{
 	  if(n == 2)
 	    {
-	      if(strstr(command[1],"conf"))
+	      if(strstr(command[1],"ino"))
 		{
 		  readMsg(confSketchFile);
 		}
@@ -522,7 +531,14 @@ void openCommand()
 	  else
 	    readMsg(fileServSketch);	
 	}
-      else if(strstr(sstr,"conf"))
+    else if(strstr(sstr,"win"))
+	{
+	  confWinMode = atoi(command[1]);
+	  if(confWinMode > WIN_MODES)confWinMode = 0;
+	  init(confWinMode);
+	  unoInfo();
+	}
+    else if(strstr(sstr,"conf"))
 	{
 	  if(n == 3)
 	    {
@@ -550,7 +566,7 @@ void openCommand()
 		      putMsg(msg_h-2,temp);
 		    }
 		}
-	      saveConfig(currentConf);
+	      saveSetting();
 	    }
 	  //readMsg(currentConf); 
 	}
@@ -561,12 +577,12 @@ void openCommand()
 	  if(n == 2)
 	    {
 	      strcpy(currentConf,command[1]);
-	      strcat(currentConf,".conf");
+	      strcat(currentConf,".ino");
               
 	    }
-	  saveConfig(currentConf);
+	  saveSetting();
 	  readMsg(currentConf);
-	  sprintf(syscom,"ls *.conf > %s;",fileProjList);
+	  sprintf(syscom,"ls *.ino > %s;",fileProjList);
 	  x=system(syscom);
 	}
       else if(strstr(sstr,"del")) //delete config
@@ -574,14 +590,14 @@ void openCommand()
 	  if(n == 2)
 	    {
 	      strcpy(currentConf,command[1]);
-	      strcat(currentConf,".conf");
+	      strcat(currentConf,".ino");
               
 	    }
           if(strstr(currentConf,"default") == NULL)
 	    {
 	      sprintf(syscom,"rm %s;",currentConf);
 	      x=system(syscom);
-	      sprintf(syscom,"ls *.conf > %s;",fileProjList);
+	      sprintf(syscom,"ls *.ino > %s;",fileProjList);
 	      x=system(syscom);
 	      readMsg(fileProjList);
 	      strcpy(currentConf,fileDefault);
@@ -610,20 +626,24 @@ void openCommand()
 	}
       else if(strstr(sstr,"load"))
 	{
-          if(n == 2)
+        if(n == 2)
 	    {
 	      confSteps = atoi(command[1]);
 	    }
-          g_scenSource = 0;
-	  loadCurrentProj();
+        g_scenSource = 0;
+	    loadCurrentSketch();
 	}
-      else if(projNo > 0 && projNo < 10)
+      else if(projNo > 0 && projNo < 21)
         {
-	  selectProj(projNo,currentConf);
-	  readConfig(currentConf);
-	  g_warning = S_YES;
-	  unoInfo();
-	  readMsg(currentConf);   
+	      selectProj(projNo,g_currentSketch);
+	      readConfig(g_currentSketch);
+	      g_warning = S_YES;
+	      setRange(confBoardType);
+	      init(confWinMode);
+          unoInfo();
+          show(slog);
+	      //readMsg(g_currentSketch);
+	      readMsg(fileProjList);	   
         }
       else if(strstr(sstr,"data"))
 	{
@@ -900,7 +920,7 @@ int main(int argc, char *argv[])
   inrpt[5] = IR5;
 
 
-  sprintf(syscom,"ls *.conf > %s;",fileProjList);
+  sprintf(syscom,"ls *.ino > %s;",fileProjList);
   x=system(syscom);
   sprintf(syscom,"rm %s;touch %s;",fileTemp,fileTemp);
   x=system(syscom);
@@ -914,7 +934,7 @@ int main(int argc, char *argv[])
   err = fopen(fileError,"w"); // Issue 15
 
   readSetting();
-  readConfig(currentConf);
+  readConfig(g_currentSketch);
 
 
   initSim();

@@ -1,2 +1,2 @@
-# Simuino Setting Mon Oct 21 22:16:21 2013
-PROJECT: eeprom.conf
+# Simuino Setting Sat Oct 26 14:57:17 2013
+SKETCH: helloWorld_MEGA.ino

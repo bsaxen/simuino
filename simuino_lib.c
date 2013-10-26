@@ -92,9 +92,12 @@ void show(WINDOW *win)
       if(confBoardType ==MEGA)
 	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.8");
       wmove(win,1,2);
-      wprintw(uno,"Project......: %s              ",currentConf);
+      wprintw(uno,"Selected Sketch: %s              ",g_currentSketch);
       wmove(win,2,2);
-      wprintw(uno,"Loaded Sketch: %s              ",appName);
+     if(g_currentSketchStatus == SO_VOID)wprintw(uno,"Status.........: -");
+     if(g_currentSketchStatus == SO_SELECTED)wprintw(uno,"Status.........: selected");
+     if(g_currentSketchStatus == SO_LOADED)wprintw(uno,"Status.........: loaded");
+     if(g_currentSketchStatus == SO_ERROR)wprintw(uno,"Status.........: error");
     }
   if(win == ser)
     {
@@ -164,41 +167,11 @@ void delConfList(char *cf)
   return;
 }
 //====================================
-void saveConfig(char *cf)
+void saveSetting()
 //====================================
 {
   FILE *out;
   time_t lt;
-
-  out = fopen(cf,"w");
-  if(out == NULL)
-    {
-      showError("No config file ",-1);
-      return;
-    }
-  else
-    {
-
-      putMsg(msg_h-2,"Configuration saved");
-
-      lt = time(NULL);
-
-      fprintf(out,"# Simuino Configuration %s",ctime(&lt));
-      fprintf(out,"# %s\n",cf);
-
-      //fprintf(out,"BOARD_TYPE %d\n",confBoardType);
-
-      if(confSteps > MAX_STEP)confSteps = MAX_STEP; 
-      fprintf(out,"SIM_LENGTH %d\n",confSteps);
-
-      if(confWinMode >=0 && confWinMode <= WIN_MODES)
-	    fprintf(out,"WIN_LAYOUT %d\n",confWinMode);
-      else
-	    confWinMode = 0;
-
-      fprintf(out,"SKETCH     %s\n",confSketchFile);
-    }
-  fclose(out);
 
   // Store setting
   out = fopen("settings.txt","w");
@@ -211,7 +184,7 @@ void saveConfig(char *cf)
     {
       lt = time(NULL);
       fprintf(out,"# Simuino Setting %s",ctime(&lt));
-      fprintf(out,"PROJECT: %s\n",cf);
+      fprintf(out,"SKETCH: %s\n",g_currentSketch);
     }
   fclose(out);
 }
@@ -433,7 +406,7 @@ void readSketchInfo()
 	      q = strstr(p,":");q++;
 	      sscanf(q,"%s",appName);
 	    }
-	  if(p=strstr(row,"BOARD_TYPE"))
+	  if(p=strstr(row,"BOARD_TYPE:"))
 	    {
 	      if(strstr(row,"UNO") != NULL) confBoardType = UNO;
 	      if(strstr(row,"MEGA")!= NULL) confBoardType = MEGA;
@@ -551,6 +524,11 @@ void resetSim()
 void readConfig(char *cf)
 //====================================
 {
+// BOARD_TYPE:  UNO
+// SKETCH_NAME: HelloWorld_UNO
+// SIM_LENGTH:  600
+// WIN_LAYOUT:    2
+// SO_DELAY:     40
   FILE *in;
   char row[80],*p,temp[40];
   int x;
@@ -561,31 +539,40 @@ void readConfig(char *cf)
       showError("No config file",-1);
       confSteps = 444;
       confWinMode = 2;
-      strcpy(confSketchFile,"helloWorld_UNO.c");
+      strcpy(confSketchFile,"helloWorld_UNO.ino");
       return;
     }
   else
     {
       while (fgets(row,80,in)!=NULL)
-	{
-	  if(row[0] != '#')
+	  {
+	    if(row[0] != '#')
 	    {
-	      if(p=strstr(row,"SIM_LENGTH"))
-		{
-		  sscanf(p,"%s%d",temp,&confSteps);
-		}
-	      if(p=strstr(row,"WIN_LAYOUT"))
-		{
-		  sscanf(p,"%s%d",temp,&confWinMode);
-		}
-              if(p=strstr(row,"SKETCH"))
-                {
-                  sscanf(p,"%s%s",temp,confSketchFile);
-                }
-	    }
+	       if(p=strstr(row,"BOARD_TYPE:"))
+		   {
+		     if(strstr(row,"UNO") != NULL) confBoardType = UNO;
+	         if(strstr(row,"MEGA")!= NULL) confBoardType = MEGA;
+		   }
+		   if(p=strstr(row,"SIM_LENGTH:"))
+		   {
+		     sscanf(p,"%s%d",temp,&confSteps);
+		   }
+	       if(p=strstr(row,"WIN_LAYOUT:"))
+		   {
+		     sscanf(p,"%s%d",temp,&confWinMode);
+		   }
+           if(p=strstr(row,"SKETCH_NAME:"))
+           {
+             sscanf(p,"%s%s",temp,confSketchFile);
+           }
+           if(p=strstr(row,"SO_DELAY:"))
+		   {
+		     //sscanf(p,"%s%d",temp,&???);
+		   }
+	     }
 	 
-	}
-    }
+       }
+     }
   fclose(in);
 }
 
@@ -906,20 +893,21 @@ void selectProj(int projNo,char *projName)
   in = fopen(fileProjList,"r");
   if(in == NULL)
     {
-      showError("Unable to open list conf file",-1);
+      showError("Unable to open list file",-1);
       return;
     }
   else
     {
       while (fgets(row,SIZE_ROW,in)!=NULL)
         {
-	  i++;
-	  if(i==projNo) 
-	    {
+	      i++;
+	      if(i==projNo) 
+	      {
               sscanf(row,"%s",projName);
-	    }
-        }
-      fclose(in);
+              g_currentSketchStatus = SO_SELECTED;
+	      }
+         }
+       fclose(in);
     }
   return;
 }
@@ -948,8 +936,8 @@ void readMsg(char *fileName)
           if(strstr(fileName,fileProjList) != NULL)
 	    {
 	      strcpy(temp,row);
-	      if(p = strstr(temp,".conf")) strcpy(p,"\0");
-	      if(strstr(row,currentConf))
+	      if(p = strstr(temp,".ino")) strcpy(p,"\0");
+	      if(strstr(row,g_currentSketch))
 		sprintf(row,"> %d %s",i,temp);
 	      else
 		sprintf(row,"  %d %s",i,temp);
@@ -1529,7 +1517,7 @@ int loadSketch(char sketch[])
 
   sprintf(syscom,"cp %s %s > %s 2>&1;",sketch,fileServSketch,fileCopyError);
   x=system(syscom);
-  strcpy(confSketchFile,sketch);
+  //strcpy(confSketchFile,sketch);
 
   instrument(sketch,fileServSketch);
 
@@ -1935,7 +1923,7 @@ void readSetting()
   if(in == NULL)
     {
       showError("No settings",-1);
-      strcpy(currentConf,"default.conf");
+      strcpy(currentConf,"default.ino");
       return;
     }
   else
@@ -1943,10 +1931,10 @@ void readSetting()
       while (fgets(row,120,in)!=NULL)
 	{
 
-	  if(p=strstr(row,"PROJECT:"))
+	  if(p=strstr(row,"SKETCH:"))
 	    {
 	      q = strstr(p,":");q++;
-	      sscanf(q,"%s",currentConf);
+	      sscanf(q,"%s",g_currentSketch);
 	    }
 	  //readSketchName(sketch,name);
 	}
