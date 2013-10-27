@@ -711,7 +711,7 @@ void runMode(int stop)
       unoInfo();
 
       if(g_debug == 1) 
-	readFile(confSketchFile,g_lineSketch[currentStep]);
+	readFile(g_currentSketch,g_lineSketch[currentStep]);
 
 
       ch = getchar();
