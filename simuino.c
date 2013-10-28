@@ -59,11 +59,11 @@ int x_pinRW[MAX_TOTAL_PINS][SCEN_MAX];
 #define WIN_MODES 5
 
 // Sketch Status 
-#define SO_VOID      1
-#define SO_SELECTED  2
-#define SO_LOADED    3
-#define SO_ERROR     4
-
+#define SO_VOID       1
+#define SO_SELECTED   2
+#define SO_LOADED     3
+#define SO_COMP_ERROR 4
+#define SO_RUN_ERROR  5
 
 // Current data
 int  currentStep = 0;
@@ -332,7 +332,9 @@ void loadCurrentSketch()
     unoInfo();
     sprintf(temp,"Sketch load ready: %s",confSketchFile);
     putMsg(msg_h-2,temp);
+    g_currentSketchStatus = SO_LOADED;
   }
+  if(res != 0)g_currentSketchStatus = SO_COMP_ERROR;
 }
 
 //====================================
@@ -506,7 +508,7 @@ void openCommand()
 	      strcpy(currentConf,command[1]);
 	      strcat(currentConf,".ino");
 	      readConfig(currentConf);
-              g_warning = S_YES;
+          g_warning = S_YES;
 	      unoInfo();
 	    }
 	  readMsg(currentConf);
@@ -638,6 +640,7 @@ void openCommand()
 	      selectProj(projNo,g_currentSketch);
 	      readConfig(g_currentSketch);
 	      g_warning = S_YES;
+	      g_currentSketchStatus = SO_SELECTED;
 	      setRange(confBoardType);
 	      init(confWinMode);
           unoInfo();
@@ -721,23 +724,27 @@ void runMode(int stop)
 	  return;
 	}
 
-      if (ch=='h')
-        {
+    if (ch=='h')
+    {
           readMsg(fileInfoRun);
-        }
-      else if (ch=='c')
-        {
+    }
+    else if (ch=='c')
+    {
           readMsg(currentConf);
-        }
-      else if (ch=='d')
-        {
+    }
+    else if (ch=='e')
+    {
+         readMsg(fileServError);
+    }
+    else if (ch=='d')
+    {
           readMsg(fileServTime);
-        }
-      else if(ch=='y' ) // scenario
+    }
+    else if(ch=='y' ) // scenario
 	{
 	  readMsg(fileServScen);
 	}
-      else if (ch=='x')
+    else if (ch=='x')
 	{
 	  readMsg(fileServScenario);
 	}
