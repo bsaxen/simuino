@@ -94,10 +94,11 @@ void show(WINDOW *win)
       wmove(win,1,2);
       wprintw(uno,"Selected Sketch: %s              ",g_currentSketch);
       wmove(win,2,2);
-     if(g_currentSketchStatus == SO_VOID)wprintw(uno,"Status.........: -");
-     if(g_currentSketchStatus == SO_SELECTED)wprintw(uno,"Status.........: selected");
-     if(g_currentSketchStatus == SO_LOADED)wprintw(uno,"Status.........: loaded");
-     if(g_currentSketchStatus == SO_ERROR)wprintw(uno,"Status.........: error");
+     if(g_currentSketchStatus == SO_VOID)      wprintw(uno,"Status.........: -");
+     if(g_currentSketchStatus == SO_SELECTED)  wprintw(uno,"Status.........: selected");
+     if(g_currentSketchStatus == SO_LOADED)    wprintw(uno,"Status.........: loaded");
+     if(g_currentSketchStatus == SO_RUN_ERROR) wprintw(uno,"Status.........: runtime error");
+     if(g_currentSketchStatus == SO_COMP_ERROR)wprintw(uno,"Status.........: compile error");
     }
   if(win == ser)
     {
@@ -298,9 +299,14 @@ void unoInfo()
   wmove(uno,ap+2,3); 
 
   if(g_existError == S_YES)
-    wprintw(uno,"  [Errors - err]            ");
+  {
+    wprintw(uno,"  [More details - type: err  (or r in run-mode)]");
+  }
   else if(g_warning == S_YES)
-    wprintw(uno,"  [Possible Mismatch - load]");
+  {
+    wprintw(uno,"  [Load status unknown - load]");
+   // g_currentSketchStatus = SO_SELECTED;
+  }
   else
     wprintw(uno,"                            ");
 
@@ -1502,7 +1508,11 @@ void anyErrors()
   sprintf(syscom,"cat %s %s %s> %s",fileError,fileServError,fileCopyError,fileTemp);
   x = system(syscom); 
   x = countRowsInFile(fileTemp);
-  if(x > 0 && x != 999)g_existError = S_YES;
+  if(x > 0 && x != 999)
+  {
+	  g_existError = S_YES;
+	  g_currentSketchStatus = SO_RUN_ERROR;
+  }
   if(x == 999)putMsg(2,"Unable to read error file");
   show(uno);
 }
@@ -1532,7 +1542,7 @@ int loadSketch(char sketch[])
       wprintw(msg,"press any key to continue >>");
       wrefresh(msg);
       ch = getchar();
-      putMsg(2,"Check your sketch or report an Issue to Simuino");
+      putMsg(2,"Check your sketch or report an issue to Simuino");
       return(1);
     }
   readSketchInfo();

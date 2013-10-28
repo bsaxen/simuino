@@ -27,10 +27,10 @@ Window:
  w  toggles window layout mode.
 
 Information:
- c  show current configuration
  d  show scenario delay overview
  l  show loop information
  s  show debug sketch
+ e  show runtime error log
 ------------------------------------
  q  quit Run Mode, enter Admin Mode. 
  h  show this information

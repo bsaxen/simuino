@@ -1,13 +1,11 @@
 exit             Exit Simuino
 
-load <steps>     Load current configuration and
-                 create scenario of length <steps>
-                 if no parameters, <steps> are as configured
+load             Load selected sketch
 
-list             List available configurations (max 10). 
+list             List available sketches (max 100). 
                  Selected is marked with '>'
 
-<n>              Select configuration according to number in list
+<n>              Select sketch according to number in list
 
 run <steps>      Step until step=<steps>
                  If no steps given - enter Run Mode
@@ -16,24 +14,17 @@ loop <loop>      Step until loop <loop>
 
 reset            Reset simulation. Current step set to 0
 
-save  <name>     Save current configuration as <name>
-                 If no <name>, saved to current configuration
-
-del   <name>     Delete configuration. If no parameter,
-                 current configuration will be deleted.
-                 Default configuration cannot be deleted.
-
 add   <...>      Add pin-value-point in scenario
                  Ex. add a 3 100 650
                  Analog Pin 3 will read values 650 
                  from step 100 and forward.
 
-rem   <...>	 Remove pin-value-point in scenario
+rem   <...>	     Remove pin-value-point in scenario
                  Ex. rem d 7 50
                  Digital Pin 7 will no longer read values
                  specified at step 50	 
 
-info  <area>     Show info about <area>
+info  <par>      Show info about <par>
     - scen       Show scenario data
     - conf       Display configuration
     - loop       Show loop information
@@ -41,8 +32,6 @@ info  <area>     Show info about <area>
     - g++        Show compilation errors
     - help       Show command information
 
-conf             Show current configuration
-conf <par> <val> Edit configuration with commands below:
-   - win         Set Window layout mode to <val> (0,1,2,3,4)
-   - sketch      Set sketch source file
-   - sim <steps> Total steps in simulation
+sketch           Show current sketch
+   
+help             Show this information
