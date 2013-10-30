@@ -7,22 +7,7 @@ list             List available sketches (max 100).
 
 <n>              Select sketch according to number in list
 
-run <steps>      Step until step=<steps>
-                 If no steps given - enter Run Mode
-
-loop <loop>      Step until loop <loop>
-
-reset            Reset simulation. Current step set to 0
-
-add   <...>      Add pin-value-point in scenario
-                 Ex. add a 3 100 650
-                 Analog Pin 3 will read values 650 
-                 from step 100 and forward.
-
-rem   <...>	     Remove pin-value-point in scenario
-                 Ex. rem d 7 50
-                 Digital Pin 7 will no longer read values
-                 specified at step 50	 
+run              Enter Run Mode
 
 info  <par>      Show info about <par>
     - scen       Show scenario data
@@ -30,8 +15,7 @@ info  <par>      Show info about <par>
     - loop       Show loop information
     - error      Show Servuino errors
     - g++        Show compilation errors
-    - help       Show command information
 
-sketch           Show current sketch
+sketch           Show selected sketch
    
 help             Show this information

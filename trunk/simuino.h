@@ -73,3 +73,4 @@ int  readStatus();
 void readSerial();
 void readTime();
 int  goStep(int step);
+char *replace_str(char *str, char orig[], char rep[]);

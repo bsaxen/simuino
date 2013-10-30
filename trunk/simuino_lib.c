@@ -63,16 +63,25 @@ int analyzeEvent(char *event)
 //====================================
 {
   int step,pin,value;
-  char str[80];
+  char str[80],str1[12],str2[12],*p;
   {
     if(strstr(event,"analogRead") || strstr(event,"digitalRead"))
       {
-	sscanf(event,"%s %d %d",str,&pin,&value);
-	g_pinNo = pin;
-	g_pinValue = value;
-	if(strstr(event,"analog"))  g_pinType = ANA;
-	if(strstr(event,"digital")) g_pinType = DIG;
-	return(g_pinType);
+	    sscanf(event,"%s %s %s",str,str1,str2);
+	    
+	    p = strstr(str1,"pin=");
+	    p = p+4;
+	    sscanf(p,"%d",&pin);
+	    
+	    p = strstr(str2,"value=");
+	    p = p+6;
+	    sscanf(p,"%d",&value);
+	    	    	    	    
+	    g_pinNo = pin;
+	    g_pinValue = value;
+	    if(strstr(event,"analog"))  g_pinType = ANA;
+	    if(strstr(event,"digital")) g_pinType = DIG;
+    	return(g_pinType);
       } 
     return(0); 
   }
@@ -88,17 +97,17 @@ void show(WINDOW *win)
     {
       wmove(win,0,2);
       if(confBoardType ==UNO)
-	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.8");
+	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.8 ");
       if(confBoardType ==MEGA)
-	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.8");
+	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.8 ");
       wmove(win,1,2);
-      wprintw(uno,"Selected Sketch: %s              ",g_currentSketch);
+                                               wprintw(uno,"Sketch: %s",g_currentSketch);
       wmove(win,2,2);
-     if(g_currentSketchStatus == SO_VOID)      wprintw(uno,"Status.........: -");
-     if(g_currentSketchStatus == SO_SELECTED)  wprintw(uno,"Status.........: selected");
-     if(g_currentSketchStatus == SO_LOADED)    wprintw(uno,"Status.........: loaded");
-     if(g_currentSketchStatus == SO_RUN_ERROR) wprintw(uno,"Status.........: runtime error");
-     if(g_currentSketchStatus == SO_COMP_ERROR)wprintw(uno,"Status.........: compile error");
+     if(g_currentSketchStatus == SO_VOID)      wprintw(uno,"Status: -            ");
+     if(g_currentSketchStatus == SO_SELECTED)  wprintw(uno,"Status: selected     ");
+     if(g_currentSketchStatus == SO_LOADED)    wprintw(uno,"Status: loaded       ");
+     if(g_currentSketchStatus == SO_RUN_ERROR) wprintw(uno,"Status: runtime error");
+     if(g_currentSketchStatus == SO_COMP_ERROR)wprintw(uno,"Status: compile error");
     }
   if(win == ser)
     {
@@ -155,18 +164,7 @@ void showError(const char *m, int value)
   fprintf(err,"%s %d\n",err_msg,value,-1);
   error = 1;
 }
-//====================================
-void addConfList(char *cf)
-//====================================
-{
-  return;
-}
-//====================================
-void delConfList(char *cf)
-//====================================
-{ 
-  return;
-}
+
 //====================================
 void saveSetting()
 //====================================
@@ -300,7 +298,7 @@ void unoInfo()
 
   if(g_existError == S_YES)
   {
-    wprintw(uno,"  [More details - type: err  (or r in run-mode)]");
+    wprintw(uno,"  [More details - type: err  (or e in run-mode)]");
   }
   else if(g_warning == S_YES)
   {
@@ -530,14 +528,10 @@ void resetSim()
 void readConfig(char *cf)
 //====================================
 {
-// BOARD_TYPE:  UNO
-// SKETCH_NAME: HelloWorld_UNO
-// SIM_LENGTH:  600
-// WIN_LAYOUT:    2
-// SO_DELAY:     40
   FILE *in;
   char row[80],*p,temp[40];
   int x;
+  
   
   in = fopen(cf,"r");
   if(in == NULL)
@@ -545,11 +539,16 @@ void readConfig(char *cf)
       showError("No config file",-1);
       confSteps = 444;
       confWinMode = 2;
-      strcpy(confSketchFile,"helloWorld_UNO.ino");
+      strcpy(confSketchFile,"Unknown sketch");
       return;
     }
   else
     {
+	  confBoardType = UNO;
+	  confSteps = 555;
+	  confWinMode = 2;
+	  strcpy(confSketchFile,"No sketch name defined");
+	  g_runDelay = 30;
       while (fgets(row,80,in)!=NULL)
 	  {
 	    if(row[0] != '#')
@@ -573,7 +572,7 @@ void readConfig(char *cf)
            }
            if(p=strstr(row,"SO_DELAY:"))
 		   {
-		     //sscanf(p,"%s%d",temp,&???);
+		     sscanf(p,"%s%d",temp,&g_runDelay);
 		   }
 	     }
 	 
@@ -621,23 +620,6 @@ void readDebug()
 	}
     }
   fclose(in);
-
-/*   in = fopen(confSketchFile,"r"); */
-/*   if(in == NULL) */
-/*     { */
-/*       showError("readDebug: No sketch file",-1); */
-/*       return; */
-/*     } */
-/*   else */
-/*     { */
-/*       line = 0; */
-/*       while (fgets(row,80,in)!=NULL) */
-/* 	{ */
-/*           line++; */
-/* 	  strcpy(g_sourceSketch[line],row); */
-/* 	} */
-/*     } */
-/*   fclose(in); */
 
 }
 
@@ -700,13 +682,13 @@ void runAll(int stop)
   if(currentStep < stop)
     {
       while(currentStep < stop)
-	x = runStep(S_FORWARD);
+ 	    x = runStep(S_FORWARD);
     }
 
   if(currentStep > stop)
     {
       while(currentStep > stop)
-	x = runStep(S_BACKWARD);
+	    x = runStep(S_BACKWARD);
     }
 
   return;
@@ -942,7 +924,7 @@ void readMsg(char *fileName)
           if(strstr(fileName,fileProjList) != NULL)
 	    {
 	      strcpy(temp,row);
-	      if(p = strstr(temp,".ino")) strcpy(p,"\0");
+	      //if(p = strstr(temp,".ino")) strcpy(p,"\0");
 	      if(strstr(row,g_currentSketch))
 		sprintf(row,"> %d %s",i,temp);
 	      else
@@ -993,22 +975,30 @@ void readFile(char *fileName,int line)
     }
   else
     {
-      from = line - msg_h/2;
-      to   = line + msg_h/2;
-      if(from < 0)from  = 1;
+	  if(line > msg_h)
+	  {
+         from = line - msg_h/2;
+         to   = line + msg_h/2;
+      }
+      else
+      {
+		 from = 0;
+		 to   = msg_h;  
+	  }
+      if(from < 0)from  = 0;
       while (fgets(row,SIZE_ROW,in)!=NULL)
-	{
+	  {
           i++;
-          if(i > from && i < to)
+        if(i > from && i < to)
 	    {
 	      wmove(msg,i,1);
 	      wprintw(msg," ");
 	      if(i==line)
-		{
-		  sprintf(temp,"[%d]:>",i);
-		  wprintw(msg,temp);
-		  //wmove(msg,i,4);
-		}
+		  {
+		    sprintf(temp,"[%d]:>",i);
+		    wprintw(msg,temp);
+		   //wmove(msg,i,4);
+		  }
 	      wprintw(msg,row);
 	    }
 	}
