@@ -1,10 +1,12 @@
-//================================================
-//  Example HelloWorld
-//================================================
-// BOARD_TYPE:   UNO
-// SCENSIMLEN:   650
-// WINDOWLAYOUT:   2
-// SO_DELAY:      40
+
+// ===============================================
+// SIMUINO_BEGIN
+// ===============================================
+// BOARD_TYPE:  MEGA
+// SKETCH_NAME: HelloWorld_MEGA.ino
+// SIM_LENGTH:  600
+// WIN_LAYOUT:    2
+// SO_DELAY:     40
 //================================================
 //  Scenario
 //================================================
@@ -25,7 +27,6 @@
 //================================================
 // Simuino log text customization
 //================================================
-// SKETCH_NAME: HelloWorld_UNO
 
 // PINMODE_OUT: 11  "PIN: Led Urgent"
 // PINMODE_OUT: 12  "PIN: Led Blink"
@@ -44,12 +45,12 @@
 
 
 //-------- DIGITAL PIN settings ------------------
-#include <EEPROM.h>
+
 // Leds
-int URGENTLED    = 11;
-int BLINKLED     = 12;
-int IN_PIN       = 10;
-int CONTROL      =  9;
+int URGENTLED    = 31;
+int BLINKLED     = 32;
+int IN_PIN       = 52;
+int CONTROL      = 53;
  
 //-------- ANALOGUE PIN settings
 int SENSOR1  = 4;
@@ -62,7 +63,15 @@ int SENSOR2  = 5;
 void blinkLed(int n);
 
 //================================================
-void urgent()
+void urgent0()
+//================================================
+{
+      digitalWrite(URGENTLED, HIGH); 
+      delay(400);
+      digitalWrite(URGENTLED, LOW); 
+}
+//================================================
+void urgent1()
 //================================================
 {
       digitalWrite(URGENTLED, HIGH); 
@@ -70,7 +79,7 @@ void urgent()
       digitalWrite(URGENTLED, LOW); 
 }
 //================================================
-void very_urgent()
+void urgent2()
 //================================================
 {
       digitalWrite(URGENTLED, HIGH); 
@@ -78,16 +87,50 @@ void very_urgent()
       digitalWrite(URGENTLED, LOW); 
 }
 //================================================
+void urgent3()
+//================================================
+{
+      digitalWrite(URGENTLED, HIGH); 
+      delay(403);
+      digitalWrite(URGENTLED, LOW); 
+}
+//================================================
+void urgent4()
+//================================================
+{
+      digitalWrite(URGENTLED, HIGH); 
+      delay(404);
+      digitalWrite(URGENTLED, LOW); 
+}
+//================================================
+void urgent5()
+//================================================
+{
+      digitalWrite(URGENTLED, HIGH); 
+      delay(405);
+      digitalWrite(URGENTLED, LOW); 
+}
+//================================================
 void setup()
 //================================================
 {
   Serial.begin(9600); 
-  attachInterrupt(0,urgent, CHANGE);
-  attachInterrupt(1,very_urgent, RISING);
+  
   pinMode(BLINKLED,OUTPUT);   
   pinMode(URGENTLED,OUTPUT);   
   pinMode(IN_PIN,INPUT);
   pinMode(CONTROL,INPUT);
+  pinMode(15,OUTPUT);
+  pinMode(44,INPUT);
+  pinMode(45,OUTPUT);
+  pinMode(46,OUTPUT);
+  pinMode(47,INPUT);
+  attachInterrupt(0,urgent0, CHANGE);
+  attachInterrupt(1,urgent1, RISING);
+  attachInterrupt(2,urgent2, FALLING);
+  attachInterrupt(3,urgent3, LOW);
+  attachInterrupt(4,urgent4, CHANGE);
+  attachInterrupt(5,urgent5, RISING);
 }
 	 
 //================================================ 
@@ -110,12 +153,14 @@ void loop()
   Serial.println(value1);
   Serial.print("Digital CONTROL read: ");
   Serial.println(value2);
+
+  analogWrite(10,123);
+  analogWrite(11,167);
+
+  analogWrite(3,127);
+  analogWrite(4,147);
   
   delay(1000); 
-  EEPROM.write(34,'b');
-  char lue = EEPROM.read(34);
-  Serial.print("EEPROM value is: ");
-  Serial.println(lue);
 }
 
 //================================================
@@ -123,7 +168,7 @@ void blinkLed(int n)
 //================================================
 {
   int i;
-  for(i=1;i<=10;i++)
+  for(i=1;i<=2;i++)
     {
       digitalWrite(BLINKLED, HIGH); 
       delay(500);

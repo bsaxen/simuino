@@ -74,6 +74,7 @@ int  currentValueD[MAX_PIN_DIGITAL_MEGA];
 int  currentValueA[MAX_PIN_ANALOG_MEGA];
 char g_currentSketch[80];
 int  g_currentSketchStatus = SO_VOID;
+int  g_runDelay = 0; //millisec
 
 
 // Limits
@@ -263,7 +264,7 @@ int runStep(int dir)
   // Realtime animation
   temp = stepDelay[currentStep];
   if(temp > 0)microDelay(temp);
-
+  iDelay(g_runDelay);
   return(0);
 }    
 
@@ -286,6 +287,7 @@ int goStep(int step)
   //strcpy(stemp,status[currentStep]);
   displayStatus();
   unoInfo();
+  iDelay(g_runDelay);
   return(0);
 }    
 
@@ -515,6 +517,8 @@ void openCommand()
 	}
     else if(strstr(sstr,"list"))
 	{
+	  sprintf(syscom,"ls sketchbook/*.ino > %s;",fileProjList);
+	  x=system(syscom);
 	  readMsg(fileProjList);	
 	}
     else if(strstr(sstr,"sketch"))
@@ -576,48 +580,21 @@ void openCommand()
       
       else if(strstr(sstr,"sav")) //save config
 	{
-	  if(n == 2)
-	    {
-	      strcpy(currentConf,command[1]);
-	      strcat(currentConf,".ino");
-              
-	    }
-	  saveSetting();
-	  readMsg(currentConf);
-	  sprintf(syscom,"ls *.ino > %s;",fileProjList);
-	  x=system(syscom);
+
 	}
-      else if(strstr(sstr,"del")) //delete config
-	{
-	  if(n == 2)
-	    {
-	      strcpy(currentConf,command[1]);
-	      strcat(currentConf,".ino");
-              
-	    }
-          if(strstr(currentConf,"default") == NULL)
-	    {
-	      sprintf(syscom,"rm %s;",currentConf);
-	      x=system(syscom);
-	      sprintf(syscom,"ls *.ino > %s;",fileProjList);
-	      x=system(syscom);
-	      readMsg(fileProjList);
-	      strcpy(currentConf,fileDefault);
-	    }	
-	}
-      else if(strstr(sstr,"win")) //windows layout
-        {
-          if(n == 2)
+    else if(strstr(sstr,"win")) //windows layout
+    {
+        if(n == 2)
 	    {
               confWinMode = atoi(command[1]);
               if(confWinMode > WIN_MODES)confWinMode = 0;
               init(confWinMode);
               unoInfo();
 	    }
-        }
-      else if(strstr(sstr,"loop"))
+    }
+    else if(strstr(sstr,"loop"))
 	{
-          if(n == 2)loop = atoi(command[1]);
+      if(n == 2)loop = atoi(command[1]);
 	  loop = checkRange(HEAL,"loop",loop);
 	  runLoops(loop);
 	}
@@ -700,7 +677,7 @@ void runMode(int stop)
     {
       if(stop > g_steps)stop = g_steps;
       //if(stop > currentStep)
-	runAll(stop);
+	  runAll(stop);
       return;
     }
 
@@ -708,18 +685,17 @@ void runMode(int stop)
 
   while(1)  
     {
+      if(g_debug == 1) 
+	   readFile(g_currentSketch,g_lineSketch[currentStep]);
+	   
       anyErrors();
       if(g_silent==S_NO )mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
       if(g_silent==S_YES)mvwprintw(uno,board_h-2,1,"R%1d<",confWinMode);
       unoInfo();
-
-      if(g_debug == 1) 
-	readFile(g_currentSketch,g_lineSketch[currentStep]);
-
-
+      
       ch = getchar();
 
-      if (ch=='q')
+    if (ch=='q')
 	{
 	  return;
 	}
@@ -730,7 +706,8 @@ void runMode(int stop)
     }
     else if (ch=='c')
     {
-          readMsg(currentConf);
+		sprintf(temp,"Simulation Length: %d\n Delay............: %d ms",confSteps,g_runDelay);
+		putMsg(2,temp);
     }
     else if (ch=='e')
     {
@@ -748,20 +725,25 @@ void runMode(int stop)
 	{
 	  readMsg(fileServScenario);
 	}
-      else if (ch=='G')
+    else if (ch=='G')
 	{
 	  runAll(g_steps);
 	}
-      else if (ch=='l')
+    else if (ch=='l')
 	{
 	  showLoops();
 	}
-      else if (ch=='s')
+    else if (ch=='s')
 	{
 	  g_debug++;
-	  if(g_debug > 1)g_debug = 0;
+	  if(g_debug > 1)
+	  {
+		  g_debug = 0;
+		  putMsg(2,"Run Mode. Press h for help.");
+	  }
+		  
 	}
-      else if (ch=='w')
+    else if (ch=='w')
 	{
 	  confWinMode++;
 	  if(confWinMode > WIN_MODES)confWinMode = 0;
@@ -769,27 +751,27 @@ void runMode(int stop)
 	  mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
 	  unoInfo();
 	}
-      else if (ch=='a')
+    else if (ch=='a')
 	{
           goStep(1);
 	}
-      else if (ch=='r')
+    else if (ch=='r')
 	{
           goStep(loopStep[currentLoop+1]);
 	}
-      else if (ch=='o')
+    else if (ch=='o')
 	{
           goStep(loopStep[currentLoop]);
 	}
-      else if (ch=='p')
+    else if (ch=='p')
 	{
           goStep(loopStep[currentLoop-1]);
 	}
-      else if (ch=='z')
+    else if (ch=='z')
 	{
           goStep(g_steps);
 	}
-      else if (ch=='k')
+    else if (ch=='k')
 	{
 	  resetSim();
 	  init(confWinMode);
@@ -797,32 +779,49 @@ void runMode(int stop)
 	  mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
 	  show(uno);
 	}
-      else if (ch=='f')// Up Arrow 
+    else if (ch=='f')// Up Arrow 
 	{
 	  goStep(currentStep+1);
 	}
-      else if (ch=='b')// Down Arrow
+    else if (ch=='b')// Down Arrow
 	{
 	  goStep(currentStep-1);
 	}
-      else if (ch=='R') // Right Arrow
+    else if (ch=='R') // Right Arrow
 	{
 	  runLoop(S_FORWARD);
 	}
-      else if (ch=='P') // Left Arrow
+    else if (ch=='P') // Left Arrow
 	{
 	  runLoop(S_BACKWARD);
 	}
-      else if (ch=='t')
+	else if (ch=='A')// Up Arrow 
+	{
+	  goStep(currentStep+1);
+	}
+    else if (ch=='B')// Down Arrow
+	{
+	  goStep(currentStep-1);
+	}
+    else if (ch=='C') // Right Arrow
+	{
+	  runLoop(S_FORWARD);
+	}
+    else if (ch=='D') // Left Arrow
+	{
+	  runLoop(S_BACKWARD);
+	}
+    else if (ch=='t')
 	{
 	  runNextRead();
 	}
-      else if (ch=='j')
+    else if (ch=='j')
 	{
 	  runPrevRead();
 	}
-      else if (ch=='i') 
+    else if (ch=='i') 
 	{
+		ok = 0;
           step = currentStep;
 	  sprintf(temp,"(Step:%d) Enter: d/a pin value (q - cancel)",step);
           putMsg(2,temp);
@@ -851,6 +850,7 @@ void runMode(int stop)
 		  g_scenSource = 1;
 		  // steps, source, pintype, pinno, pinvalue, pinstep
 		  sprintf(syscom,"cd servuino;./servuino %d %d %d %d %d %d %d;",confSteps,g_scenSource,g_pinType,g_pinNo,x,currentStep,S_ADD);
+putMsg(2,syscom);
 		  tmp=system(syscom);
 		  initSim();
 		  readSketchInfo();
@@ -862,12 +862,13 @@ void runMode(int stop)
 	  else
 	    putMsg(2,"Cancelled!");
 	}
-      else if (ch=='v') 
+    else if (ch=='v') 
 	{
           step = currentStep ;
-	  sprintf(temp," Enter value to be read at step %d (q - cancel)",step);
+          res = analyzeEvent(simulation[step]);
+	      sprintf(temp," Pin:%d Enter value to be read at step %d (q - cancel)",g_pinNo,step);
           putMsg(2,temp);
-	  res = analyzeEvent(simulation[step]);
+
           if(res > 0)
 	    {
 	      wgetstr(uno,temp);

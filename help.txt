@@ -1,10 +1,16 @@
 [Run Mode]
 Goto:
+ arrow up    step forward
+ arrow down  step backward
+ arrow right loop forward
+ arrow left  loop backward
+ 
  f  step forward
  b  step backward
  r  loop forward
- o  loop reset
  p  loop backward
+ 
+ o  loop reset
  a  goto first step
  z  goto last step
  t  step to next analogRead/digitalRead
@@ -15,13 +21,12 @@ Animation(realtime time delay):
  G  step through scenario
 
 Scenario breakpoints:
- y  View Scenario Breakpoints
- x  Expanded view of Scenario Breakpoints
+ c  view configuration parameters
+ y  view Scenario Breakpoints
+ x  expanded view of Scenario Breakpoints
  v  set value analogRead/digitalRead
     Current step must be one step before Read
     Use 't' to step between Read events.
- i  set Scenario Breakpoint at current step
-    Example: a 4 323  (analog pin=4 value=323)
 
 Window:
  w  toggles window layout mode.
