@@ -472,30 +472,22 @@ void openCommand()
 	  {
 	    if(n == 2)
 	    {
-	      if(strstr(command[1],"conf"))
-		{
-		  readMsg(fileDefault);
-		}
-	      else if(strstr(command[1],"err"))
-		{
+	     if(strstr(command[1],"err"))
+		 {
 		  readMsg(fileServError);
-		}
-	      else if(strstr(command[1],"g++"))
-		{
+		 }
+	     else if(strstr(command[1],"g++"))
+		 {
 		  readMsg(fileServComp);
-		}
-	      else if(strstr(command[1],"help"))
-		{
-		  readMsg(fileInfoAdmin);
-		}
-	      else if(strstr(command[1],"loop")) 
-		{
+		 }
+	     else if(strstr(command[1],"loop")) 
+		 {
 		  showLoops();
-		}
-	      else if(strstr(command[1],"scen")) // scenario
-		{
+		 }
+	     else if(strstr(command[1],"scen")) // scenario
+		 {
 		  readMsg(fileServScen);
-		}
+		 }
 	  }
 	  else
 	  {
@@ -503,18 +495,6 @@ void openCommand()
 	  }
 	}
 
-    else if(strstr(sstr,"proj"))
-	{
-	  if(n == 2)
-	    {
-	      strcpy(currentConf,command[1]);
-	      strcat(currentConf,".ino");
-	      readConfig(currentConf);
-          g_warning = S_YES;
-	      unoInfo();
-	    }
-	  readMsg(currentConf);
-	}
     else if(strstr(sstr,"list"))
 	{
 	  sprintf(syscom,"ls sketchbook/*.ino > %s;",fileProjList);
@@ -819,7 +799,7 @@ void runMode(int stop)
 	{
 	  runPrevRead();
 	}
-    else if (ch=='i') 
+   /* else if (ch=='i') 
 	{
 		ok = 0;
           step = currentStep;
@@ -861,7 +841,7 @@ putMsg(2,syscom);
 	    }
 	  else
 	    putMsg(2,"Cancelled!");
-	}
+	} */
     else if (ch=='v') 
 	{
           step = currentStep ;
@@ -928,7 +908,7 @@ int main(int argc, char *argv[])
   inrpt[5] = IR5;
 
 
-  sprintf(syscom,"ls *.ino > %s;",fileProjList);
+  sprintf(syscom,"ls sketchbook/*.ino > %s;",fileProjList);
   x=system(syscom);
   sprintf(syscom,"rm %s;touch %s;",fileTemp,fileTemp);
   x=system(syscom);

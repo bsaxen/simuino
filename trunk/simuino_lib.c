@@ -119,16 +119,16 @@ void show(WINDOW *win)
       next =  loopPos[currentLoop+1];
       if(currentStep == loopPos[currentLoop+1]) next = loopPos[currentLoop+2];
       wmove(win,0,2);
-      wprintw(win,"Log  ");
+      wprintw(win,"Log ");
       if(currentStep == g_steps)
-	wprintw(slog,"%d,%d ->| (%d,%d)",currentLoop,currentStep,g_loops,g_steps);
+    	wprintw(slog,"%d,%d ->| (%d,%d)",currentLoop,currentStep,g_loops,g_steps);
       else
-	wprintw(slog,"%d,%d ->%d (%d,%d)",currentLoop,currentStep,next,g_loops,g_steps);
+	    wprintw(slog,"%d,%d ->%d (%d,%d)",currentLoop,currentStep,next,g_loops,g_steps);
     }
   if(win == msg)
     {
       wmove(win,0,2);
-      wprintw(win,"Messages");
+      wprintw(win,"----------Messages----------");
     }
   
   wmove(uno,board_h-2,4);

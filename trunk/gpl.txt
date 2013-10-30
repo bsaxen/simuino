@@ -1,5 +1,5 @@
  
- SIMUINO Arduino Simulator  www.simuino.com
+ SIMUINO Arduino Simulator  
  Copyright (C) 2013 Benny Saxen
  This program comes with ABSOLUTELY NO WARRANTY.
  This is free software. You are welcome to redistribute 
@@ -7,4 +7,7 @@
 
  Type "help" for list of commands.
 
- Contact:  benny.saxen@gmail.com
+ Place your sketch (.ino) in folder sketchbook. 
+ Add configuration information. (See helloWorld_UNO.ino)
+ 
+ Visit: www.simuino.com for more information.
