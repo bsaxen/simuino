@@ -112,8 +112,8 @@ void loop()
   Serial.println(value2);
   
   delay(1000); 
-  EEPROM.write(678,311);
-  int lue = EEPROM.read(678);
+  EEPROM.write(55,120);
+  int lue = EEPROM.read(55);
   Serial.print("EEPROM value is: ");
   Serial.println(lue);
 }
