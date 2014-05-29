@@ -15,7 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
-
 //====================================   
 int milliSleep(unsigned long milisec)
 //====================================   
@@ -97,9 +96,9 @@ void show(WINDOW *win)
     {
       wmove(win,0,2);
       if(confBoardType ==UNO)
-	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.1.8 ");
+	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.2.0 ");
       if(confBoardType ==MEGA)
-	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.1.8 ");
+	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.2.0 ");
       wmove(win,1,2);
                                                wprintw(uno,"Sketch: %s",g_currentSketch);
       wmove(win,2,2);
@@ -161,7 +160,7 @@ void showError(const char *m, int value)
   char err_msg[300];
   strcpy(err_msg,"SimuinoERROR: ");
   strcat(err_msg,m);
-  fprintf(err,"%s %d\n",err_msg,value,-1);
+  fprintf(err,"%s %d\n",err_msg,value);
   error = 1;
 }
 
@@ -963,8 +962,10 @@ void readFile(char *fileName,int line)
 //====================================
 {
   FILE *in;
-  char row[SIZE_ROW],temp[10];
-  int i=0,from,to;
+  char row[SIZE_ROW],temp[20];
+  int i=0,k=0,from,to,lines_in_file = 0;
+
+  lines_in_file = countRowsInFile(fileName);
 
   wclear(msg);
   in = fopen(fileName,"r");
@@ -975,10 +976,15 @@ void readFile(char *fileName,int line)
     }
   else
     {
-	  if(line > msg_h)
+	  if(lines_in_file > msg_h)
 	  {
-         from = line - msg_h/2;
-         to   = line + msg_h/2;
+         if(line > msg_h/2)from = line - msg_h/2;
+         else
+          from = 0;
+          
+         if((lines_in_file - line) > msg_h/2)to = line + msg_h/2;
+         else
+          to = lines_in_file;
       }
       else
       {
@@ -988,11 +994,13 @@ void readFile(char *fileName,int line)
       if(from < 0)from  = 0;
       while (fgets(row,SIZE_ROW,in)!=NULL)
 	  {
-          i++;
-        if(i > from && i < to)
+        i++;
+        if(i >= from && i <= to)
 	    {
-	      wmove(msg,i,1);
-	      wprintw(msg," ");
+		  k++;
+	      wmove(msg,k,1);
+	      //sprintf(temp,"[%d,%d,%d,%d,%d]",i,msg_h,from,to,lines_in_file);
+	      //wprintw(msg,temp);
 	      if(i==line)
 		  {
 		    sprintf(temp,"[%d]:>",i);
@@ -1001,7 +1009,7 @@ void readFile(char *fileName,int line)
 		  }
 	      wprintw(msg,row);
 	    }
-	}
+	  }
       show(msg);
       fclose(in);
     }
