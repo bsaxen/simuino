@@ -374,6 +374,8 @@ void openCommand()
       p = str;
 
       projNo = atoi(sstr);
+      //sprintf(temp,"ProjNo: %d",projNo);
+	  //putMsg(msg_h-2,temp);
 
       if(strstr(sstr,"gpl"))
         {
@@ -545,7 +547,7 @@ void openCommand()
 		  if(stat(temp,&st) == 0)
 		    {
 		      strcpy(confSketchFile,command[2]);
-		    }
+		    }	
 		  else
 		    {
 		      sprintf(temp,"Sketch not found: %s",command[2]);// Issue 16
@@ -592,7 +594,7 @@ void openCommand()
         g_scenSource = 0;
 	    loadCurrentSketch();
 	}
-      else if(projNo > 0 && projNo < 21)
+      else if(projNo > 0 && projNo <= 100)
         {
 	      selectProj(projNo,g_currentSketch);
 	      readConfig(g_currentSketch);
@@ -817,7 +819,7 @@ void runMode(int stop)
 		{
 		  ok = ok + checkRange(S_OK,"anapin",g_pinNo);
 		  ok = ok + checkRange(S_OK,"anaval",x);
-		  g_pinType = ANA;
+		  g_pinType = ANA;apt-get install geany
 		}
 	      if(strstr(command[0],"d"))
 		{
@@ -839,7 +841,7 @@ putMsg(2,syscom);
 		  readMsg(fileServScen);
 		}
 	    }
-	  else
+	  elseapt-get install geany
 	    putMsg(2,"Cancelled!");
 	} */
     else if (ch=='v') 
