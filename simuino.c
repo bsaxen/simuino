@@ -677,132 +677,108 @@ void runMode(int stop)
       
       ch = getchar();
 
-    if (ch=='q')
-	{
-	  return;
-	}
-
-    if (ch=='h')
-    {
-          readMsg(fileInfoRun);
-    }
-    else if (ch=='c')
-    {
-		sprintf(temp,"Simulation Length: %d\n Delay............: %d ms",confSteps,g_runDelay);
-		putMsg(2,temp);
-    }
-    else if (ch=='e')
-    {
-         readMsg(fileServError);
-    }
-    else if (ch=='d')
-    {
-          readMsg(fileServTime);
-    }
-    else if(ch=='y' ) // scenario
-	{
-	  readMsg(fileServScen);
-	}
-    else if (ch=='x')
-	{
-	  readMsg(fileServScenario);
-	}
-    else if (ch=='G')
-	{
-	  runAll(g_steps);
-	}
-    else if (ch=='l')
-	{
-	  showLoops();
-	}
-    else if (ch=='s')
-	{
-	  g_debug++;
-	  if(g_debug > 1)
-	  {
-		  g_debug = 0;
-		  putMsg(2,"Run Mode. Press h for help.");
-	  }
-		  
-	}
-    else if (ch=='w')
-	{
-	  confWinMode++;
-	  if(confWinMode > WIN_MODES)confWinMode = 0;
-          init(confWinMode);
-	  mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
-	  unoInfo();
-	}
-    else if (ch=='a')
-	{
-          goStep(1);
-	}
-    else if (ch=='r')
-	{
-          goStep(loopStep[currentLoop+1]);
-	}
-    else if (ch=='o')
-	{
-          goStep(loopStep[currentLoop]);
-	}
-    else if (ch=='p')
-	{
-          goStep(loopStep[currentLoop-1]);
-	}
-    else if (ch=='z')
-	{
-          goStep(g_steps);
-	}
-    else if (ch=='k')
-	{
-	  resetSim();
-	  init(confWinMode);
-	  unoInfo();
-	  mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
-	  show(uno);
-	}
-    else if (ch=='f')// Up Arrow 
-	{
-	  goStep(currentStep+1);
-	}
-    else if (ch=='b')// Down Arrow
-	{
-	  goStep(currentStep-1);
-	}
-    else if (ch=='R') // Right Arrow
-	{
-	  runLoop(S_FORWARD);
-	}
-    else if (ch=='P') // Left Arrow
-	{
-	  runLoop(S_BACKWARD);
-	}
-	else if (ch=='A')// Up Arrow 
-	{
-	  goStep(currentStep+1);
-	}
-    else if (ch=='B')// Down Arrow
-	{
-	  goStep(currentStep-1);
-	}
-    else if (ch=='C') // Right Arrow
-	{
-	  runLoop(S_FORWARD);
-	}
-    else if (ch=='D') // Left Arrow
-	{
-	  runLoop(S_BACKWARD);
-	}
-    else if (ch=='t')
-	{
-	  runNextRead();
-	}
-    else if (ch=='j')
-	{
-	  runPrevRead();
-	}
-   /* else if (ch=='i') 
-	{
+      switch(ch)
+        {
+          case 'q':
+            return;
+          case 'h':
+            readMsg(fileInfoRun);
+            break;
+          case 'i':
+              bottom_up = !bottom_up;
+              winLog();
+              winSer();
+              break;
+          case 'c':
+              sprintf(temp,"Simulation Length: %d\n Delay............: %d ms",confSteps,g_runDelay);
+              putMsg(2,temp);
+              break;
+          case 'e':
+              readMsg(fileServError);
+              break;
+          case 'd':
+              readMsg(fileServTime);
+              break;
+          case 'y' : // scenario
+              readMsg(fileServScen);
+              break;
+          case 'x':
+              readMsg(fileServScenario);
+              break;
+          case 'G':
+              runAll(g_steps);
+              break;
+          case 'l':
+              showLoops();
+              break;
+          case 's':
+              g_debug++;
+              if(g_debug > 1)
+              {
+                  g_debug = 0;
+                  putMsg(2,"Run Mode. Press h for help.");
+              }
+              break;
+          case 'w':
+              confWinMode++;
+              if(confWinMode > WIN_MODES)confWinMode = 0;
+              init(confWinMode);
+              mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
+              unoInfo();
+              break;
+          case 'a':
+              goStep(1);
+              break;
+          case 'r':
+              goStep(loopStep[currentLoop+1]);
+              break;
+          case 'o':
+              goStep(loopStep[currentLoop]);
+              break;
+          case 'p':
+              goStep(loopStep[currentLoop-1]);
+              break;
+          case 'z':
+              goStep(g_steps);
+              break;
+          case 'k':
+              resetSim();
+              init(confWinMode);
+              unoInfo();
+              mvwprintw(uno,board_h-2,1,"R%1d>",confWinMode);
+              show(uno);
+              break;
+          case 'f':// Up Arrow 
+              goStep(currentStep+1);
+              break;
+          case 'b':// Down Arrow
+              goStep(currentStep-1);
+              break;
+          case 'R': // Right Arrow
+              runLoop(S_FORWARD);
+              break;
+          case 'P': // Left Arrow
+              runLoop(S_BACKWARD);
+              break;
+              case 'A':// Up Arrow 
+              goStep(currentStep+1);
+              break;
+          case 'B':// Down Arrow
+              goStep(currentStep-1);
+              break;
+          case 'C': // Right Arrow
+              runLoop(S_FORWARD);
+              break;
+          case 'D': // Left Arrow
+              runLoop(S_BACKWARD);
+              break;
+          case 't':
+              runNextRead();
+              break;
+          case 'j':
+              runPrevRead();
+              break;
+       /*   case 'i': 
 		ok = 0;
           step = currentStep;
 	  sprintf(temp,"(Step:%d) Enter: d/a pin value (q - cancel)",step);
@@ -843,9 +819,8 @@ putMsg(2,syscom);
 	    }
 	  elseapt-get install geany
 	    putMsg(2,"Cancelled!");
-	} */
-    else if (ch=='v') 
-	{
+	  break; */
+          case 'v': 
           step = currentStep ;
           res = analyzeEvent(simulation[step]);
 	      sprintf(temp," Pin:%d Enter value to be read at step %d (q - cancel)",g_pinNo,step);
@@ -879,9 +854,8 @@ putMsg(2,syscom);
 	    }
 	  else
 	    putMsg(2,"Next step is not a Read event");
-	}
-      else
-	{
+	  break;
+      default:
 	  sprintf(temp,"Unknown command: %c",ch);
 	  putMsg(msg_h-2,temp);
 	}

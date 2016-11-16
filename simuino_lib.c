@@ -96,9 +96,9 @@ void show(WINDOW *win)
     {
       wmove(win,0,2);
       if(confBoardType ==UNO)
-	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.2.0 ");
+	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.2.1 ");
       if(confBoardType ==MEGA)
-	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.2.0 ");
+	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.2.1 ");
       wmove(win,1,2);
                                                wprintw(uno,"Sketch: %s",g_currentSketch);
       wmove(win,2,2);
@@ -210,38 +210,58 @@ void resetFile(const char *filename)
 
 
 //====================================
-void fill(int len,char *p,char c)
+static void showTruncatedLine(WINDOW *win, int max, const char *fmt, ...)
 //====================================
 {
-  int i;
+  va_list argp;
+  char out_line[120+MAX_SERIAL_BUFFER];
+  int len;
+  char *p;
 
-  if(len > 0)
+  va_start(argp, fmt);
+  len = vsnprintf(out_line, max, fmt, argp);
+  if (len < max)
+  {
+     strcpy(out_line + len, logBlankRow + sizeof(logBlankRow) - (max - len));
+  }
+  if ( (p = strchr(out_line, '\n') ) )
     {
-      for(i=0;i<len;i++)p[i]=c;
-      p[len]='\0';
+        *p = ' ';
     }
+  out_line[max] = '\0';
+  wprintw(win,"%s", out_line);
 }
+
+static int bottom_up = 0;
 //====================================
-void winLog()
+void winLog()   // show log lines in selectable order
 //====================================
 {
   int i,k;
-  char filler[120];
+  int first, last, incr;
+  char out_line[120+MAX_SERIAL_BUFFER];
+  char *p;
 
-  wmove(slog,1,1);
-  fill(log_w-strlen(simulation[currentStep+1]),filler,' ');
-  wprintw(slog,"next>%s%s",simulation[currentStep+1],filler);
+  wmove(slog, bottom_up ? log_h - 2 : 1, 1);
+  showTruncatedLine(slog, log_w, "next>%s", simulation[currentStep+1]);
   for(i=1;i<log_h-2;i++)
     {
-      wmove(slog,i+1,1);
+      int pos;
+      pos = i + 1;
+      if (bottom_up)
+      {
+        pos = log_h - pos - 1;
+      }
+      wmove(slog,pos,1);
       k = currentStep - i+1;
       if(k>0)
 	{
-	  fill(log_w-strlen(simulation[k]),filler,' ');
-	  wprintw(slog,"[%d,%d] %s%s",k,stepLoop[k],simulation[k],filler);
+          showTruncatedLine(slog, log_w, "[%d,%d] %s", k, stepLoop[k], simulation[k]);
 	}
       else
-	wprintw(slog,"%s",logBlankRow);
+        {
+          showTruncatedLine(slog, log_w, logBlankRow);
+        }
     }
   show(slog);
 }
@@ -252,7 +272,7 @@ void winSer()
 {
   int i,j,k=0,m=0,prevL=1;
   char buf[MAX_STEP][240];
-  char filler[120];
+  char out_line[120+MAX_SERIAL_BUFFER];
 
   for(i=1;i<=currentStep;i++)
     {
@@ -273,15 +293,23 @@ void winSer()
   wmove(ser,1,1);
   for(i=1;i<ser_h-1;i++)
     {
-      wmove(ser,i,1);
+      int pos;
+      char *p;
+      pos = i;
+      if (bottom_up)
+      {
+        pos = ser_h - pos - 1;
+      }
+      wmove(ser,pos,1);
       k = m-i+1;
       if(k>0)
 	{
-	  fill(ser_w-strlen(buf[k]),filler,' ');
-	  wprintw(ser,"%s%s",buf[k],filler);
-	}
+          showTruncatedLine(ser, ser_w, "%s", buf[k]);
+        }
       else
-	wprintw(ser,"%s",logBlankRow);
+        {
+          showTruncatedLine(ser, log_w, logBlankRow);
+        }
     }
 
 
@@ -1522,10 +1550,6 @@ int loadSketch(char sketch[])
 {
   int x,ch,res;
   char syscom[120];
-
-  sprintf(syscom,"cp %s %s > %s 2>&1;",sketch,fileServSketch,fileCopyError);
-  x=system(syscom);
-  //strcpy(confSketchFile,sketch);
 
   instrument(sketch,fileServSketch);
 
