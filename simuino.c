@@ -869,6 +869,8 @@ int main(int argc, char *argv[])
   char syscom[120];
   int ch,i,x;
 
+  memset(logBlankRow, ' ', sizeof logBlankRow);
+  logBlankRow[sizeof logBlankRow - 1] = '\0';
   currentStep = 1;
   currentLoop = 0;
 

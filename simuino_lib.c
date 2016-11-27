@@ -96,9 +96,9 @@ void show(WINDOW *win)
     {
       wmove(win,0,2);
       if(confBoardType ==UNO)
-	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.2.1 ");
+	wprintw(win,"SIMUINO - Arduino UNO Pin Analyzer 0.2.3 ");
       if(confBoardType ==MEGA)
-	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.2.1 ");
+	wprintw(win,"SIMUINO - Arduino MEGA Pin Analyzer 0.2.3 ");
       wmove(win,1,2);
                                                wprintw(uno,"Sketch: %s",g_currentSketch);
       wmove(win,2,2);
@@ -230,6 +230,7 @@ static void showTruncatedLine(WINDOW *win, int max, const char *fmt, ...)
     }
   out_line[max] = '\0';
   wprintw(win,"%s", out_line);
+  va_end(argp);
 }
 
 static int bottom_up = 0;
@@ -766,7 +767,6 @@ void runPrevRead()
   return;
 }    
 
-
 //====================================
 void readSimulation()
 //====================================
@@ -794,7 +794,6 @@ void readSimulation()
 	  
 	  if(row[0] == '+')
 	    {
-	      //printf("%s",row);
 	      p = strstr(row," ? ");
 	      p = p+3;
 	      g_steps++;
